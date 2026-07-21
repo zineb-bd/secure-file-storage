@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecureDocs Entreprise — Stockage sécurisé</title>
+  <script>
+    (function () {
+      if (localStorage.getItem('sfs_theme') === 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- ═══════════════ PAGE DE CONNEXION ═══════════════ -->
+  <div id="login-page" class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="48" height="48" rx="12" fill="#0078d4"/>
+          <path d="M24 10L34 16V26C34 32.627 29.523 37.902 24 39C18.477 37.902 14 32.627 14 26V16L24 10Z" fill="white" fill-opacity="0.9"/>
+          <path d="M21 25L23 27L27 23" stroke="#0078d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="login-logo-text">
+          SecureDocs Entreprise
+          <span>Gestion documentaire sécurisée</span>
+        </div>
+      </div>
+      <h2>Connexion</h2>
+      <p class="subtitle">Accédez à votre espace de gestion documentaire.</p>
+      <label for="login-email">Adresse e-mail</label>
+      <input type="email" id="login-email" value="admin@entreprise.local" autocomplete="username" placeholder="nom@entreprise.local">
+      <label for="login-password">Mot de passe</label>
+      <input type="password" id="login-password" value="Admin123!" autocomplete="current-password" placeholder="••••••••">
+      <button class="btn" id="btn-login" style="width:100%;margin-top:1.25rem;justify-content:center">Se connecter</button>
+      <a class="forgot-link" id="forgot-password">Mot de passe oublié ?</a>
+      <div class="login-note">
+        Authentification JWT — OAuth2 planifié pour une intégration SSO entreprise.
+      </div>
+      <div id="login-msg"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ APPLICATION ═══════════════ -->
+  <div id="app" class="app-layout hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+          <rect width="48" height="48" rx="10" fill="#0078d4"/>
+          <path d="M24 10L34 16V26C34 32.627 29.523 37.902 24 39C18.477 37.902 14 32.627 14 26V16L24 10Z" fill="white" fill-opacity="0.9"/>
+        </svg>
+        <div class="sidebar-brand-text">
+          SecureDocs
+          <small>Fichiers d'entreprise</small>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Navigation</div>
+        <button class="nav-item active" data-page="dashboard"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7A1 1 0 003 10h1v7a1 1 0 001 1h4v-4h4v4h4a1 1 0 001-1v-7h1a1 1 0 00.707-1.707l-7-7z"/></svg></span>Accueil</button>
+        <button class="nav-item" data-page="documents"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg></span>Mes fichiers</button>
+        <button class="nav-item" data-page="categories"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H2V6zm0 3h16v5a2 2 0 01-2 2H4a2 2 0 01-2-2V9z"/></svg></span>Catégories</button>
+        <button class="nav-item" data-page="archived"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3a2 2 0 00-2 2v1h16V5a2 2 0 00-2-2H4zm14 4H2v8a2 2 0 002 2h12a2 2 0 002-2V7zM7 10h6v2H7v-2z"/></svg></span>Archivés</button>
+        <button class="nav-item" data-page="trash"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 2h4v1H8V2zm-2 2h8l-1 12H7L6 4zm2 3v7h1V7H8zm3 0v7h1V7h-1z"/></svg></span>Corbeille</button>
+        <button class="nav-item" data-page="search"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.5 3a5.5 5.5 0 104.227 8.957l3.536 3.536 1.414-1.414-3.3-3.3A5.5 5.5 0 008.5 3zm0 2a3.5 3.5 0 110 7 3.5 3.5 0 010-7z"/></svg></span>Rechercher</button>
+
+        <div class="nav-section">Compte</div>
+        <button class="nav-item" data-page="profile"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 10a3 3 0 100-6 3 3 0 000 6zm-7 8a7 7 0 0114 0H3z"/></svg></span>Mon profil</button>
+        <button class="nav-item" data-page="settings"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11.983 1.907a1 1 0 00-1.966 0l-.18.985a6.04 6.04 0 00-1.07.617l-.9-.52a1 1 0 00-1.366.366l-.5.866a1 1 0 00.366 1.366l.9.52c-.05.18-.09.36-.12.545l-.985.18a1 1 0 000 1.966l.985.18c.03.185.07.365.12.545l-.9.52a1 1 0 00-.366 1.366l.5.866a1 1 0 001.366.366l.9-.52c.33.24.69.44 1.07.617l.18.985a1 1 0 001.966 0l.18-.985c.38-.177.74-.377 1.07-.617l.9.52a1 1 0 001.366-.366l.5-.866a1 1 0 00-.366-1.366l-.9-.52c.05-.18.09-.36.12-.545l.985-.18a1 1 0 000-1.966l-.985-.18a6.04 6.04 0 00-.12-.545l.9-.52a1 1 0 00.366-1.366l-.5-.866a1 1 0 00-1.366-.366l-.9.52a6.04 6.04 0 00-1.07-.617l-.18-.985zM10 13a3 3 0 110-6 3 3 0 010 6z"/></svg></span>Paramètres</button>
+
+        <div class="nav-section admin-only hidden">Administration</div>
+        <button class="nav-item admin-only hidden" data-page="admin-users"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 8a3 3 0 116 0 3 3 0 01-6 0zM3 17a5 5 0 0110 0H3zm10-2a4 4 0 014 2h-2.1a6 6 0 00-1.9-2zM13 7a2 2 0 114 0 2 2 0 01-4 0z"/></svg></span>Utilisateurs</button>
+        <button class="nav-item admin-only hidden" data-page="admin-roles"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2l7 4v5c0 4.2-3 7.7-7 9-4-1.3-7-4.8-7-9V6l7-4zm0 2.2L5 7.3V11c0 3.1 2.2 5.8 5 6.8 2.8-1 5-3.7 5-6.8V7.3L10 4.2z"/></svg></span>Rôles</button>
+        <button class="nav-item admin-only hidden" data-page="admin-audit"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 2h12a1 1 0 011 1v14l-3-2-3 2-3-2-3 2-3-2V3a1 1 0 011-1z"/></svg></span>Traçabilité</button>
+        <button class="nav-item admin-only hidden" data-page="admin-config"><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4h12v12H4V4zm2 2v8h8V6H6zm1 1h6v1H7V7zm0 2h6v1H7V9zm0 2h4v1H7v-1z"/></svg></span>Configuration</button>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="app-main">
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menu-toggle" aria-label="Menu"><span></span></button>
+        </div>
+        <div class="topbar-center">
+          <div class="global-search">
+            <span class="global-search-icon" aria-hidden="true"></span>
+            <input type="search" id="global-search" placeholder="Rechercher dans vos fichiers">
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" id="btn-theme-toggle" aria-label="Mode sombre" title="Mode sombre / clair">🌙</button>
+          <div style="position:relative">
+            <button class="topbar-btn" id="btn-notifications" aria-label="Notifications">🔔<span class="notif-badge hidden" id="notif-badge">0</span></button>
+            <div class="notif-panel hidden" id="notif-panel">
+              <div class="notif-panel-header">Notifications</div>
+              <div id="notif-list"></div>
+            </div>
+          </div>
+          <div class="user-menu">
+            <button class="user-trigger" id="user-trigger">
+              <div class="user-avatar" id="user-avatar">A</div>
+              <div class="user-info">
+                <div class="user-info-name" id="user-name">—</div>
+                <div class="user-info-role" id="user-role">—</div>
+              </div>
+              <span style="color:var(--gray-400);font-size:.7rem">▼</span>
+            </button>
+            <div class="dropdown hidden" id="user-dropdown">
+              <button class="dropdown-item" data-goto="profile">Mon profil</button>
+              <button class="dropdown-item" data-goto="settings">Paramètres</button>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item danger" id="btn-logout">Déconnexion</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="od-command-bar">
+        <div>
+          <div class="od-breadcrumb" id="page-breadcrumb">Accueil</div>
+          <div class="od-breadcrumb-sub hidden" id="page-breadcrumb-sub"></div>
+        </div>
+      </div>
+
+      <div class="page-content">
+
+        <!-- 1. Dashboard -->
+        <section id="page-dashboard" class="page">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Tableau de bord</h1>
+              <p class="page-subtitle">Vue d'ensemble de votre espace documentaire</p>
+            </div>
+          </div>
+          <div class="stats-grid" id="dashboard-stats">
+            <div class="stat-card"><div class="stat-icon"><span class="stat-abbr">DOC</span></div><div><div class="stat-value" id="stat-docs">—</div><div class="stat-label">Documents totaux</div></div></div>
+            <div class="stat-card green"><div class="stat-icon"><span class="stat-abbr">STO</span></div><div><div class="stat-value" id="stat-storage">—</div><div class="stat-label">Stockage utilisé</div></div></div>
+            <div class="stat-card amber"><div class="stat-icon"><span class="stat-abbr">ENV</span></div><div><div class="stat-value" id="stat-uploads">—</div><div class="stat-label">Téléversements récents</div></div></div>
+            <div class="stat-card red"><div class="stat-icon"><span class="stat-abbr">ALR</span></div><div><div class="stat-value" id="stat-notifs">—</div><div class="stat-label">Notifications</div></div></div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Documents récents</h3></div>
+              <div class="table-wrap" id="dash-recent-docs"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Activité récente</h3></div>
+              <div class="table-wrap" id="dash-recent-activity"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Notifications</h3></div>
+            <div id="dash-notifications"></div>
+          </div>
+          <div id="dashboard-msg"></div>
+        </section>
+
+        <!-- 2. Mes documents -->
+        <section id="page-documents" class="page hidden">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Mes documents</h1>
+              <p class="page-subtitle">Gérez et organisez vos fichiers</p>
+            </div>
+            <button class="btn" id="btn-open-upload">Téléverser</button>
+          </div>
+          <div class="filters-bar">
+            <div><label for="doc-search">Recherche</label><input type="text" id="doc-search" placeholder="Nom de fichier…"></div>
+            <div><label for="doc-filter-category">Catégorie</label>
+              <select id="doc-filter-category"><option value="">Toutes</option><option value="RH">RH</option><option value="Factures">Factures</option><option value="Contrats">Contrats</option><option value="General">Général</option></select>
+            </div>
+            <div><label for="doc-filter-type">Type</label><input type="text" id="doc-filter-type" placeholder="application/pdf"></div>
+            <div><label for="doc-filter-status">Statut</label>
+              <select id="doc-filter-status"><option value="">Tous</option><option value="Active">Actif</option><option value="Archived">Archivé</option><option value="Deleted">Supprimé</option></select>
+            </div>
+            <div><label for="doc-filter-from">Du</label><input type="date" id="doc-filter-from"></div>
+            <div><label for="doc-filter-to">Au</label><input type="date" id="doc-filter-to"></div>
+            <div style="flex:0"><label>&nbsp;</label><button class="btn btn-secondary" id="btn-filter-docs">Filtrer</button></div>
+          </div>
+          <div class="card" style="padding:0;margin-bottom:0">
+            <div class="table-wrap" id="docs-table-wrap"></div>
+          </div>
+          <div id="docs-msg"></div>
+        </section>
+
+        <!-- 3. Catégories -->
+        <section id="page-categories" class="page hidden">
+          <div class="page-header">
+            <div><h1 class="page-title">Catégories</h1><p class="page-subtitle">Documents regroupés par catégorie</p></div>
+          </div>
+          <div id="categories-content"></div>
+          <div id="categories-msg"></div>
+        </section>
+
+        <!-- 4. Archivés -->
+        <section id="page-archived" class="page hidden">
+          <div class="page-header">
+            <div><h1 class="page-title">Documents archivés</h1><p class="page-subtitle">Documents mis en archive</p></div>
+          </div>
+          <div class="card" style="padding:0"><div class="table-wrap" id="archived-table-wrap"></div></div>
+          <div id="archived-msg"></div>
+        </section>
+
+        <!-- 5. Corbeille -->
+        <section id="page-trash" class="page hidden">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Corbeille</h1>
+              <p class="page-subtitle">Documents supprimés — restaurez-les ou videz la corbeille</p>
+            </div>
+            <button class="btn btn-danger" id="btn-empty-trash">Vider la corbeille</button>
+          </div>
+          <div class="card" style="padding:0"><div class="table-wrap" id="trash-table-wrap"></div></div>
+          <div id="trash-msg"></div>
+        </section>
+
+        <!-- 6. Recherche -->
+        <section id="page-search" class="page hidden">
+          <div class="page-header">
+            <div><h1 class="page-title">Recherche avancée</h1><p class="page-subtitle">Filtrez vos documents avec des critères précis</p></div>
+          </div>
+          <div class="card">
+            <div class="grid-2">
+              <div>
+                <label for="search-filename">Nom de fichier</label><input type="text" id="search-filename">
+                <label for="search-category">Catégorie</label>
+                <select id="search-category"><option value="">Toutes</option><option value="RH">RH</option><option value="Factures">Factures</option><option value="Contrats">Contrats</option><option value="General">Général</option></select>
+              </div>
+              <div>
+                <label for="search-content-type">Type MIME</label><input type="text" id="search-content-type" placeholder="application/pdf">
+                <label for="search-status">Statut</label>
+                <select id="search-status"><option value="">Tous</option><option value="Active">Actif</option><option value="Archived">Archivé</option><option value="Deleted">Supprimé</option></select>
+                <label for="search-from">Créé à partir du</label><input type="date" id="search-from">
+                <label for="search-to">Créé jusqu'au</label><input type="date" id="search-to">
+              </div>
+            </div>
+            <button class="btn" id="btn-search" style="margin-top:1rem">Rechercher</button>
+          </div>
+          <div class="card" style="padding:0;margin-top:1rem"><div class="table-wrap" id="search-results"></div></div>
+          <div id="search-msg"></div>
+        </section>
+
+        <!-- 9. Profil -->
+        <section id="page-profile" class="page hidden">
+          <div class="page-header">
+            <div><h1 class="page-title">Mon profil</h1><p class="page-subtitle">Informations personnelles et sécurité</p></div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Informations</h3></div>
+              <div id="profile-info" class="meta-detail-grid"></div>
+              <label for="profile-first">Prénom</label><input type="text" id="profile-first">
+              <label for="profile-last">Nom</label><input type="text" id="profile-last">
+              <button class="btn" id="btn-save-profile" style="margin-top:1rem">Enregistrer</button>
+              <div id="profile-msg"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Changer le mot de passe</h3></div>
+              <label for="pwd-current">Mot de passe actuel</label><input type="password" id="pwd-current">
+              <label for="pwd-new">Nouveau mot de passe</label><input type="password" id="pwd-new">
+              <label for="pwd-confirm">Confirmer</label><input type="password" id="pwd-confirm">
+              <button class="btn" id="btn-change-password" style="margin-top:1rem">Modifier le mot de passe</button>
+              <div id="password-msg"></div>
+            </div>
+          </div>
+          <div class="card">
+              <div class="card-header"><h3 class="card-title">Historique documentaire</h3></div>
+            <div class="table-wrap" id="profile-activity"></div>
+          </div>
+        </section>
+
+        <!-- 10. Paramètres -->
+        <section id="page-settings" class="page hidden">
+          <div class="page-header">
+            <div><h1 class="page-title">Paramètres</h1><p class="page-subtitle">Configuration et informations système</p></div>
+          </div>
+          <div class="info-grid">
+            <div class="info-block">
+              <h4>Application</h4>
+              <p><strong>SecureDocs Entreprise</strong> — Microservice de stockage et lecture sécurisée des fichiers.</p>
+              <ul style="margin-top:.5rem">
+                <li>Version API : 1.0</li>
+                <li>Interface : Web SPA</li>
+                <li>Langue : Français</li>
+              </ul>
+            </div>
+            <div class="info-block">
+              <h4>Authentification JWT</h4>
+              <p>Connexion par jeton Bearer stocké localement (<code>sfs_token</code>).</p>
+              <ul style="margin-top:.5rem">
+                <li>Algorithme : HMAC-SHA256</li>
+                <li>OAuth2 / SSO : planifié</li>
+                <li>Refresh token : planifié</li>
+              </ul>
+            </div>
+            <div class="info-block">
+              <h4>Chiffrement</h4>
+              <p>Les fichiers sont chiffrés au repos avec AES-256. Clé maître rotatable par l'administrateur.</p>
+              <ul style="margin-top:.5rem">
+                <li>Intégrité : SHA-256</li>
+                <li>Antivirus : scan à l'upload</li>
+                <li>Permissions granulaires par document</li>
+              </ul>
+            </div>
+            <div class="info-block">
+              <h4>Apparence</h4>
+              <p>Choisissez le thème de l'interface.</p>
+              <div class="theme-toggle-group" style="margin-top:.75rem">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-theme-light">☀️ Mode clair</button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-theme-dark">🌙 Mode sombre</button>
+              </div>
+              <p id="theme-current-label" style="margin-top:.5rem;font-size:.8rem;color:var(--gray-500)"></p>
+            </div>
+            <div class="info-block">
+              <h4>Session actuelle</h4>
+              <div id="settings-session"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 11. Admin Users -->
+        <section id="page-admin-users" class="page hidden">
+          <div class="page-header">
+            <div><h1 class="page-title">Utilisateurs</h1><p class="page-subtitle">Gestion des comptes utilisateurs</p></div>
+            <button class="btn" id="btn-show-create-user">Nouvel utilisateur</button>
+          </div>
+          <div class="card" style="padding:0"><div class="table-wrap" id="users-table-wrap"></div></div>
+          <div class="card hidden" id="user-form-card">
+            <div class="card-header"><h3 class="card-title" id="user-form-title">Créer un utilisateur</h3></div>
+            <input type="hidden" id="user-action-id">
+            <div class="grid-2">
+              <div>
+                <label for="user-email">E-mail</label><input type="email" id="user-email">
+                <label for="user-password">Mot de passe</label><input type="password" id="user-password">
+                <label for="user-first">Prénom</label><input type="text" id="user-first">
+                <label for="user-last">Nom</label><input type="text" id="user-last">
+              </div>
+              <div>
+                <label for="user-roles-input">Rôles (virgules)</label><input type="text" id="user-roles-input" placeholder="User, Manager">
+                <label><input type="checkbox" id="user-update-active" checked> Compte actif</label>
+                <label for="user-reset-pwd">Réinitialiser mot de passe</label><input type="password" id="user-reset-pwd">
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:1rem">
+              <button class="btn btn-success" id="btn-create-user">Créer</button>
+              <button class="btn" id="btn-update-user">Mettre à jour</button>
+              <button class="btn btn-secondary" id="btn-reset-pwd">Réinitialiser MDP</button>
+              <button class="btn btn-danger" id="btn-deactivate-user">Désactiver</button>
+              <button class="btn btn-danger" id="btn-delete-user">Supprimer</button>
+              <button class="btn btn-outline" id="btn-cancel-user-form">Annuler</button>
+            </div>
+          </div>
+          <div id="users-msg"></div>
+        </section>
+
+        <!-- 12. Admin Roles -->
+        <section id="page-admin-roles" class="page hidden">
+          <div class="page-header">
+            <div><h1 class="page-title">Rôles &amp; permissions</h1><p class="page-subtitle">Gestion des rôles et affectations</p></div>
+          </div>
+          <div class="card" style="padding:0"><div class="table-wrap" id="roles-table-wrap"></div></div>
+          <div class="grid-2" style="margin-top:1rem">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Créer / modifier un rôle</h3></div>
+              <input type="hidden" id="role-edit-id">
+              <label for="role-name">Nom</label><input type="text" id="role-name">
+              <label for="role-desc">Description</label><input type="text" id="role-desc">
+              <label for="role-edit-name">Nom (modification)</label><input type="text" id="role-edit-name">
+              <label for="role-edit-desc">Description (modification)</label><input type="text" id="role-edit-desc">
+              <div class="btn-group" style="margin-top:1rem">
+                <button class="btn btn-success" id="btn-create-role">Créer</button>
+                <button class="btn" id="btn-update-role">Mettre à jour</button>
+                <button class="btn btn-danger" id="btn-delete-role">Supprimer</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Affecter un rôle</h3></div>
+              <label for="assign-user-id">Identifiant utilisateur</label><input type="text" id="assign-user-id" placeholder="GUID">
+              <label for="assign-role-id">Identifiant rôle</label><input type="text" id="assign-role-id" placeholder="GUID">
+              <button class="btn btn-success" id="btn-assign-role" style="margin-top:1rem">Affecter</button>
+            </div>
+          </div>
+          <div id="roles-msg"></div>
+        </section>
+
+        <!-- 13. Admin Traçabilité documents -->
+        <section id="page-admin-audit" class="page hidden">
+          <div class="page-header">
+            <div><h1 class="page-title">Traçabilité des documents</h1><p class="page-subtitle">Historique des opérations sur les fichiers (téléversement, consultation, modification, archivage…)</p></div>
+            <button class="btn btn-outline" id="btn-export-audit">Exporter CSV</button>
+          </div>
+          <div class="filters-bar">
+            <div><label for="audit-action">Action</label><input type="text" id="audit-action" placeholder="Upload, Download, View…"></div>
+            <div><label for="audit-document-id">Identifiant document</label><input type="text" id="audit-document-id" placeholder="GUID du document"></div>
+            <div><label for="audit-from">Du</label><input type="date" id="audit-from"></div>
+            <div><label for="audit-to">Au</label><input type="date" id="audit-to"></div>
+            <div style="flex:0"><label>&nbsp;</label><button class="btn btn-secondary" id="btn-load-audit">Filtrer</button></div>
+          </div>
+          <div class="card" style="padding:0"><div class="table-wrap" id="audit-table-wrap"></div></div>
+          <div id="audit-msg"></div>
+        </section>
+
+        <!-- 14. Admin Config -->
+        <section id="page-admin-config" class="page hidden">
+          <div class="page-header">
+            <div><h1 class="page-title">Configuration système</h1><p class="page-subtitle">Stockage et sécurité</p></div>
+          </div>
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="storage">Stockage</button>
+            <button class="tab-btn" data-tab="security">Sécurité</button>
+          </div>
+          <div id="tab-storage" class="tab-content">
+            <div class="card">
+              <div id="storage-current" class="meta-detail-grid"></div>
+              <div class="grid-2" style="margin-top:1rem">
+                <div>
+                  <label for="storage-provider">Fournisseur</label>
+                  <select id="storage-provider"><option value="Local">Local</option><option value="S3">S3</option><option value="NAS">NAS</option></select>
+                  <label for="storage-db">Base de données</label><input type="text" id="storage-db" value="Sqlite">
+                  <label for="storage-base">Chemin de base</label><input type="text" id="storage-base" placeholder="./storage">
+                </div>
+                <div>
+                  <label for="storage-s3-endpoint">Endpoint S3</label><input type="text" id="storage-s3-endpoint">
+                  <label for="storage-s3-bucket">Bucket S3</label><input type="text" id="storage-s3-bucket">
+                  <label for="storage-s3-key">Clé d'accès S3</label><input type="text" id="storage-s3-key">
+                  <label for="storage-s3-secret">Secret S3</label><input type="password" id="storage-s3-secret">
+                </div>
+              </div>
+              <button class="btn" id="btn-save-storage" style="margin-top:1rem">Enregistrer la configuration</button>
+              <div id="storage-msg"></div>
+            </div>
+          </div>
+          <div id="tab-security" class="tab-content hidden">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Alertes antivirus</h3><button class="btn btn-sm btn-secondary" id="btn-load-alerts">Actualiser</button></div>
+              <div class="table-wrap" id="alerts-table-wrap"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Rotation des clés de chiffrement</h3></div>
+              <p style="font-size:.85rem;color:var(--gray-500);margin-bottom:.75rem">Génère une nouvelle clé maître AES. Opération sensible.</p>
+              <button class="btn btn-danger" id="btn-rotate-key">Effectuer la rotation</button>
+              <div id="rotate-result" style="margin-top:1rem"></div>
+            </div>
+            <div id="security-msg"></div>
+          </div>
+        </section>
+
+      </div><!-- /page-content -->
+    </div><!-- /app-main -->
+  </div><!-- /app -->
+
+  <!-- ═══════════════ MODALES ═══════════════ -->
+
+  <!-- Upload -->
+  <div class="modal-overlay hidden" id="modal-upload">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Téléverser un document</h3>
+        <button class="modal-close" data-close="modal-upload">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="upload-file">Fichier</label>
+        <input type="file" id="upload-file">
+        <label for="upload-category">Catégorie</label>
+        <select id="upload-category">
+          <option value="General">Général</option>
+          <option value="RH">RH</option>
+          <option value="Factures">Factures</option>
+          <option value="Contrats">Contrats</option>
+        </select>
+        <label for="upload-desc">Description</label>
+        <input type="text" id="upload-desc" placeholder="Description optionnelle">
+        <div id="upload-msg"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-upload">Annuler</button>
+        <button class="btn" id="btn-upload">Téléverser</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="modal-overlay hidden" id="modal-preview">
+    <div class="modal modal-xl">
+      <div class="modal-header">
+        <h3 class="modal-title" id="preview-title">Aperçu du document</h3>
+        <button class="modal-close" data-close="modal-preview">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="preview-layout">
+          <div class="preview-frame-wrap"><iframe id="preview-iframe" title="Aperçu"></iframe></div>
+          <div class="preview-sidebar" id="preview-sidebar"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="preview-versions-btn">Versions</button>
+        <button class="btn" id="preview-download-btn">Télécharger</button>
+        <button class="btn btn-secondary" data-close="modal-preview">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metadata -->
+  <div class="modal-overlay hidden" id="modal-metadata">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Métadonnées du document</h3>
+        <button class="modal-close" data-close="modal-metadata">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="meta-doc-id">
+        <dl class="meta-detail-grid" id="meta-detail"></dl>
+        <hr style="margin:1rem 0;border:none;border-top:1px solid var(--gray-200)">
+        <h4 style="font-size:.9rem;margin-bottom:.75rem">Modifier</h4>
+        <div class="grid-2">
+          <div><label for="meta-category">Catégorie</label><input type="text" id="meta-category"></div>
+          <div><label for="meta-desc">Description</label><input type="text" id="meta-desc"></div>
+        </div>
+        <label for="meta-owner-id" class="admin-only hidden">Nouveau propriétaire (GUID, admin)</label>
+        <input type="text" id="meta-owner-id" class="admin-only hidden">
+        <details style="margin-top:1rem" class="admin-only hidden">
+          <summary style="cursor:pointer;font-weight:600;font-size:.875rem;color:var(--gray-600)">Permissions document</summary>
+          <div style="margin-top:.75rem">
+            <label for="perm-user-id">Utilisateur (GUID)</label><input type="text" id="perm-user-id">
+            <label for="perm-type">Permission</label>
+            <select id="perm-type"><option value="Read">Lecture</option><option value="Write">Écriture</option><option value="Admin">Administration</option></select>
+            <div class="btn-group" style="margin-top:.5rem">
+              <button class="btn btn-sm btn-success" id="btn-grant-perm">Accorder</button>
+              <button class="btn btn-sm btn-danger" id="btn-revoke-perm">Révoquer</button>
+            </div>
+            <input type="hidden" id="revoke-user-id">
+          </div>
+        </details>
+        <div id="meta-msg"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-check-integrity">Vérifier l'intégrité</button>
+        <button class="btn btn-secondary" data-close="modal-metadata">Annuler</button>
+        <button class="btn" id="btn-save-metadata">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Versions -->
+  <div class="modal-overlay hidden" id="modal-versions">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title" id="versions-title">Versions du document</h3>
+        <button class="modal-close" data-close="modal-versions">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="versions-doc-id">
+        <div class="table-wrap" id="versions-table-wrap"></div>
+        <div id="versions-msg"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-versions">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

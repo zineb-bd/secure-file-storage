@@ -1,0 +1,31 @@
+@baseUrl = http://localhost:5001
+@token = {{login.response.body.token}}
+
+### Connexion admin
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@entreprise.local",
+  "password": "Admin123!"
+}
+
+### Santé
+GET {{baseUrl}}/health
+
+### Lister les documents
+GET {{baseUrl}}/api/documents
+Authorization: Bearer {{token}}
+
+### Rechercher par catégorie
+GET {{baseUrl}}/api/documents?category=RH&page=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### Journaux d'audit (admin)
+GET {{baseUrl}}/api/admin/audit?page=1&pageSize=20
+Authorization: Bearer {{token}}
+
+### Utilisateurs (admin)
+GET {{baseUrl}}/api/admin/users
+Authorization: Bearer {{token}}
