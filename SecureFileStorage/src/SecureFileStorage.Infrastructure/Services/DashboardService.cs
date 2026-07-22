@@ -21,11 +21,18 @@ public class DashboardService(ApplicationDbContext context, IPermissionChecker p
             .Where(d => d.Status != DocumentStatus.Deleted);
 
         if (!isAdmin)
-            query = query.Where(d => d.OwnerId == userId || d.Permissions.Any(p => p.UserId == userId));
+            query = query.Where(d => d.OwnerId == userId || d.Permissions.Any(p => p.UserId == userId && (p.ExpiresAt == null || p.ExpiresAt > DateTime.UtcNow)));
 
         var docs = await query.ToListAsync(ct);
         var total = docs.Count;
-        var storage = docs.Sum(d => d.SizeBytes);
+        var logicalStorage = docs.Sum(d => d.SizeBytes);
+
+        var blobStorage = await context.StoredBlobs.SumAsync(b => (long?)b.SizeBytes, ct) ?? 0L;
+        var legacyStorage = await context.DocumentVersions
+            .Where(v => v.StoredBlobId == null)
+            .SumAsync(v => (long?)v.SizeBytes, ct) ?? 0L;
+        var physicalStorage = blobStorage + legacyStorage;
+        var bytesSaved = Math.Max(0, logicalStorage - physicalStorage);
 
         var recent = docs
             .OrderByDescending(d => d.CreatedAt)
@@ -62,6 +69,6 @@ public class DashboardService(ApplicationDbContext context, IPermissionChecker p
                 d.UpdatedAt ?? d.CreatedAt))
             .ToList();
 
-        return new DashboardStatsDto(total, storage, recent, recentActivity, notifications);
+        return new DashboardStatsDto(total, physicalStorage, logicalStorage, bytesSaved, recent, recentActivity, notifications);
     }
 }

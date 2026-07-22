@@ -23,21 +23,49 @@ public class DocumentsController : ControllerBase
 
     [HttpPost]
     [RequestSizeLimit(100_000_000)]
-    [SwaggerOperation(Summary = "Téléverser un document", Description = "Envoie un fichier. Il sera chiffré et stocké de manière sécurisée.")]
+    [SwaggerOperation(Summary = "Téléverser un document", Description = "Envoie un fichier avec visibilité (Privé, Partagé, Public) et droits d'accès.")]
     public async Task<ActionResult<DocumentDto>> Upload(
         IFormFile file,
         [FromForm] string? category,
         [FromForm] string? description,
+        [FromForm] string? visibility,
+        [FromForm] string? publicAccessLevel,
+        [FromForm] string? sharedUsersJson,
         CancellationToken ct)
     {
         if (_currentUser.UserId is null) return Unauthorized();
         if (file.Length == 0) return BadRequest(new { message = "Fichier vide." });
 
+        IEnumerable<UploadShareEntry>? sharedUsers = null;
+        if (!string.IsNullOrWhiteSpace(sharedUsersJson))
+        {
+            try
+            {
+                sharedUsers = System.Text.Json.JsonSerializer.Deserialize<List<UploadShareEntry>>(
+                    sharedUsersJson,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch
+            {
+                return BadRequest(new { message = "Format des partages invalide." });
+            }
+        }
+
         await using var stream = file.OpenReadStream();
         var result = await _documentService.UploadAsync(
             stream, file.FileName, file.ContentType, _currentUser.UserId.Value,
-            new DocumentUploadRequest(category, description, null, null), ct);
+            new DocumentUploadRequest(
+                category, description, null, null,
+                visibility ?? "Private", publicAccessLevel, sharedUsers), ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    [HttpGet("shared-with-me")]
+    [SwaggerOperation(Summary = "Documents partagés avec moi", Description = "Liste les documents accessibles via un partage ou la visibilité publique, hors propriété.")]
+    public async Task<ActionResult<PagedResult<DocumentDto>>> GetSharedWithMe([FromQuery] DocumentSearchRequest request, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        return Ok(await _documentService.GetSharedWithMeAsync(request, _currentUser.UserId.Value, ct));
     }
 
     [HttpGet]
@@ -152,6 +180,43 @@ public class DocumentsController : ControllerBase
             ? NoContent() : NotFound();
     }
 
+    [HttpPost("{id:guid}/share/user")]
+    [SwaggerOperation(Summary = "Partager avec un utilisateur", Description = "Partage un document avec un collègue (lecture, téléchargement ou modification) et une date d'expiration optionnelle.")]
+    public async Task<ActionResult<DocumentUserShareDto>> ShareWithUser(Guid id, [FromBody] ShareWithUserRequest request, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        var result = await _documentService.ShareWithUserAsync(id, request, _currentUser.UserId.Value, ct);
+        return result is null ? BadRequest(new { message = "Partage impossible. Vérifiez l'utilisateur et vos droits." }) : Ok(result);
+    }
+
+    [HttpPost("{id:guid}/share/link")]
+    [SwaggerOperation(Summary = "Générer un lien sécurisé", Description = "Crée un lien temporaire avec token pour partager le document.")]
+    public async Task<ActionResult<CreateShareLinkResponse>> CreateShareLink(Guid id, [FromBody] CreateShareLinkRequest request, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var result = await _documentService.CreateShareLinkAsync(id, request, _currentUser.UserId.Value, baseUrl, ct);
+        return result is null ? BadRequest(new { message = "Impossible de créer le lien de partage." }) : Ok(result);
+    }
+
+    [HttpGet("{id:guid}/shares")]
+    [SwaggerOperation(Summary = "Lister les partages", Description = "Affiche les partages utilisateurs et liens actifs d'un document.")]
+    public async Task<ActionResult<DocumentSharesDto>> GetShares(Guid id, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        var result = await _documentService.GetSharesAsync(id, _currentUser.UserId.Value, ct);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    [HttpDelete("{id:guid}/share/link/{linkId:guid}")]
+    [SwaggerOperation(Summary = "Révoquer un lien", Description = "Désactive un lien de partage temporaire.")]
+    public async Task<IActionResult> RevokeShareLink(Guid id, Guid linkId, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        return await _documentService.RevokeShareLinkAsync(id, linkId, _currentUser.UserId.Value, ct)
+            ? NoContent() : NotFound();
+    }
+
     [HttpGet("{id:guid}/detail")]
     [SwaggerOperation(Summary = "Métadonnées complètes", Description = "Affiche toutes les métadonnées du document.")]
     public async Task<ActionResult<DocumentDetailDto>> GetDetail(Guid id, CancellationToken ct)
@@ -188,6 +253,42 @@ public class DocumentsController : ControllerBase
         if (_currentUser.UserId is null) return Unauthorized();
         return await _documentService.PermanentDeleteAsync(id, _currentUser.UserId.Value, ct)
             ? NoContent() : NotFound();
+    }
+
+    [HttpPost("{id:guid}/checkout")]
+    [SwaggerOperation(Summary = "Verrouiller un document (check-out)", Description = "Réserve le document pour modification exclusive. Les autres utilisateurs passent en lecture seule.")]
+    public async Task<ActionResult<DocumentDto>> CheckOut(Guid id, [FromBody] DocumentLockRequest? request, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        try
+        {
+            var doc = await _documentService.CheckOutAsync(id, _currentUser.UserId.Value, request, ct);
+            return doc is null ? NotFound() : Ok(doc);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id:guid}/checkin")]
+    [SwaggerOperation(Summary = "Libérer un document (check-in)", Description = "Libère le verrou. Réservé au détenteur, au propriétaire ou à l'administrateur.")]
+    public async Task<ActionResult<DocumentDto>> CheckIn(Guid id, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        try
+        {
+            var doc = await _documentService.CheckInAsync(id, _currentUser.UserId.Value, ct);
+            return doc is null ? NotFound() : Ok(doc);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("{id:guid}/integrity")]

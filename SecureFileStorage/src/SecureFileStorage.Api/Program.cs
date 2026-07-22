@@ -85,6 +85,7 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await context.Database.EnsureCreatedAsync();
+    await SchemaUpdater.ApplyAsync(context);
     await DbSeeder.SeedAsync(context);
 }
 
@@ -113,5 +114,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
+app.MapFallbackToFile("index.html");
 
 app.Run();

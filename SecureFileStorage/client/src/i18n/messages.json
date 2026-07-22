@@ -1,0 +1,1074 @@
+{
+  "app.title": {
+    "fr": "SecureDocs Entreprise — Stockage sécurisé",
+    "en": "SecureDocs Enterprise — Secure storage"
+  },
+  "app.tagline": {
+    "fr": "Gestion documentaire sécurisée",
+    "en": "Secure document management"
+  },
+  "app.sidebarSubtitle": {
+    "fr": "Fichiers d'entreprise",
+    "en": "Enterprise files"
+  },
+  "login.title": {
+    "fr": "Connexion",
+    "en": "Sign in"
+  },
+  "login.subtitle": {
+    "fr": "Accédez à votre espace de gestion documentaire.",
+    "en": "Access your document management workspace."
+  },
+  "login.email": {
+    "fr": "Adresse e-mail",
+    "en": "Email address"
+  },
+  "login.password": {
+    "fr": "Mot de passe",
+    "en": "Password"
+  },
+  "login.submit": {
+    "fr": "Se connecter",
+    "en": "Sign in"
+  },
+  "login.forgot": {
+    "fr": "Mot de passe oublié ?",
+    "en": "Forgot password?"
+  },
+  "login.note": {
+    "fr": "Authentification JWT — OAuth2 planifié pour une intégration SSO entreprise.",
+    "en": "JWT authentication — OAuth2 planned for enterprise SSO integration."
+  },
+  "nav.section": {
+    "fr": "Navigation",
+    "en": "Navigation"
+  },
+  "nav.account": {
+    "fr": "Compte",
+    "en": "Account"
+  },
+  "nav.admin": {
+    "fr": "Administration",
+    "en": "Administration"
+  },
+  "nav.dashboard": {
+    "fr": "Accueil",
+    "en": "Home"
+  },
+  "nav.documents": {
+    "fr": "Mes fichiers",
+    "en": "My files"
+  },
+  "nav.shared": {
+    "fr": "Partagés avec moi",
+    "en": "Shared with me"
+  },
+  "nav.categories": {
+    "fr": "Catégories",
+    "en": "Categories"
+  },
+  "nav.archived": {
+    "fr": "Archivés",
+    "en": "Archived"
+  },
+  "nav.trash": {
+    "fr": "Corbeille",
+    "en": "Trash"
+  },
+  "nav.profile": {
+    "fr": "Mon profil",
+    "en": "My profile"
+  },
+  "nav.users": {
+    "fr": "Utilisateurs",
+    "en": "Users"
+  },
+  "nav.roles": {
+    "fr": "Rôles",
+    "en": "Roles"
+  },
+  "nav.audit": {
+    "fr": "Traçabilité",
+    "en": "Audit trail"
+  },
+  "nav.config": {
+    "fr": "Configuration",
+    "en": "Settings"
+  },
+  "nav.upload": {
+    "fr": "Téléverser",
+    "en": "Upload"
+  },
+  "topbar.search": {
+    "fr": "Rechercher dans vos fichiers",
+    "en": "Search your files"
+  },
+  "topbar.notifications": {
+    "fr": "Notifications",
+    "en": "Notifications"
+  },
+  "topbar.themeDark": {
+    "fr": "Mode sombre / clair",
+    "en": "Dark / light mode"
+  },
+  "topbar.themeToLight": {
+    "fr": "Passer en mode clair",
+    "en": "Switch to light mode"
+  },
+  "topbar.themeToDark": {
+    "fr": "Passer en mode sombre",
+    "en": "Switch to dark mode"
+  },
+  "topbar.menu": {
+    "fr": "Menu",
+    "en": "Menu"
+  },
+  "user.profile": {
+    "fr": "Mon profil",
+    "en": "My profile"
+  },
+  "user.logout": {
+    "fr": "Déconnexion",
+    "en": "Sign out"
+  },
+  "page.dashboard.title": {
+    "fr": "Tableau de bord",
+    "en": "Dashboard"
+  },
+  "page.dashboard.subtitle": {
+    "fr": "Vue d'ensemble de votre espace documentaire",
+    "en": "Overview of your document workspace"
+  },
+  "page.documents.title": {
+    "fr": "Mes documents",
+    "en": "My documents"
+  },
+  "page.documents.subtitle": {
+    "fr": "Gérez et organisez vos fichiers",
+    "en": "Manage and organize your files"
+  },
+  "page.shared.title": {
+    "fr": "Partagés avec moi",
+    "en": "Shared with me"
+  },
+  "page.shared.subtitle": {
+    "fr": "Documents partagés avec vous ou accessibles publiquement",
+    "en": "Documents shared with you or publicly accessible"
+  },
+  "page.categories.title": {
+    "fr": "Catégories",
+    "en": "Categories"
+  },
+  "page.categories.subtitle": {
+    "fr": "Documents regroupés par catégorie",
+    "en": "Documents grouped by category"
+  },
+  "page.archived.title": {
+    "fr": "Documents archivés",
+    "en": "Archived documents"
+  },
+  "page.archived.subtitle": {
+    "fr": "Documents mis en archive",
+    "en": "Documents placed in archive"
+  },
+  "page.trash.title": {
+    "fr": "Corbeille",
+    "en": "Trash"
+  },
+  "page.trash.subtitle": {
+    "fr": "Documents supprimés — restaurez-les ou videz la corbeille",
+    "en": "Deleted documents — restore them or empty the trash"
+  },
+  "page.profile.title": {
+    "fr": "Mon profil",
+    "en": "My profile"
+  },
+  "page.profile.subtitle": {
+    "fr": "Gérez vos informations, votre sécurité et vos préférences",
+    "en": "Manage your information, security and preferences"
+  },
+  "page.adminUsers.title": {
+    "fr": "Utilisateurs",
+    "en": "Users"
+  },
+  "page.adminUsers.subtitle": {
+    "fr": "Gestion des comptes utilisateurs",
+    "en": "User account management"
+  },
+  "page.adminRoles.title": {
+    "fr": "Rôles & permissions",
+    "en": "Roles & permissions"
+  },
+  "page.adminRoles.subtitle": {
+    "fr": "Gestion des rôles et affectations",
+    "en": "Role and assignment management"
+  },
+  "page.adminAudit.title": {
+    "fr": "Traçabilité des documents",
+    "en": "Document audit trail"
+  },
+  "page.adminAudit.subtitle": {
+    "fr": "Historique des opérations sur les fichiers (téléversement, consultation, modification, archivage…)",
+    "en": "History of file operations (upload, view, edit, archive…)"
+  },
+  "page.adminConfig.title": {
+    "fr": "Configuration système",
+    "en": "System configuration"
+  },
+  "page.adminConfig.subtitle": {
+    "fr": "Stockage et sécurité",
+    "en": "Storage and security"
+  },
+  "stat.totalDocs": {
+    "fr": "Documents totaux",
+    "en": "Total documents"
+  },
+  "stat.storage": {
+    "fr": "Stockage physique",
+    "en": "Physical storage"
+  },
+  "stat.recent": {
+    "fr": "Ajouts récents",
+    "en": "Recent uploads"
+  },
+  "stat.saved": {
+    "fr": "économisés",
+    "en": "saved"
+  },
+  "card.recentDocs": {
+    "fr": "Documents récents",
+    "en": "Recent documents"
+  },
+  "card.recentActivity": {
+    "fr": "Activité récente",
+    "en": "Recent activity"
+  },
+  "filter.search": {
+    "fr": "Rechercher",
+    "en": "Search"
+  },
+  "filter.apply": {
+    "fr": "Appliquer",
+    "en": "Apply"
+  },
+  "filter.advanced": {
+    "fr": "Filtres avancés",
+    "en": "Advanced filters"
+  },
+  "filter.category": {
+    "fr": "Catégorie",
+    "en": "Category"
+  },
+  "filter.type": {
+    "fr": "Type",
+    "en": "Type"
+  },
+  "filter.status": {
+    "fr": "Statut",
+    "en": "Status"
+  },
+  "filter.from": {
+    "fr": "Du",
+    "en": "From"
+  },
+  "filter.to": {
+    "fr": "Au",
+    "en": "To"
+  },
+  "filter.all": {
+    "fr": "Toutes",
+    "en": "All"
+  },
+  "filter.allStatuses": {
+    "fr": "Tous",
+    "en": "All"
+  },
+  "filter.searchFile": {
+    "fr": "Rechercher un fichier…",
+    "en": "Search a file…"
+  },
+  "filter.searchShared": {
+    "fr": "Rechercher un fichier partagé…",
+    "en": "Search a shared file…"
+  },
+  "status.active": {
+    "fr": "Actif",
+    "en": "Active"
+  },
+  "status.archived": {
+    "fr": "Archivé",
+    "en": "Archived"
+  },
+  "status.deleted": {
+    "fr": "Supprimé",
+    "en": "Deleted"
+  },
+  "status.inactive": {
+    "fr": "Inactif",
+    "en": "Inactive"
+  },
+  "vis.private": {
+    "fr": "Privé",
+    "en": "Private"
+  },
+  "vis.shared": {
+    "fr": "Partagé",
+    "en": "Shared"
+  },
+  "vis.public": {
+    "fr": "Public",
+    "en": "Public"
+  },
+  "btn.upload": {
+    "fr": "Téléverser",
+    "en": "Upload"
+  },
+  "btn.emptyTrash": {
+    "fr": "Vider la corbeille",
+    "en": "Empty trash"
+  },
+  "btn.save": {
+    "fr": "Enregistrer",
+    "en": "Save"
+  },
+  "btn.cancel": {
+    "fr": "Annuler",
+    "en": "Cancel"
+  },
+  "btn.edit": {
+    "fr": "Modifier",
+    "en": "Edit"
+  },
+  "btn.create": {
+    "fr": "Créer",
+    "en": "Create"
+  },
+  "btn.update": {
+    "fr": "Mettre à jour",
+    "en": "Update"
+  },
+  "btn.delete": {
+    "fr": "Supprimer",
+    "en": "Delete"
+  },
+  "btn.deactivate": {
+    "fr": "Désactiver",
+    "en": "Deactivate"
+  },
+  "table.file": {
+    "fr": "Fichier",
+    "en": "File"
+  },
+  "table.name": {
+    "fr": "Nom",
+    "en": "Name"
+  },
+  "table.category": {
+    "fr": "Catégorie",
+    "en": "Category"
+  },
+  "table.type": {
+    "fr": "Type",
+    "en": "Type"
+  },
+  "table.size": {
+    "fr": "Taille",
+    "en": "Size"
+  },
+  "table.version": {
+    "fr": "Version",
+    "en": "Version"
+  },
+  "table.owner": {
+    "fr": "Propriétaire",
+    "en": "Owner"
+  },
+  "table.created": {
+    "fr": "Créé le",
+    "en": "Created"
+  },
+  "table.updated": {
+    "fr": "Modifié le",
+    "en": "Updated"
+  },
+  "table.status": {
+    "fr": "Statut",
+    "en": "Status"
+  },
+  "table.actions": {
+    "fr": "Actions",
+    "en": "Actions"
+  },
+  "table.action": {
+    "fr": "Action",
+    "en": "Action"
+  },
+  "table.document": {
+    "fr": "Document",
+    "en": "Document"
+  },
+  "table.date": {
+    "fr": "Date",
+    "en": "Date"
+  },
+  "table.rights": {
+    "fr": "Mes droits",
+    "en": "My access"
+  },
+  "table.source": {
+    "fr": "Source",
+    "en": "Source"
+  },
+  "table.email": {
+    "fr": "E-mail",
+    "en": "Email"
+  },
+  "table.roles": {
+    "fr": "Rôles",
+    "en": "Roles"
+  },
+  "action.preview": {
+    "fr": "Aperçu",
+    "en": "Preview"
+  },
+  "action.download": {
+    "fr": "Télécharger",
+    "en": "Download"
+  },
+  "action.share": {
+    "fr": "Partager",
+    "en": "Share"
+  },
+  "action.details": {
+    "fr": "Détails",
+    "en": "Details"
+  },
+  "action.versions": {
+    "fr": "Versions",
+    "en": "Versions"
+  },
+  "action.restore": {
+    "fr": "Restaurer",
+    "en": "Restore"
+  },
+  "action.archive": {
+    "fr": "Archiver",
+    "en": "Archive"
+  },
+  "action.trash": {
+    "fr": "Mettre à la corbeille",
+    "en": "Move to trash"
+  },
+  "action.permDelete": {
+    "fr": "Suppression définitive",
+    "en": "Permanent delete"
+  },
+  "action.checkin": {
+    "fr": "Libérer (check-in)",
+    "en": "Release (check-in)"
+  },
+  "action.checkout": {
+    "fr": "Verrouiller (check-out)",
+    "en": "Lock (check-out)"
+  },
+  "action.Upload": {
+    "fr": "Téléversement",
+    "en": "Upload"
+  },
+  "action.Download": {
+    "fr": "Téléchargement",
+    "en": "Download"
+  },
+  "action.View": {
+    "fr": "Consultation",
+    "en": "View"
+  },
+  "action.Update": {
+    "fr": "Modification",
+    "en": "Update"
+  },
+  "action.Delete": {
+    "fr": "Suppression",
+    "en": "Deletion"
+  },
+  "action.Archive": {
+    "fr": "Archivage",
+    "en": "Archive"
+  },
+  "action.Restore": {
+    "fr": "Restauration",
+    "en": "Restore"
+  },
+  "action.Share": {
+    "fr": "Partage",
+    "en": "Share"
+  },
+  "action.Login": {
+    "fr": "Connexion",
+    "en": "Login"
+  },
+  "action.Logout": {
+    "fr": "Déconnexion",
+    "en": "Logout"
+  },
+  "action.Preview": {
+    "fr": "Prévisualisation",
+    "en": "Preview"
+  },
+  "action.Search": {
+    "fr": "Recherche",
+    "en": "Search"
+  },
+  "action.CheckOut": {
+    "fr": "Verrouillage",
+    "en": "Lock"
+  },
+  "action.CheckIn": {
+    "fr": "Libération",
+    "en": "Unlock"
+  },
+  "access.read": {
+    "fr": "Lecture",
+    "en": "Read"
+  },
+  "access.preview": {
+    "fr": "Prévisualisation",
+    "en": "Preview"
+  },
+  "access.download": {
+    "fr": "Téléchargement",
+    "en": "Download"
+  },
+  "access.write": {
+    "fr": "Modification",
+    "en": "Write"
+  },
+  "role.user": {
+    "fr": "Utilisateur",
+    "en": "User"
+  },
+  "role.admin": {
+    "fr": "Administrateur",
+    "en": "Administrator"
+  },
+  "perm.view": {
+    "fr": "Consulter les documents",
+    "en": "View documents"
+  },
+  "perm.download": {
+    "fr": "Télécharger les documents",
+    "en": "Download documents"
+  },
+  "perm.upload": {
+    "fr": "Téléverser des documents",
+    "en": "Upload documents"
+  },
+  "perm.edit": {
+    "fr": "Modifier les documents",
+    "en": "Edit documents"
+  },
+  "perm.delete": {
+    "fr": "Supprimer définitivement",
+    "en": "Permanently delete"
+  },
+  "perm.share": {
+    "fr": "Partager des documents",
+    "en": "Share documents"
+  },
+  "perm.adminUsers": {
+    "fr": "Gérer les utilisateurs",
+    "en": "Manage users"
+  },
+  "perm.adminRoles": {
+    "fr": "Gérer les rôles et permissions",
+    "en": "Manage roles and permissions"
+  },
+  "perm.adminAudit": {
+    "fr": "Consulter la traçabilité",
+    "en": "View audit trail"
+  },
+  "perm.adminConfig": {
+    "fr": "Configuration système",
+    "en": "System configuration"
+  },
+  "profile.editProfile": {
+    "fr": "Modifier le profil",
+    "en": "Edit profile"
+  },
+  "profile.memberSince": {
+    "fr": "Membre depuis",
+    "en": "Member since"
+  },
+  "profile.statTotal": {
+    "fr": "Documents totaux",
+    "en": "Total documents"
+  },
+  "profile.statPrivate": {
+    "fr": "Documents privés",
+    "en": "Private documents"
+  },
+  "profile.statShared": {
+    "fr": "Documents partagés",
+    "en": "Shared documents"
+  },
+  "profile.statArchived": {
+    "fr": "Archivés",
+    "en": "Archived"
+  },
+  "profile.statStorage": {
+    "fr": "Stockage utilisé",
+    "en": "Storage used"
+  },
+  "profile.personalInfo": {
+    "fr": "Informations personnelles",
+    "en": "Personal information"
+  },
+  "profile.firstName": {
+    "fr": "Prénom",
+    "en": "First name"
+  },
+  "profile.lastName": {
+    "fr": "Nom",
+    "en": "Last name"
+  },
+  "profile.email": {
+    "fr": "E-mail",
+    "en": "Email"
+  },
+  "profile.phone": {
+    "fr": "Téléphone",
+    "en": "Phone"
+  },
+  "profile.phoneEmpty": {
+    "fr": "Non renseigné",
+    "en": "Not provided"
+  },
+  "profile.accountCreated": {
+    "fr": "Compte créé le",
+    "en": "Account created on"
+  },
+  "profile.security": {
+    "fr": "Sécurité du compte",
+    "en": "Account security"
+  },
+  "profile.changePassword": {
+    "fr": "Modifier le mot de passe",
+    "en": "Change password"
+  },
+  "profile.passwordHint": {
+    "fr": "Utilisez un mot de passe fort et unique.",
+    "en": "Use a strong, unique password."
+  },
+  "profile.currentPassword": {
+    "fr": "Mot de passe actuel",
+    "en": "Current password"
+  },
+  "profile.newPassword": {
+    "fr": "Nouveau mot de passe",
+    "en": "New password"
+  },
+  "profile.confirmPassword": {
+    "fr": "Confirmer le mot de passe",
+    "en": "Confirm password"
+  },
+  "profile.savePassword": {
+    "fr": "Enregistrer le mot de passe",
+    "en": "Save password"
+  },
+  "profile.lastLogin": {
+    "fr": "Dernière activité de connexion",
+    "en": "Last sign-in activity"
+  },
+  "profile.twoFactor": {
+    "fr": "Authentification à deux facteurs",
+    "en": "Two-factor authentication"
+  },
+  "profile.twoFactorOff": {
+    "fr": "Non activée sur ce compte",
+    "en": "Not enabled on this account"
+  },
+  "profile.soon": {
+    "fr": "Bientôt",
+    "en": "Coming soon"
+  },
+  "profile.activeSession": {
+    "fr": "Session active",
+    "en": "Active session"
+  },
+  "profile.disconnect": {
+    "fr": "Déconnecter",
+    "en": "Sign out"
+  },
+  "profile.preferences": {
+    "fr": "Préférences",
+    "en": "Preferences"
+  },
+  "profile.appearance": {
+    "fr": "Apparence",
+    "en": "Appearance"
+  },
+  "profile.appearanceHint": {
+    "fr": "Mode clair ou sombre",
+    "en": "Light or dark mode"
+  },
+  "profile.themeLight": {
+    "fr": "Clair",
+    "en": "Light"
+  },
+  "profile.themeDark": {
+    "fr": "Sombre",
+    "en": "Dark"
+  },
+  "profile.language": {
+    "fr": "Langue de l'interface",
+    "en": "Interface language"
+  },
+  "profile.languageHint": {
+    "fr": "Langue d'affichage",
+    "en": "Display language"
+  },
+  "profile.notifInApp": {
+    "fr": "Notifications in-app",
+    "en": "In-app notifications"
+  },
+  "profile.notifInAppHint": {
+    "fr": "Alertes dans l'application",
+    "en": "Alerts in the application"
+  },
+  "profile.notifEmail": {
+    "fr": "Notifications par e-mail",
+    "en": "Email notifications"
+  },
+  "profile.notifEmailHint": {
+    "fr": "Résumés et alertes par e-mail",
+    "en": "Summaries and alerts by email"
+  },
+  "profile.rolesPermissions": {
+    "fr": "Rôle et permissions",
+    "en": "Role and permissions"
+  },
+  "profile.currentRole": {
+    "fr": "Rôle actuel :",
+    "en": "Current role:"
+  },
+  "profile.recentActivity": {
+    "fr": "Activité récente",
+    "en": "Recent activity"
+  },
+  "profile.sessionActive": {
+    "fr": "Session active",
+    "en": "Active session"
+  },
+  "profile.tokenExpires": {
+    "fr": "Session active · jeton expire le {date}",
+    "en": "Active session · token expires on {date}"
+  },
+  "profile.timeline.login": {
+    "fr": "Dernière connexion",
+    "en": "Last sign-in"
+  },
+  "profile.timeline.upload": {
+    "fr": "Dernier téléversement",
+    "en": "Last upload"
+  },
+  "profile.timeline.download": {
+    "fr": "Dernier téléchargement",
+    "en": "Last download"
+  },
+  "profile.timeline.update": {
+    "fr": "Dernière modification",
+    "en": "Last update"
+  },
+  "profile.timeline.share": {
+    "fr": "Dernier partage",
+    "en": "Last share"
+  },
+  "profile.noActivity": {
+    "fr": "Aucune activité récente.",
+    "en": "No recent activity."
+  },
+  "profile.langSaved": {
+    "fr": "Langue de l'interface mise à jour.",
+    "en": "Interface language updated."
+  },
+  "profile.saved": {
+    "fr": "Profil mis à jour avec succès.",
+    "en": "Profile updated successfully."
+  },
+  "profile.passwordSaved": {
+    "fr": "Mot de passe modifié avec succès.",
+    "en": "Password changed successfully."
+  },
+  "profile.avatarSoon": {
+    "fr": "La modification de photo de profil sera bientôt disponible.",
+    "en": "Profile photo editing will be available soon."
+  },
+  "profile.logoutConfirm": {
+    "fr": "Voulez-vous vous déconnecter de cette session ?",
+    "en": "Do you want to sign out of this session?"
+  },
+  "profile.saving": {
+    "fr": "Enregistrement…",
+    "en": "Saving…"
+  },
+  "profile.sessionEmail": {
+    "fr": "E-mail :",
+    "en": "Email:"
+  },
+  "profile.sessionRoles": {
+    "fr": "Rôles :",
+    "en": "Roles:"
+  },
+  "profile.sessionToken": {
+    "fr": "Expiration du jeton :",
+    "en": "Token expires:"
+  },
+  "empty.none": {
+    "fr": "Aucun résultat.",
+    "en": "No results."
+  },
+  "empty.activity": {
+    "fr": "Aucune activité.",
+    "en": "No activity."
+  },
+  "empty.recentActivity": {
+    "fr": "Aucune activité récente.",
+    "en": "No recent activity."
+  },
+  "empty.notifications": {
+    "fr": "Aucune notification.",
+    "en": "No notifications."
+  },
+  "empty.documents": {
+    "fr": "Aucun document récent.",
+    "en": "No recent documents."
+  },
+  "msg.sessionExpired": {
+    "fr": "Session expirée. Veuillez vous reconnecter.",
+    "en": "Session expired. Please sign in again."
+  },
+  "msg.defaultUser": {
+    "fr": "Utilisateur",
+    "en": "User"
+  },
+  "msg.nameRequired": {
+    "fr": "Le prénom et le nom sont requis.",
+    "en": "First name and last name are required."
+  },
+  "msg.passwordMismatch": {
+    "fr": "Les mots de passe ne correspondent pas.",
+    "en": "Passwords do not match."
+  },
+  "msg.passwordCurrent": {
+    "fr": "Indiquez le mot de passe actuel.",
+    "en": "Enter your current password."
+  },
+  "msg.passwordLength": {
+    "fr": "Le nouveau mot de passe doit contenir au moins 8 caractères.",
+    "en": "New password must be at least 8 characters."
+  },
+  "msg.loadProfileError": {
+    "fr": "Erreur de chargement du profil.",
+    "en": "Failed to load profile."
+  },
+  "theme.current": {
+    "fr": "Thème actuel : {mode}",
+    "en": "Current theme: {mode}"
+  },
+  "theme.light": {
+    "fr": "clair",
+    "en": "light"
+  },
+  "theme.dark": {
+    "fr": "sombre",
+    "en": "dark"
+  },
+  "lock.byYou": {
+    "fr": "Verrouillé par vous",
+    "en": "Locked by you"
+  },
+  "lock.byOther": {
+    "fr": "Verrouillé par {name}",
+    "en": "Locked by {name}"
+  },
+  "upload.vis.private": {
+    "fr": "Seul vous pourrez accéder au document, sauf partage ultérieur.",
+    "en": "Only you will access this document unless shared later."
+  },
+  "upload.vis.shared": {
+    "fr": "Seuls les utilisateurs listés ci-dessous auront accès (en plus de vous).",
+    "en": "Only listed users will have access (besides you)."
+  },
+  "upload.vis.public": {
+    "fr": "Tous les utilisateurs authentifiés pourront accéder selon le niveau choisi.",
+    "en": "All authenticated users can access based on the selected level."
+  },
+  "cat.newCategory": {
+    "fr": "Nouvelle catégorie",
+    "en": "New Category"
+  },
+  "cat.editCategory": {
+    "fr": "Modifier la catégorie",
+    "en": "Edit Category"
+  },
+  "cat.createCategory": {
+    "fr": "Créer la catégorie",
+    "en": "Create Category"
+  },
+  "cat.searchPlaceholder": {
+    "fr": "Rechercher une catégorie ou un document…",
+    "en": "Search a category or document…"
+  },
+  "cat.clearFilters": {
+    "fr": "Effacer les filtres",
+    "en": "Clear Filters"
+  },
+  "cat.statTotal": {
+    "fr": "Catégories totales",
+    "en": "Total Categories"
+  },
+  "cat.statDocs": {
+    "fr": "Documents totaux",
+    "en": "Total Documents"
+  },
+  "cat.statTop": {
+    "fr": "Catégorie la plus utilisée",
+    "en": "Most Used Category"
+  },
+  "cat.statRecent": {
+    "fr": "Dernier ajout",
+    "en": "Recently Added"
+  },
+  "cat.open": {
+    "fr": "Ouvrir",
+    "en": "Open"
+  },
+  "cat.documents": {
+    "fr": "documents",
+    "en": "documents"
+  },
+  "cat.lastModified": {
+    "fr": "Dernière modification :",
+    "en": "Last modified:"
+  },
+  "cat.today": {
+    "fr": "Aujourd'hui",
+    "en": "Today"
+  },
+  "cat.yesterday": {
+    "fr": "Hier",
+    "en": "Yesterday"
+  },
+  "cat.rename": {
+    "fr": "Renommer",
+    "en": "Rename"
+  },
+  "cat.emptyTitle": {
+    "fr": "Organisez vos documents par catégorie",
+    "en": "Organize your documents by category"
+  },
+  "cat.emptyDesc": {
+    "fr": "Créez des catégories pour retrouver vos fichiers plus rapidement.",
+    "en": "Create categories to find your files faster."
+  },
+  "cat.emptyCta": {
+    "fr": "Créer votre première catégorie",
+    "en": "Create your first category"
+  },
+  "cat.noDocsInCategory": {
+    "fr": "Aucun document dans cette catégorie.",
+    "en": "No documents in this category."
+  },
+  "cat.fieldName": {
+    "fr": "Nom de la catégorie",
+    "en": "Category name"
+  },
+  "cat.fieldDesc": {
+    "fr": "Description",
+    "en": "Description"
+  },
+  "cat.fieldIcon": {
+    "fr": "Icône",
+    "en": "Icon"
+  },
+  "cat.fieldColor": {
+    "fr": "Couleur",
+    "en": "Color"
+  },
+  "cat.filterOwner": {
+    "fr": "Propriétaire",
+    "en": "Owner"
+  },
+  "cat.filterVisibility": {
+    "fr": "Visibilité",
+    "en": "Visibility"
+  },
+  "cat.nameRequired": {
+    "fr": "Le nom de la catégorie est requis.",
+    "en": "Category name is required."
+  },
+  "cat.nameExists": {
+    "fr": "Cette catégorie existe déjà.",
+    "en": "This category already exists."
+  },
+  "cat.created": {
+    "fr": "Catégorie créée.",
+    "en": "Category created."
+  },
+  "cat.updated": {
+    "fr": "Catégorie mise à jour.",
+    "en": "Category updated."
+  },
+  "cat.deleted": {
+    "fr": "Catégorie supprimée.",
+    "en": "Category deleted."
+  },
+  "cat.deleteConfirm": {
+    "fr": "Supprimer cette catégorie ?",
+    "en": "Delete this category?"
+  },
+  "cat.deleteWarnDocs": {
+    "fr": "Cette catégorie contient {count} document(s). Les documents conserveront leur catégorie actuelle. Supprimer de la liste ?",
+    "en": "This category has {count} document(s). Documents will keep their current category. Remove from list?"
+  },
+  "cat.back": {
+    "fr": "← Retour",
+    "en": "← Back"
+  },
+  "cat.label.general": {
+    "fr": "Général",
+    "en": "General"
+  },
+  "cat.label.rh": {
+    "fr": "Ressources Humaines",
+    "en": "Human Resources"
+  },
+  "cat.label.invoices": {
+    "fr": "Finance / Factures",
+    "en": "Finance / Invoices"
+  },
+  "cat.label.contracts": {
+    "fr": "Contrats",
+    "en": "Contracts"
+  },
+  "cat.desc.rh": {
+    "fr": "Documents RH, paie et personnel.",
+    "en": "HR, payroll and personnel documents."
+  },
+  "cat.desc.invoices": {
+    "fr": "Factures et documents financiers.",
+    "en": "Invoices and financial documents."
+  },
+  "cat.desc.contracts": {
+    "fr": "Contrats et accords légaux.",
+    "en": "Contracts and legal agreements."
+  },
+  "cat.desc.general": {
+    "fr": "Documents généraux non classés.",
+    "en": "General uncategorized documents."
+  },
+  "cat.desc.default": {
+    "fr": "Documents de cette catégorie.",
+    "en": "Documents in this category."
+  }
+}

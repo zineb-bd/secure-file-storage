@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using SecureFileStorage.Application.DTOs;
 using SecureFileStorage.Application.Interfaces;
@@ -27,6 +29,7 @@ public class DocumentService : IDocumentService
     private readonly IAuditService _auditService;
     private readonly ApplicationDbContext _context;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly StoredBlobService _storedBlobService;
 
     public DocumentService(
         IDocumentRepository documentRepository,
@@ -36,7 +39,8 @@ public class DocumentService : IDocumentService
         IPermissionChecker permissionChecker,
         IAuditService auditService,
         ApplicationDbContext context,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        StoredBlobService storedBlobService)
     {
         _documentRepository = documentRepository;
         _storageService = storageService;
@@ -46,6 +50,7 @@ public class DocumentService : IDocumentService
         _auditService = auditService;
         _context = context;
         _unitOfWork = unitOfWork;
+        _storedBlobService = storedBlobService;
     }
 
     public async Task<DocumentDto> UploadAsync(
@@ -65,14 +70,19 @@ public class DocumentService : IDocumentService
 
         ms.Position = 0;
         var plainData = ms.ToArray();
-        var hash = _encryptionService.ComputeSha256Hash(plainData);
 
-        var (encryptedData, encryptedKey) = await _encryptionService.EncryptAsync(plainData, ct);
+        var (blob, deduplicated) = await AcquireBlobWithRetryAsync(plainData, ct);
+        var hash = blob.Sha256Hash;
         var documentId = Guid.NewGuid();
-        var storagePath = $"{documentId:N}/v1.enc";
 
-        await using var encryptedStream = new MemoryStream(encryptedData);
-        await _storageService.SaveAsync(encryptedStream, storagePath, ct);
+        var version = new DocumentVersion
+        {
+            Id = Guid.NewGuid(),
+            VersionNumber = 1,
+            UploadedById = userId,
+            ChangeComment = request.ChangeComment
+        };
+        StoredBlobService.LinkVersion(version, blob);
 
         var document = new Document
         {
@@ -87,33 +97,29 @@ public class DocumentService : IDocumentService
             OwnerId = userId,
             LastScanResult = scanResult,
             LastScanAt = DateTime.UtcNow,
-            Versions =
-            [
-                new DocumentVersion
-                {
-                    Id = Guid.NewGuid(),
-                    VersionNumber = 1,
-                    StoragePath = storagePath,
-                    EncryptedKey = encryptedKey,
-                    Sha256Hash = hash,
-                    SizeBytes = plainData.Length,
-                    UploadedById = userId,
-                    ChangeComment = request.ChangeComment
-                }
-            ]
+            Visibility = ParseVisibility(request.Visibility),
+            Versions = [version]
         };
+
+        if (document.Visibility == DocumentVisibility.Public)
+        {
+            document.PublicAccessLevel = !string.IsNullOrWhiteSpace(request.PublicAccessLevel) &&
+                TryParseAccessLevel(request.PublicAccessLevel, out var publicLevel)
+                ? publicLevel
+                : ShareAccessLevel.Read;
+        }
+
+        if (document.Visibility == DocumentVisibility.Shared)
+        {
+            await ApplySharedUsersAsync(document, request.SharedUsers, userId, ct);
+        }
 
         if (request.AllowedUserIds is not null)
         {
             foreach (var allowedUserId in request.AllowedUserIds.Where(id => id != userId))
             {
-                document.Permissions.Add(new DocumentPermission
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = allowedUserId,
-                    Permission = PermissionType.Read,
-                    GrantedById = userId
-                });
+                document.Permissions.Add(CreateDocumentPermission(
+                    allowedUserId, ShareAccessLevel.Read, userId));
             }
         }
 
@@ -121,16 +127,18 @@ public class DocumentService : IDocumentService
         await _unitOfWork.SaveChangesAsync(ct);
 
         await _auditService.LogAsync(userId, AuditAction.Upload, "Document", documentId,
-            $"Téléversement de {fileName}", "", ct: ct);
+            deduplicated
+                ? $"Téléversement de {fileName} (contenu dédupliqué — hash {hash[..12]}…)"
+                : $"Téléversement de {fileName}", "", ct: ct);
 
         var saved = await _documentRepository.GetByIdAsync(documentId, ct);
-        return MapDocument(saved!);
+        return await ToDtoAsync(saved!, userId, deduplicated, ct);
     }
 
     public async Task<(Stream Stream, string FileName, string ContentType)?> DownloadAsync(
         Guid documentId, Guid userId, int? version = null, CancellationToken ct = default)
     {
-        if (!await _permissionChecker.CanReadAsync(documentId, userId, ct))
+        if (!await _permissionChecker.CanDownloadAsync(documentId, userId, ct))
             return null;
 
         var doc = await _documentRepository.GetByIdWithVersionsAsync(documentId, ct);
@@ -140,10 +148,11 @@ public class DocumentService : IDocumentService
         var docVersion = doc.Versions.FirstOrDefault(v => v.VersionNumber == versionNumber);
         if (docVersion is null) return null;
 
-        await using var encryptedStream = await _storageService.ReadAsync(docVersion.StoragePath, ct);
+        var (storagePath, encryptedKey) = StoredBlobService.ResolveStorage(docVersion);
+        await using var encryptedStream = await _storageService.ReadAsync(storagePath, ct);
         using var ms = new MemoryStream();
         await encryptedStream.CopyToAsync(ms, ct);
-        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), docVersion.EncryptedKey, ct);
+        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), encryptedKey, ct);
 
         await _auditService.LogAsync(userId, AuditAction.Download, "Document", documentId,
             $"Téléchargement v{versionNumber}", "", ct: ct);
@@ -154,16 +163,26 @@ public class DocumentService : IDocumentService
     public async Task<(Stream Stream, string ContentType)?> PreviewAsync(
         Guid documentId, Guid userId, CancellationToken ct = default)
     {
-        var download = await DownloadAsync(documentId, userId, ct: ct);
-        if (download is null) return null;
-
-        if (!PreviewableTypes.Contains(download.Value.ContentType))
+        if (!await _permissionChecker.CanReadAsync(documentId, userId, ct))
             return null;
+
+        var doc = await _documentRepository.GetByIdWithVersionsAsync(documentId, ct);
+        if (doc is null || doc.Status == DocumentStatus.Deleted) return null;
+        if (!PreviewableTypes.Contains(doc.ContentType)) return null;
+
+        var docVersion = doc.Versions.FirstOrDefault(v => v.VersionNumber == doc.CurrentVersion);
+        if (docVersion is null) return null;
+
+        var (storagePath, encryptedKey) = StoredBlobService.ResolveStorage(docVersion);
+        await using var encryptedStream = await _storageService.ReadAsync(storagePath, ct);
+        using var ms = new MemoryStream();
+        await encryptedStream.CopyToAsync(ms, ct);
+        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), encryptedKey, ct);
 
         await _auditService.LogAsync(userId, AuditAction.Preview, "Document", documentId,
             "Prévisualisation", "", ct: ct);
 
-        return (download.Value.Stream, download.Value.ContentType);
+        return (new MemoryStream(plain), doc.ContentType);
     }
 
     public async Task<DocumentDto?> GetByIdAsync(Guid id, Guid userId, CancellationToken ct = default)
@@ -175,7 +194,7 @@ public class DocumentService : IDocumentService
         if (doc is null) return null;
 
         await _auditService.LogAsync(userId, AuditAction.View, "Document", id, "Consultation", "", ct: ct);
-        return MapDocument(doc);
+        return await ToDtoAsync(doc, userId, ct: ct);
     }
 
     public async Task<PagedResult<DocumentDto>> SearchAsync(
@@ -194,15 +213,86 @@ public class DocumentService : IDocumentService
         {
             items = items.Where(d =>
                 d.OwnerId == userId ||
-                d.Permissions.Any(p => p.UserId == userId)).ToList();
+                d.Visibility == DocumentVisibility.Public ||
+                d.Permissions.Any(p => p.UserId == userId && PermissionChecker.IsActive(p))).ToList();
             total = items.Count();
         }
 
         await _auditService.LogAsync(userId, AuditAction.Search, "Document", null,
             $"Recherche : {request.FileName ?? "tous"}", "", ct: ct);
 
-        return new PagedResult<DocumentDto>(
-            items.Select(MapDocument), total, request.Page, request.PageSize);
+        var anyLockCleared = false;
+        var dtos = new List<DocumentDto>();
+        foreach (var doc in items)
+        {
+            var hadLock = DocumentLockHelper.IsActiveLock(doc);
+            DocumentLockHelper.ClearIfExpired(doc);
+            if (hadLock && !DocumentLockHelper.IsActiveLock(doc))
+                anyLockCleared = true;
+
+            var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin);
+            dtos.Add(MapDocument(doc, userId, isAdmin, false, canModify));
+        }
+
+        if (anyLockCleared)
+            await _unitOfWork.SaveChangesAsync(ct);
+
+        return new PagedResult<DocumentDto>(dtos, total, request.Page, request.PageSize);
+    }
+
+    public async Task<PagedResult<DocumentDto>> GetSharedWithMeAsync(
+        DocumentSearchRequest request, Guid userId, CancellationToken ct = default)
+    {
+        var user = await _context.Users
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+
+        var isAdmin = user is not null &&
+            user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase));
+
+        var searchRequest = request with { Status = request.Status ?? "Active", Page = 1, PageSize = 500 };
+        var (items, _) = await _documentRepository.SearchAsync(searchRequest, ownerFilter: null, ct);
+
+        var shared = items
+            .Where(d =>
+                d.OwnerId != userId &&
+                d.Status == DocumentStatus.Active &&
+                (
+                    d.Permissions.Any(p => p.UserId == userId && PermissionChecker.IsActive(p)) ||
+                    d.Visibility == DocumentVisibility.Public
+                ))
+            .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
+            .ToList();
+
+        if (!string.IsNullOrWhiteSpace(request.FileName))
+        {
+            shared = shared
+                .Where(d => d.FileName.Contains(request.FileName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        var total = shared.Count;
+        var page = Math.Max(1, request.Page);
+        var pageSize = Math.Max(1, request.PageSize);
+        var paged = shared.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        var anyLockCleared = false;
+        var dtos = new List<DocumentDto>();
+        foreach (var doc in paged)
+        {
+            var hadLock = DocumentLockHelper.IsActiveLock(doc);
+            DocumentLockHelper.ClearIfExpired(doc);
+            if (hadLock && !DocumentLockHelper.IsActiveLock(doc))
+                anyLockCleared = true;
+
+            var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin);
+            dtos.Add(MapDocument(doc, userId, isAdmin, false, canModify));
+        }
+
+        if (anyLockCleared)
+            await _unitOfWork.SaveChangesAsync(ct);
+
+        return new PagedResult<DocumentDto>(dtos, total, page, pageSize);
     }
 
     public async Task<IEnumerable<DocumentVersionDto>> GetVersionsAsync(
@@ -238,41 +328,35 @@ public class DocumentService : IDocumentService
         using var ms = new MemoryStream();
         await fileStream.CopyToAsync(ms, ct);
         var plainData = ms.ToArray();
-        var hash = _encryptionService.ComputeSha256Hash(plainData);
-        var (encryptedData, encryptedKey) = await _encryptionService.EncryptAsync(plainData, ct);
+        var (blob, deduplicated) = await AcquireBlobWithRetryAsync(plainData, ct);
 
         var newVersionNumber = doc.CurrentVersion + 1;
-        var storagePath = $"{documentId:N}/v{newVersionNumber}.enc";
-
-        await using var encryptedStream = new MemoryStream(encryptedData);
-        await _storageService.SaveAsync(encryptedStream, storagePath, ct);
-
-        doc.Versions.Add(new DocumentVersion
+        var version = new DocumentVersion
         {
             Id = Guid.NewGuid(),
             VersionNumber = newVersionNumber,
-            StoragePath = storagePath,
-            EncryptedKey = encryptedKey,
-            Sha256Hash = hash,
-            SizeBytes = plainData.Length,
             UploadedById = userId,
             ChangeComment = changeComment
-        });
+        };
+        StoredBlobService.LinkVersion(version, blob);
+        doc.Versions.Add(version);
 
         doc.CurrentVersion = newVersionNumber;
         doc.FileName = fileName;
         doc.ContentType = contentType;
         doc.SizeBytes = plainData.Length;
-        doc.Sha256Hash = hash;
+        doc.Sha256Hash = blob.Sha256Hash;
         doc.UpdatedAt = DateTime.UtcNow;
         doc.LastScanResult = scanResult;
         doc.LastScanAt = DateTime.UtcNow;
 
         await _unitOfWork.SaveChangesAsync(ct);
         await _auditService.LogAsync(userId, AuditAction.Update, "Document", documentId,
-            $"Nouvelle version v{newVersionNumber}", "", ct: ct);
+            deduplicated
+                ? $"Nouvelle version v{newVersionNumber} (contenu dédupliqué)"
+                : $"Nouvelle version v{newVersionNumber}", "", ct: ct);
 
-        return MapDocument(doc);
+        return await ToDtoAsync(doc, userId, ct: ct);
     }
 
     public async Task<bool> ArchiveAsync(Guid documentId, Guid userId, CancellationToken ct = default)
@@ -367,7 +451,7 @@ public class DocumentService : IDocumentService
         foreach (var doc in docs)
         {
             foreach (var version in doc.Versions)
-                await _storageService.DeleteAsync(version.StoragePath, ct);
+                await _storedBlobService.ReleaseVersionAsync(version, ct);
 
             _context.Documents.Remove(doc);
             await _auditService.LogAsync(userId, AuditAction.Delete, "Document", doc.Id,
@@ -381,7 +465,7 @@ public class DocumentService : IDocumentService
     public async Task<bool> GrantPermissionAsync(
         Guid documentId, GrantPermissionRequest request, Guid grantedById, CancellationToken ct = default)
     {
-        if (!await _permissionChecker.CanWriteAsync(documentId, grantedById, ct))
+        if (!await _permissionChecker.CanManageSharesAsync(documentId, grantedById, ct))
             return false;
 
         if (!Enum.TryParse<PermissionType>(request.Permission, true, out var permission))
@@ -415,7 +499,7 @@ public class DocumentService : IDocumentService
     public async Task<bool> RevokePermissionAsync(
         Guid documentId, Guid targetUserId, Guid revokedById, CancellationToken ct = default)
     {
-        if (!await _permissionChecker.CanWriteAsync(documentId, revokedById, ct))
+        if (!await _permissionChecker.CanManageSharesAsync(documentId, revokedById, ct))
             return false;
 
         var permission = await _context.DocumentPermissions
@@ -440,10 +524,11 @@ public class DocumentService : IDocumentService
             throw new KeyNotFoundException("Document introuvable.");
 
         var version = doc.Versions.First(v => v.VersionNumber == doc.CurrentVersion);
-        await using var encryptedStream = await _storageService.ReadAsync(version.StoragePath, ct);
+        var (storagePath, encryptedKey) = StoredBlobService.ResolveStorage(version);
+        await using var encryptedStream = await _storageService.ReadAsync(storagePath, ct);
         using var ms = new MemoryStream();
         await encryptedStream.CopyToAsync(ms, ct);
-        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), version.EncryptedKey, ct);
+        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), encryptedKey, ct);
         var actualHash = _encryptionService.ComputeSha256Hash(plain);
         var isValid = actualHash == version.Sha256Hash;
 
@@ -465,7 +550,9 @@ public class DocumentService : IDocumentService
         if (doc is null) return null;
 
         var version = doc.Versions.FirstOrDefault(v => v.VersionNumber == doc.CurrentVersion);
-        return MapDetail(doc, version?.StoragePath);
+        await RefreshExpiredLockAsync(doc, ct);
+        return await ToDetailDtoAsync(doc, userId,
+            version is null ? null : StoredBlobService.ResolveStorage(version).StoragePath, ct);
     }
 
     public async Task<DocumentDto?> UpdateMetadataAsync(
@@ -486,7 +573,80 @@ public class DocumentService : IDocumentService
         await _auditService.LogAsync(userId, AuditAction.Update, "Document", documentId, "Métadonnées modifiées", "", ct: ct);
 
         var updated = await _documentRepository.GetByIdAsync(documentId, ct);
-        return MapDocument(updated!);
+        return await ToDtoAsync(updated!, userId, ct: ct);
+    }
+
+    public async Task<DocumentDto?> CheckOutAsync(
+        Guid documentId, Guid userId, DocumentLockRequest? request = null, CancellationToken ct = default)
+    {
+        var doc = await _documentRepository.GetByIdAsync(documentId, ct);
+        if (doc is null || doc.Status == DocumentStatus.Deleted) return null;
+
+        var user = await _context.Users
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+        if (user is null) return null;
+
+        var isAdmin = user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase));
+        var hasWrite = doc.OwnerId == userId || isAdmin ||
+            doc.Permissions.Any(p =>
+                p.UserId == userId &&
+                PermissionChecker.IsActive(p) &&
+                PermissionChecker.ResolveAccessLevel(p) == ShareAccessLevel.Write);
+
+        if (!hasWrite)
+            throw new UnauthorizedAccessException("Vous n'avez pas les droits d'écriture sur ce document.");
+
+        await RefreshExpiredLockAsync(doc, ct);
+
+        if (DocumentLockHelper.IsLockedByOther(doc, userId))
+        {
+            var holder = doc.LockedBy is not null
+                ? $"{doc.LockedBy.FirstName} {doc.LockedBy.LastName}".Trim()
+                : "un autre utilisateur";
+            var until = doc.LockExpiresAt.HasValue ? $" jusqu'au {doc.LockExpiresAt.Value.ToLocalTime():g}" : "";
+            throw new InvalidOperationException($"Document verrouillé par {holder}{until}.");
+        }
+
+        doc.LockedById = userId;
+        doc.LockedAt = DateTime.UtcNow;
+        doc.LockExpiresAt = DocumentLockHelper.ResolveExpiresAt(request?.ExpiresInHours);
+
+        await _unitOfWork.SaveChangesAsync(ct);
+        await _auditService.LogAsync(userId, AuditAction.CheckOut, "Document", documentId,
+            $"Verrouillage (check-out) jusqu'au {doc.LockExpiresAt:O}", "", ct: ct);
+
+        var refreshed = await _documentRepository.GetByIdAsync(documentId, ct);
+        return await ToDtoAsync(refreshed!, userId, ct: ct);
+    }
+
+    public async Task<DocumentDto?> CheckInAsync(Guid documentId, Guid userId, CancellationToken ct = default)
+    {
+        var doc = await _documentRepository.GetByIdAsync(documentId, ct);
+        if (doc is null) return null;
+
+        await RefreshExpiredLockAsync(doc, ct);
+
+        if (!DocumentLockHelper.IsActiveLock(doc))
+            return await ToDtoAsync(doc, userId, ct: ct);
+
+        var user = await _context.Users
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+        if (user is null) return null;
+
+        var isAdmin = user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase));
+        var canRelease = doc.LockedById == userId || doc.OwnerId == userId || isAdmin;
+
+        if (!canRelease)
+            throw new InvalidOperationException("Seul le détenteur du verrou, le propriétaire ou un administrateur peut libérer le document.");
+
+        DocumentLockHelper.ReleaseLock(doc);
+        await _unitOfWork.SaveChangesAsync(ct);
+        await _auditService.LogAsync(userId, AuditAction.CheckIn, "Document", documentId,
+            "Libération du verrou (check-in)", "", ct: ct);
+
+        return await ToDtoAsync(doc, userId, ct: ct);
     }
 
     public async Task<DocumentDto?> RestoreVersionAsync(
@@ -501,40 +661,31 @@ public class DocumentService : IDocumentService
         var source = doc.Versions.FirstOrDefault(v => v.VersionNumber == versionNumber);
         if (source is null) return null;
 
-        await using var encryptedStream = await _storageService.ReadAsync(source.StoragePath, ct);
-        using var ms = new MemoryStream();
-        await encryptedStream.CopyToAsync(ms, ct);
-        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), source.EncryptedKey, ct);
+        var (blob, deduplicated) = await _storedBlobService.AcquireFromVersionAsync(source, ct);
 
         var newVersionNumber = doc.CurrentVersion + 1;
-        var (encryptedData, encryptedKey) = await _encryptionService.EncryptAsync(plain, ct);
-        var storagePath = $"{documentId:N}/v{newVersionNumber}.enc";
-
-        await using var encryptedOut = new MemoryStream(encryptedData);
-        await _storageService.SaveAsync(encryptedOut, storagePath, ct);
-
-        doc.Versions.Add(new DocumentVersion
+        var version = new DocumentVersion
         {
             Id = Guid.NewGuid(),
             VersionNumber = newVersionNumber,
-            StoragePath = storagePath,
-            EncryptedKey = encryptedKey,
-            Sha256Hash = source.Sha256Hash,
-            SizeBytes = source.SizeBytes,
             UploadedById = userId,
             ChangeComment = $"Restauration depuis la version {versionNumber}"
-        });
+        };
+        StoredBlobService.LinkVersion(version, blob);
+        doc.Versions.Add(version);
 
         doc.CurrentVersion = newVersionNumber;
-        doc.Sha256Hash = source.Sha256Hash;
-        doc.SizeBytes = source.SizeBytes;
+        doc.Sha256Hash = blob.Sha256Hash;
+        doc.SizeBytes = blob.SizeBytes;
         doc.UpdatedAt = DateTime.UtcNow;
 
         await _unitOfWork.SaveChangesAsync(ct);
         await _auditService.LogAsync(userId, AuditAction.Restore, "Document", documentId,
-            $"Version {versionNumber} restaurée comme v{newVersionNumber}", "", ct: ct);
+            deduplicated
+                ? $"Version {versionNumber} restaurée comme v{newVersionNumber} (blob partagé)"
+                : $"Version {versionNumber} restaurée comme v{newVersionNumber}", "", ct: ct);
 
-        return MapDocument(doc);
+        return await ToDtoAsync(doc, userId, ct: ct);
     }
 
     public async Task<bool> PermanentDeleteAsync(Guid documentId, Guid userId, CancellationToken ct = default)
@@ -548,7 +699,7 @@ public class DocumentService : IDocumentService
         if (doc is null) return false;
 
         foreach (var v in doc.Versions)
-            await _storageService.DeleteAsync(v.StoragePath, ct);
+            await _storedBlobService.ReleaseVersionAsync(v, ct);
 
         _context.Documents.Remove(doc);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -556,17 +707,365 @@ public class DocumentService : IDocumentService
         return true;
     }
 
-    private static DocumentDetailDto MapDetail(Document doc, string? storagePath) =>
+    public async Task<DocumentUserShareDto?> ShareWithUserAsync(
+        Guid documentId, ShareWithUserRequest request, Guid sharedById, CancellationToken ct = default)
+    {
+        if (!await _permissionChecker.CanManageSharesAsync(documentId, sharedById, ct))
+            return null;
+
+        if (!TryParseAccessLevel(request.AccessLevel, out var accessLevel))
+            return null;
+
+        var targetUserId = request.UserId;
+        if (targetUserId is null && !string.IsNullOrWhiteSpace(request.UserEmail))
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.UserEmail.Trim(), ct);
+            if (user is null) return null;
+            targetUserId = user.Id;
+        }
+
+        if (targetUserId is null) return null;
+
+        var doc = await _documentRepository.GetByIdAsync(documentId, ct);
+        if (doc is null || doc.OwnerId == targetUserId) return null;
+
+        var expiresAt = ResolveExpiresAt(request.ExpiresAt, request.ExpiresInHours);
+        var permissionType = accessLevel == ShareAccessLevel.Write ? PermissionType.Write : PermissionType.Read;
+
+        var existing = await _context.DocumentPermissions
+            .FirstOrDefaultAsync(p => p.DocumentId == documentId && p.UserId == targetUserId, ct);
+
+        if (existing is not null)
+        {
+            existing.Permission = permissionType;
+            existing.AccessLevel = accessLevel;
+            existing.ExpiresAt = expiresAt;
+            existing.GrantedById = sharedById;
+            existing.GrantedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            existing = new DocumentPermission
+            {
+                Id = Guid.NewGuid(),
+                DocumentId = documentId,
+                UserId = targetUserId.Value,
+                Permission = permissionType,
+                AccessLevel = accessLevel,
+                ExpiresAt = expiresAt,
+                GrantedById = sharedById
+            };
+            await _context.DocumentPermissions.AddAsync(existing, ct);
+        }
+
+        await _unitOfWork.SaveChangesAsync(ct);
+        await _auditService.LogAsync(sharedById, AuditAction.Share, "Document", documentId,
+            $"Partage {accessLevel} avec {targetUserId} jusqu'à {(expiresAt?.ToString("O") ?? "sans limite")}", "", ct: ct);
+
+        var target = await _context.Users.FirstAsync(u => u.Id == targetUserId, ct);
+        return MapUserShare(existing, target);
+    }
+
+    public async Task<CreateShareLinkResponse?> CreateShareLinkAsync(
+        Guid documentId, CreateShareLinkRequest request, Guid createdById, string baseUrl, CancellationToken ct = default)
+    {
+        if (!await _permissionChecker.CanManageSharesAsync(documentId, createdById, ct))
+            return null;
+
+        if (!TryParseAccessLevel(request.AccessLevel, out var accessLevel))
+            return null;
+
+        var expiresAt = ResolveExpiresAt(request.ExpiresAt, request.ExpiresInHours)
+            ?? DateTime.UtcNow.AddHours(48);
+
+        var token = GenerateShareToken();
+        var link = new DocumentShareLink
+        {
+            Id = Guid.NewGuid(),
+            DocumentId = documentId,
+            TokenHash = HashToken(token),
+            AccessLevel = accessLevel,
+            ExpiresAt = expiresAt,
+            CreatedById = createdById
+        };
+
+        await _context.DocumentShareLinks.AddAsync(link, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+        await _auditService.LogAsync(createdById, AuditAction.Share, "Document", documentId,
+            $"Lien de partage {accessLevel} jusqu'au {expiresAt:O}", "", ct: ct);
+
+        var shareUrl = $"{baseUrl.TrimEnd('/')}/share.html?token={Uri.EscapeDataString(token)}";
+        return new CreateShareLinkResponse(link.Id, token, shareUrl, accessLevel.ToString(), expiresAt);
+    }
+
+    public async Task<DocumentSharesDto?> GetSharesAsync(Guid documentId, Guid userId, CancellationToken ct = default)
+    {
+        if (!await _permissionChecker.CanManageSharesAsync(documentId, userId, ct))
+            return null;
+
+        var userShares = await _context.DocumentPermissions
+            .Include(p => p.User)
+            .Where(p => p.DocumentId == documentId)
+            .OrderByDescending(p => p.GrantedAt)
+            .ToListAsync(ct);
+
+        var links = await _context.DocumentShareLinks
+            .Where(l => l.DocumentId == documentId && !l.IsRevoked)
+            .OrderByDescending(l => l.CreatedAt)
+            .ToListAsync(ct);
+
+        return new DocumentSharesDto(
+            userShares.Select(p => MapUserShare(p, p.User)),
+            links.Select(MapShareLink));
+    }
+
+    public async Task<bool> RevokeShareLinkAsync(Guid documentId, Guid linkId, Guid revokedById, CancellationToken ct = default)
+    {
+        if (!await _permissionChecker.CanManageSharesAsync(documentId, revokedById, ct))
+            return false;
+
+        var link = await _context.DocumentShareLinks
+            .FirstOrDefaultAsync(l => l.Id == linkId && l.DocumentId == documentId, ct);
+        if (link is null || link.IsRevoked) return false;
+
+        link.IsRevoked = true;
+        await _unitOfWork.SaveChangesAsync(ct);
+        await _auditService.LogAsync(revokedById, AuditAction.PermissionChange, "Document", documentId,
+            $"Lien de partage révoqué {linkId}", "", ct: ct);
+        return true;
+    }
+
+    public async Task<SharedDocumentInfoDto?> GetSharedInfoAsync(string token, CancellationToken ct = default)
+    {
+        var link = await FindActiveShareLinkAsync(token, ShareAccessLevel.Read, ct);
+        if (link is null) return null;
+
+        var doc = link.Document;
+        return new SharedDocumentInfoDto(
+            doc.Id, doc.FileName, doc.ContentType, doc.SizeBytes,
+            link.AccessLevel.ToString(), link.ExpiresAt,
+            $"{doc.Owner.FirstName} {doc.Owner.LastName}");
+    }
+
+    public async Task<(Stream Stream, string ContentType)?> PreviewByTokenAsync(string token, CancellationToken ct = default)
+    {
+        var payload = await ReadDocumentByTokenAsync(token, ShareAccessLevel.Read, ct);
+        if (payload is null) return null;
+        if (!PreviewableTypes.Contains(payload.Value.ContentType)) return null;
+
+        await _auditService.LogAsync(null, AuditAction.Preview, "Document", payload.Value.DocumentId,
+            "Prévisualisation via lien de partage", "", ct: ct);
+
+        return (payload.Value.Stream, payload.Value.ContentType);
+    }
+
+    public async Task<(Stream Stream, string FileName, string ContentType)?> DownloadByTokenAsync(string token, CancellationToken ct = default)
+    {
+        var payload = await ReadDocumentByTokenAsync(token, ShareAccessLevel.Download, ct);
+        if (payload is null) return null;
+
+        await _auditService.LogAsync(null, AuditAction.Download, "Document", payload.Value.DocumentId,
+            "Téléchargement via lien de partage", "", ct: ct);
+
+        return (payload.Value.Stream, payload.Value.FileName, payload.Value.ContentType);
+    }
+
+    private async Task<(Stream Stream, string FileName, string ContentType, Guid DocumentId)?> ReadDocumentByTokenAsync(
+        string token, ShareAccessLevel requiredLevel, CancellationToken ct)
+    {
+        var link = await FindActiveShareLinkAsync(token, requiredLevel, ct);
+        if (link is null) return null;
+
+        var doc = link.Document;
+        var version = doc.Versions.FirstOrDefault(v => v.VersionNumber == doc.CurrentVersion);
+        if (version is null) return null;
+
+        var (storagePath, encryptedKey) = StoredBlobService.ResolveStorage(version);
+        await using var encryptedStream = await _storageService.ReadAsync(storagePath, ct);
+        using var ms = new MemoryStream();
+        await encryptedStream.CopyToAsync(ms, ct);
+        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), encryptedKey, ct);
+
+        return (new MemoryStream(plain), doc.FileName, doc.ContentType, doc.Id);
+    }
+
+    private async Task<(StoredBlob Blob, bool Deduplicated)> AcquireBlobWithRetryAsync(
+        byte[] plainData, CancellationToken ct)
+    {
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            var (blob, deduplicated) = await _storedBlobService.AcquireAsync(plainData, ct);
+
+            try
+            {
+                await _unitOfWork.SaveChangesAsync(ct);
+                return (blob, deduplicated);
+            }
+            catch (DbUpdateException) when (attempt == 0 && !deduplicated)
+            {
+                await _storedBlobService.RollbackNewBlobAsync(blob, ct);
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
+        }
+
+        var fallback = await _storedBlobService.AcquireAsync(plainData, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return fallback;
+    }
+
+    private async Task<DocumentShareLink?> FindActiveShareLinkAsync(
+        string token, ShareAccessLevel requiredLevel, CancellationToken ct)
+    {
+        var hash = HashToken(token);
+        var link = await _context.DocumentShareLinks
+            .Include(l => l.Document).ThenInclude(d => d.Versions).ThenInclude(v => v.StoredBlob)
+            .Include(l => l.Document).ThenInclude(d => d.Owner)
+            .FirstOrDefaultAsync(l => l.TokenHash == hash && !l.IsRevoked, ct);
+
+        if (link is null || link.ExpiresAt <= DateTime.UtcNow) return null;
+        if (link.Document.Status == DocumentStatus.Deleted) return null;
+        if (link.AccessLevel < requiredLevel) return null;
+        return link;
+    }
+
+    private static DocumentUserShareDto MapUserShare(DocumentPermission permission, User user)
+    {
+        var level = PermissionChecker.ResolveAccessLevel(permission);
+        var expired = permission.ExpiresAt.HasValue && permission.ExpiresAt <= DateTime.UtcNow;
+        return new DocumentUserShareDto(
+            permission.Id,
+            permission.UserId,
+            user.Email,
+            $"{user.FirstName} {user.LastName}",
+            level.ToString(),
+            permission.GrantedAt,
+            permission.ExpiresAt,
+            expired);
+    }
+
+    private static ShareLinkDto MapShareLink(DocumentShareLink link) =>
+        new(link.Id, link.AccessLevel.ToString(), link.CreatedAt, link.ExpiresAt, link.IsRevoked,
+            link.ExpiresAt <= DateTime.UtcNow);
+
+    private static bool TryParseAccessLevel(string value, out ShareAccessLevel accessLevel) =>
+        Enum.TryParse(value, true, out accessLevel) &&
+        Enum.IsDefined(typeof(ShareAccessLevel), accessLevel);
+
+    private static DateTime? ResolveExpiresAt(DateTime? expiresAt, int? expiresInHours)
+    {
+        if (expiresAt.HasValue) return expiresAt.Value.ToUniversalTime();
+        if (expiresInHours.HasValue && expiresInHours.Value > 0)
+            return DateTime.UtcNow.AddHours(expiresInHours.Value);
+        return null;
+    }
+
+    private static string GenerateShareToken()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    }
+
+    private static string HashToken(string token) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+
+    private async Task RefreshExpiredLockAsync(Document doc, CancellationToken ct)
+    {
+        var hadActiveLock = DocumentLockHelper.IsActiveLock(doc);
+        DocumentLockHelper.ClearIfExpired(doc);
+        if (hadActiveLock && !DocumentLockHelper.IsActiveLock(doc))
+            await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    private async Task<DocumentDto> ToDtoAsync(
+        Document doc, Guid userId, bool wasDeduplicated = false, CancellationToken ct = default)
+    {
+        await RefreshExpiredLockAsync(doc, ct);
+        var user = await _context.Users
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+        var isAdmin = user is not null &&
+            user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase));
+        var canModify = await _permissionChecker.CanWriteAsync(doc.Id, userId, ct);
+        return MapDocument(doc, userId, isAdmin, wasDeduplicated, canModify);
+    }
+
+    private async Task<DocumentDetailDto> ToDetailDtoAsync(
+        Document doc, Guid userId, string? storagePath, CancellationToken ct = default)
+    {
+        await RefreshExpiredLockAsync(doc, ct);
+        var canModify = await _permissionChecker.CanWriteAsync(doc.Id, userId, ct);
+        return MapDetail(doc, storagePath, userId, canModify);
+    }
+
+    private static DocumentDetailDto MapDetail(
+        Document doc, string? storagePath, Guid userId, bool canModify) =>
         new(doc.Id, doc.FileName, FileValidator.GetExtension(doc.FileName), doc.ContentType, doc.SizeBytes,
             doc.Category, doc.Description, doc.Sha256Hash, doc.CurrentVersion, doc.Status.ToString(),
             doc.OwnerId, $"{doc.Owner.FirstName} {doc.Owner.LastName}", doc.CreatedAt, doc.UpdatedAt,
-            doc.LastScanResult.ToString(), storagePath);
+            doc.LastScanResult.ToString(), storagePath,
+            DocumentLockHelper.IsActiveLock(doc),
+            doc.LockedById,
+            doc.LockedBy is not null ? $"{doc.LockedBy.FirstName} {doc.LockedBy.LastName}".Trim() : null,
+            doc.LockedAt,
+            doc.LockExpiresAt,
+            DocumentLockHelper.IsLockedByUser(doc, userId),
+            canModify,
+            doc.Visibility.ToString(),
+            doc.PublicAccessLevel.ToString());
 
-    private static DocumentDto MapDocument(Document doc) =>
-        new(doc.Id, doc.FileName, doc.ContentType, doc.SizeBytes, doc.Category, doc.Description,
+    private static DocumentDto MapDocument(
+        Document doc, Guid userId, bool isAdmin, bool wasDeduplicated = false, bool canModify = false)
+    {
+        var myLevel = PermissionChecker.GetEffectiveLevelOnDocument(doc, userId, isAdmin);
+        return new(doc.Id, doc.FileName, doc.ContentType, doc.SizeBytes, doc.Category, doc.Description,
             doc.Sha256Hash, doc.CurrentVersion, doc.Status.ToString(), doc.OwnerId,
             $"{doc.Owner.FirstName} {doc.Owner.LastName}", doc.CreatedAt, doc.UpdatedAt, doc.DeletedAt,
-            doc.LastScanResult.ToString());
+            doc.LastScanResult.ToString(), wasDeduplicated,
+            DocumentLockHelper.IsActiveLock(doc),
+            doc.LockedById,
+            doc.LockedBy is not null ? $"{doc.LockedBy.FirstName} {doc.LockedBy.LastName}".Trim() : null,
+            doc.LockedAt,
+            doc.LockExpiresAt,
+            DocumentLockHelper.IsLockedByUser(doc, userId),
+            canModify,
+            doc.Visibility.ToString(),
+            doc.PublicAccessLevel.ToString(),
+            myLevel?.ToString(),
+            doc.OwnerId == userId);
+    }
+
+    private static DocumentVisibility ParseVisibility(string? value) =>
+        Enum.TryParse<DocumentVisibility>(value, true, out var v) ? v : DocumentVisibility.Private;
+
+    private async Task ApplySharedUsersAsync(
+        Document document, IEnumerable<UploadShareEntry>? entries, Guid ownerId, CancellationToken ct)
+    {
+        if (entries is null) return;
+
+        foreach (var entry in entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.UserEmail)) continue;
+            var email = entry.UserEmail.Trim();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+            if (user is null || user.Id == ownerId) continue;
+
+            if (!TryParseAccessLevel(entry.AccessLevel, out var accessLevel))
+                accessLevel = ShareAccessLevel.Read;
+
+            document.Permissions.Add(CreateDocumentPermission(user.Id, accessLevel, ownerId));
+        }
+    }
+
+    private static DocumentPermission CreateDocumentPermission(
+        Guid targetUserId, ShareAccessLevel accessLevel, Guid grantedById) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            UserId = targetUserId,
+            Permission = accessLevel == ShareAccessLevel.Write ? PermissionType.Write : PermissionType.Read,
+            AccessLevel = accessLevel,
+            GrantedById = grantedById
+        };
 }
 
 public class StorageConfigService : IStorageConfigService

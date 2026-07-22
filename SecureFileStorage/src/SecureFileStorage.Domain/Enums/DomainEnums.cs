@@ -35,7 +35,25 @@ public enum AuditAction
     PermissionChange = 10,
     IntegrityCheck = 11,
     AntivirusAlert = 12,
-    Logout = 13
+    Logout = 13,
+    Share = 14,
+    CheckOut = 15,
+    CheckIn = 16
+}
+
+public enum DocumentVisibility
+{
+    Private = 0,
+    Shared = 1,
+    Public = 2
+}
+
+public enum ShareAccessLevel
+{
+    Read = 0,
+    Download = 1,
+    Write = 2,
+    Preview = 3
 }
 
 public enum PermissionType

@@ -27,6 +27,17 @@ public class UserService : IUserService
         return users.Select(AuthService.MapUser);
     }
 
+    public async Task<IEnumerable<UserDirectoryEntry>> GetDirectoryAsync(CancellationToken ct = default)
+    {
+        var users = await _context.Users
+            .Where(u => u.IsActive)
+            .OrderBy(u => u.LastName)
+            .ThenBy(u => u.FirstName)
+            .Select(u => new UserDirectoryEntry(u.Id, u.Email, u.FirstName + " " + u.LastName))
+            .ToListAsync(ct);
+        return users;
+    }
+
     public async Task<UserDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         var user = await _userRepository.GetByIdWithRolesAsync(id, ct);

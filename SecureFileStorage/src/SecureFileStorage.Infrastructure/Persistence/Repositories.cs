@@ -16,13 +16,14 @@ public class DocumentRepository(ApplicationDbContext context) : IDocumentReposit
     public Task<Document?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         context.Documents
             .Include(d => d.Owner)
+            .Include(d => d.LockedBy)
             .Include(d => d.Permissions)
             .FirstOrDefaultAsync(d => d.Id == id, ct);
 
     public Task<Document?> GetByIdWithVersionsAsync(Guid id, CancellationToken ct = default) =>
         context.Documents
             .Include(d => d.Owner)
-            .Include(d => d.Versions)
+            .Include(d => d.Versions).ThenInclude(v => v.StoredBlob)
             .Include(d => d.Permissions)
             .FirstOrDefaultAsync(d => d.Id == id, ct);
 
@@ -34,6 +35,8 @@ public class DocumentRepository(ApplicationDbContext context) : IDocumentReposit
     {
         var query = context.Documents
             .Include(d => d.Owner)
+            .Include(d => d.LockedBy)
+            .Include(d => d.Permissions)
             .AsQueryable();
 
         if (ownerFilter.HasValue)

@@ -11,7 +11,7 @@ Microservice **ASP.NET Core 8** qui centralise le stockage, la consultation et l
 | Métadonnées | Nom, type, taille, propriétaire, catégorie, dates |
 | Versioning | Conservation de toutes les versions |
 | Prévisualisation | PDF, images, documents Office |
-| Recherche | Par métadonnées avec pagination |
+| Partage sécurisé | Partage utilisateur, liens temporaires, expiration, révocation |
 | Audit | Traçabilité des opérations sur les documents (export CSV) |
 | Suppression logique | Archivage et restauration |
 | API REST | JWT/OAuth2, Swagger |
@@ -74,6 +74,13 @@ L'API est disponible sur `https://localhost:7001/swagger`.
 
 ### Documents (authentifié)
 - `POST /api/documents` — Téléverser un fichier
+- `POST /api/documents/{id}/share/user` — Partager avec un utilisateur (lecture / téléchargement / modification)
+- `POST /api/documents/{id}/share/link` — Générer un lien sécurisé temporaire
+- `GET /api/documents/{id}/shares` — Lister les partages actifs
+- `DELETE /api/documents/{id}/share/link/{linkId}` — Révoquer un lien
+- `GET /api/share/{token}/info` — Consulter un partage par lien (public)
+- `GET /api/share/{token}/preview` — Prévisualiser via lien (public)
+- `GET /api/share/{token}/download` — Télécharger via lien (public)
 - `GET /api/documents` — Rechercher
 - `GET /api/documents/{id}` — Détails
 - `GET /api/documents/{id}/download` — Télécharger

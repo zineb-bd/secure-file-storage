@@ -20,11 +20,18 @@ public record UpdateRoleRequest(string? Name, string? Description);
 
 public record AssignRoleRequest(Guid UserId, Guid RoleId);
 
+public record UploadShareEntry(string UserEmail, string AccessLevel);
+
 public record DocumentUploadRequest(
     string? Category,
     string? Description,
     string? ChangeComment,
-    IEnumerable<Guid>? AllowedUserIds);
+    IEnumerable<Guid>? AllowedUserIds,
+    string Visibility = "Private",
+    string? PublicAccessLevel = null,
+    IEnumerable<UploadShareEntry>? SharedUsers = null);
+
+public record UserDirectoryEntry(Guid Id, string Email, string FullName);
 
 public record DocumentDto(
     Guid Id,
@@ -41,7 +48,19 @@ public record DocumentDto(
     DateTime CreatedAt,
     DateTime? UpdatedAt,
     DateTime? DeletedAt,
-    string LastScanResult);
+    string LastScanResult,
+    bool WasDeduplicated = false,
+    bool IsLocked = false,
+    Guid? LockedById = null,
+    string? LockedByName = null,
+    DateTime? LockedAt = null,
+    DateTime? LockExpiresAt = null,
+    bool IsLockedByCurrentUser = false,
+    bool CanModify = false,
+    string Visibility = "Private",
+    string PublicAccessLevel = "Read",
+    string? MyAccessLevel = null,
+    bool IsOwner = false);
 
 public record EmptyTrashResult(int DeletedCount);
 
@@ -69,6 +88,56 @@ public record DocumentSearchRequest(
 public record PagedResult<T>(IEnumerable<T> Items, int TotalCount, int Page, int PageSize);
 
 public record GrantPermissionRequest(Guid UserId, string Permission);
+
+public record ShareWithUserRequest(
+    Guid? UserId,
+    string? UserEmail,
+    string AccessLevel,
+    DateTime? ExpiresAt = null,
+    int? ExpiresInHours = null);
+
+public record CreateShareLinkRequest(
+    string AccessLevel,
+    DateTime? ExpiresAt = null,
+    int? ExpiresInHours = null);
+
+public record DocumentUserShareDto(
+    Guid Id,
+    Guid UserId,
+    string UserEmail,
+    string UserName,
+    string AccessLevel,
+    DateTime GrantedAt,
+    DateTime? ExpiresAt,
+    bool IsExpired);
+
+public record ShareLinkDto(
+    Guid Id,
+    string AccessLevel,
+    DateTime CreatedAt,
+    DateTime ExpiresAt,
+    bool IsRevoked,
+    bool IsExpired);
+
+public record CreateShareLinkResponse(
+    Guid Id,
+    string Token,
+    string ShareUrl,
+    string AccessLevel,
+    DateTime ExpiresAt);
+
+public record DocumentSharesDto(
+    IEnumerable<DocumentUserShareDto> UserShares,
+    IEnumerable<ShareLinkDto> Links);
+
+public record SharedDocumentInfoDto(
+    Guid Id,
+    string FileName,
+    string ContentType,
+    long SizeBytes,
+    string AccessLevel,
+    DateTime ExpiresAt,
+    string OwnerName);
 
 public record StorageConfigDto(
     Guid Id,
@@ -135,6 +204,8 @@ public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
 public record UpdateMetadataRequest(string? Category, string? Description, Guid? OwnerId);
 
+public record DocumentLockRequest(int? ExpiresInHours = 8);
+
 public record RotateKeyResponse(string KeyIdentifier, DateTime RotatedAt);
 
 public record DocumentDetailDto(
@@ -153,4 +224,13 @@ public record DocumentDetailDto(
     DateTime CreatedAt,
     DateTime? UpdatedAt,
     string LastScanResult,
-    string? StoragePath);
+    string? StoragePath,
+    bool IsLocked = false,
+    Guid? LockedById = null,
+    string? LockedByName = null,
+    DateTime? LockedAt = null,
+    DateTime? LockExpiresAt = null,
+    bool IsLockedByCurrentUser = false,
+    bool CanModify = false,
+    string Visibility = "Private",
+    string PublicAccessLevel = "Read");

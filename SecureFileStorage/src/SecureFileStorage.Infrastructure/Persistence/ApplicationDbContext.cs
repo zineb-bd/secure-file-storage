@@ -10,9 +10,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<StoredBlob> StoredBlobs => Set<StoredBlob>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentVersion> DocumentVersions => Set<DocumentVersion>();
     public DbSet<DocumentPermission> DocumentPermissions => Set<DocumentPermission>();
+    public DbSet<DocumentShareLink> DocumentShareLinks => Set<DocumentShareLink>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<StorageConfiguration> StorageConfigurations => Set<StorageConfiguration>();
     public DbSet<EncryptionKeyRecord> EncryptionKeys => Set<EncryptionKeyRecord>();
@@ -45,6 +47,7 @@ public class ApplicationDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.HasOne(x => x.Owner).WithMany(u => u.OwnedDocuments).HasForeignKey(x => x.OwnerId);
+            e.HasOne(x => x.LockedBy).WithMany().HasForeignKey(x => x.LockedById).IsRequired(false);
             e.Property(x => x.FileName).HasMaxLength(500);
             e.Property(x => x.Sha256Hash).HasMaxLength(64);
         });
@@ -54,7 +57,16 @@ public class ApplicationDbContext : DbContext
             e.HasKey(x => x.Id);
             e.HasOne(x => x.Document).WithMany(d => d.Versions).HasForeignKey(x => x.DocumentId);
             e.HasOne(x => x.UploadedBy).WithMany().HasForeignKey(x => x.UploadedById);
+            e.HasOne(x => x.StoredBlob).WithMany(b => b.Versions).HasForeignKey(x => x.StoredBlobId);
             e.HasIndex(x => new { x.DocumentId, x.VersionNumber }).IsUnique();
+        });
+
+        modelBuilder.Entity<StoredBlob>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Sha256Hash).HasMaxLength(64);
+            e.HasIndex(x => x.Sha256Hash).IsUnique();
+            e.Property(x => x.StoragePath).HasMaxLength(500);
         });
 
         modelBuilder.Entity<DocumentPermission>(e =>
@@ -63,6 +75,14 @@ public class ApplicationDbContext : DbContext
             e.HasOne(x => x.Document).WithMany(d => d.Permissions).HasForeignKey(x => x.DocumentId);
             e.HasOne(x => x.User).WithMany(u => u.DocumentPermissions).HasForeignKey(x => x.UserId);
             e.HasIndex(x => new { x.DocumentId, x.UserId }).IsUnique();
+        });
+
+        modelBuilder.Entity<DocumentShareLink>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TokenHash).HasMaxLength(64);
+            e.HasIndex(x => x.TokenHash);
+            e.HasOne(x => x.Document).WithMany(d => d.ShareLinks).HasForeignKey(x => x.DocumentId);
         });
 
         modelBuilder.Entity<AuditLog>(e =>

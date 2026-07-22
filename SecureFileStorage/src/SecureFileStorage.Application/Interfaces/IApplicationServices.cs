@@ -17,6 +17,7 @@ public interface IAuthService
 public interface IUserService
 {
     Task<IEnumerable<UserDto>> GetAllAsync(CancellationToken ct = default);
+    Task<IEnumerable<UserDirectoryEntry>> GetDirectoryAsync(CancellationToken ct = default);
     Task<UserDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<UserDto> CreateAsync(CreateUserRequest request, CancellationToken ct = default);
     Task<UserDto?> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken ct = default);
@@ -40,6 +41,7 @@ public interface IDocumentService
     Task<(Stream Stream, string ContentType)?> PreviewAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<DocumentDto?> GetByIdAsync(Guid id, Guid userId, CancellationToken ct = default);
     Task<PagedResult<DocumentDto>> SearchAsync(DocumentSearchRequest request, Guid userId, CancellationToken ct = default);
+    Task<PagedResult<DocumentDto>> GetSharedWithMeAsync(DocumentSearchRequest request, Guid userId, CancellationToken ct = default);
     Task<IEnumerable<DocumentVersionDto>> GetVersionsAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<DocumentDto?> UpdateAsync(Guid documentId, Stream fileStream, string fileName, string contentType, Guid userId, string? changeComment, CancellationToken ct = default);
     Task<bool> ArchiveAsync(Guid documentId, Guid userId, CancellationToken ct = default);
@@ -50,11 +52,20 @@ public interface IDocumentService
     Task<EmptyTrashResult> EmptyTrashAsync(Guid userId, CancellationToken ct = default);
     Task<bool> GrantPermissionAsync(Guid documentId, GrantPermissionRequest request, Guid grantedById, CancellationToken ct = default);
     Task<bool> RevokePermissionAsync(Guid documentId, Guid targetUserId, Guid revokedById, CancellationToken ct = default);
+    Task<DocumentUserShareDto?> ShareWithUserAsync(Guid documentId, ShareWithUserRequest request, Guid sharedById, CancellationToken ct = default);
+    Task<CreateShareLinkResponse?> CreateShareLinkAsync(Guid documentId, CreateShareLinkRequest request, Guid createdById, string baseUrl, CancellationToken ct = default);
+    Task<DocumentSharesDto?> GetSharesAsync(Guid documentId, Guid userId, CancellationToken ct = default);
+    Task<bool> RevokeShareLinkAsync(Guid documentId, Guid linkId, Guid revokedById, CancellationToken ct = default);
+    Task<SharedDocumentInfoDto?> GetSharedInfoAsync(string token, CancellationToken ct = default);
+    Task<(Stream Stream, string ContentType)?> PreviewByTokenAsync(string token, CancellationToken ct = default);
+    Task<(Stream Stream, string FileName, string ContentType)?> DownloadByTokenAsync(string token, CancellationToken ct = default);
     Task<IntegrityCheckResult> VerifyIntegrityAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<DocumentDetailDto?> GetDetailAsync(Guid id, Guid userId, CancellationToken ct = default);
     Task<DocumentDto?> UpdateMetadataAsync(Guid documentId, UpdateMetadataRequest request, Guid userId, bool isAdmin, CancellationToken ct = default);
     Task<DocumentDto?> RestoreVersionAsync(Guid documentId, int versionNumber, Guid userId, CancellationToken ct = default);
     Task<bool> PermanentDeleteAsync(Guid documentId, Guid userId, CancellationToken ct = default);
+    Task<DocumentDto?> CheckOutAsync(Guid documentId, Guid userId, DocumentLockRequest? request = null, CancellationToken ct = default);
+    Task<DocumentDto?> CheckInAsync(Guid documentId, Guid userId, CancellationToken ct = default);
 }
 
 public interface IAuditService
@@ -138,8 +149,10 @@ public interface IAuditRepository
 public interface IPermissionChecker
 {
     Task<bool> CanReadAsync(Guid documentId, Guid userId, CancellationToken ct = default);
+    Task<bool> CanDownloadAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<bool> CanWriteAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<bool> CanDeleteAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<bool> CanRestoreFromTrashAsync(Guid documentId, Guid userId, CancellationToken ct = default);
+    Task<bool> CanManageSharesAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     bool IsAdmin(IEnumerable<string> roles);
 }

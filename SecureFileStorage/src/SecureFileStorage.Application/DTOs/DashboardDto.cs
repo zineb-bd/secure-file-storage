@@ -3,6 +3,8 @@ namespace SecureFileStorage.Application.DTOs;
 public record DashboardStatsDto(
     int TotalDocuments,
     long StorageUsedBytes,
+    long LogicalStorageBytes,
+    long BytesSavedByDedup,
     IEnumerable<DocumentDto> RecentDocuments,
     IEnumerable<RecentActivityDto> RecentActivity,
     IEnumerable<NotificationDto> Notifications);

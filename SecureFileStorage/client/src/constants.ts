@@ -1,0 +1,24 @@
+export const TOKEN_KEY = 'sfs_token'
+export const USER_KEY = 'sfs_user'
+export const THEME_KEY = 'sfs_theme'
+export const PREF_LANG_KEY = 'sfs_pref_lang'
+export const PREF_NOTIF_INAPP_KEY = 'sfs_pref_notif_inapp'
+export const PREF_NOTIF_EMAIL_KEY = 'sfs_pref_notif_email'
+export const CUSTOM_CATEGORIES_KEY = 'sfs_custom_categories'
+export const CATEGORY_OVERRIDES_KEY = 'sfs_category_overrides'
+export const DOC_FAVORITES_KEY = 'sfs_doc_favorites'
+
+export const CATEGORIES = ['RH', 'Factures', 'Contrats', 'General'] as const
+
+export type PageId =
+  | 'dashboard'
+  | 'documents'
+  | 'shared'
+  | 'categories'
+  | 'archived'
+  | 'trash'
+  | 'profile'
+  | 'admin-users'
+  | 'admin-roles'
+  | 'admin-audit'
+  | 'admin-config'
