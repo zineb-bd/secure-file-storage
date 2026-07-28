@@ -38,7 +38,9 @@ public enum AuditAction
     Logout = 13,
     Share = 14,
     CheckOut = 15,
-    CheckIn = 16
+    CheckIn = 16,
+    Favorite = 17,
+    Import = 18
 }
 
 public enum DocumentVisibility

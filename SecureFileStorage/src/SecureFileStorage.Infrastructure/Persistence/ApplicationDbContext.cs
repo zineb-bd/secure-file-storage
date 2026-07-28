@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<DocumentVersion> DocumentVersions => Set<DocumentVersion>();
     public DbSet<DocumentPermission> DocumentPermissions => Set<DocumentPermission>();
     public DbSet<DocumentShareLink> DocumentShareLinks => Set<DocumentShareLink>();
+    public DbSet<DocumentFavorite> DocumentFavorites => Set<DocumentFavorite>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<StorageConfiguration> StorageConfigurations => Set<StorageConfiguration>();
     public DbSet<EncryptionKeyRecord> EncryptionKeys => Set<EncryptionKeyRecord>();
@@ -83,6 +84,14 @@ public class ApplicationDbContext : DbContext
             e.Property(x => x.TokenHash).HasMaxLength(64);
             e.HasIndex(x => x.TokenHash);
             e.HasOne(x => x.Document).WithMany(d => d.ShareLinks).HasForeignKey(x => x.DocumentId);
+        });
+
+        modelBuilder.Entity<DocumentFavorite>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.UserId, x.DocumentId }).IsUnique();
+            e.HasOne(x => x.User).WithMany(u => u.Favorites).HasForeignKey(x => x.UserId);
+            e.HasOne(x => x.Document).WithMany(d => d.Favorites).HasForeignKey(x => x.DocumentId);
         });
 
         modelBuilder.Entity<AuditLog>(e =>

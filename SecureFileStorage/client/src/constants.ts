@@ -7,6 +7,8 @@ export const PREF_NOTIF_EMAIL_KEY = 'sfs_pref_notif_email'
 export const CUSTOM_CATEGORIES_KEY = 'sfs_custom_categories'
 export const CATEGORY_OVERRIDES_KEY = 'sfs_category_overrides'
 export const DOC_FAVORITES_KEY = 'sfs_doc_favorites'
+export const PROFILE_AVATAR_KEY_PREFIX = 'sfs_avatar_'
+export const SIDEBAR_COLLAPSED_KEY = 'sfs_sidebar_collapsed'
 
 export const CATEGORIES = ['RH', 'Factures', 'Contrats', 'General'] as const
 

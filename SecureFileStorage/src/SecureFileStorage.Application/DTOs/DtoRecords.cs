@@ -60,7 +60,8 @@ public record DocumentDto(
     string Visibility = "Private",
     string PublicAccessLevel = "Read",
     string? MyAccessLevel = null,
-    bool IsOwner = false);
+    bool IsOwner = false,
+    bool IsFavorite = false);
 
 public record EmptyTrashResult(int DeletedCount);
 
@@ -129,6 +130,39 @@ public record CreateShareLinkResponse(
 public record DocumentSharesDto(
     IEnumerable<DocumentUserShareDto> UserShares,
     IEnumerable<ShareLinkDto> Links);
+
+public record DocumentCollaboratorDto(
+    Guid? UserId,
+    string UserName,
+    string UserEmail,
+    string Role,
+    string AccessLevel,
+    Guid? PermissionId = null,
+    DateTime? GrantedAt = null,
+    DateTime? ExpiresAt = null,
+    bool IsExpired = false);
+
+public record DocumentCollaboratorsDto(
+    DocumentCollaboratorDto Owner,
+    IEnumerable<DocumentCollaboratorDto> Collaborators,
+    bool CanManage);
+
+public record FavoriteToggleResult(Guid DocumentId, bool IsFavorite);
+
+public record ImportFromUrlRequest(
+    string Url,
+    string? FileName = null,
+    string? Category = null,
+    string? Description = null,
+    string Visibility = "Private",
+    string? PublicAccessLevel = null,
+    IEnumerable<UploadShareEntry>? SharedUsers = null);
+
+public record DocumentImportSourceDto(
+    string Id,
+    string DisplayName,
+    bool IsEnabled,
+    string? UnavailableReason = null);
 
 public record SharedDocumentInfoDto(
     Guid Id,
@@ -234,3 +268,7 @@ public record DocumentDetailDto(
     bool CanModify = false,
     string Visibility = "Private",
     string PublicAccessLevel = "Read");
+
+public record ChatRequest(string Message, string? Locale = null);
+
+public record ChatResponse(string Reply, string Source);

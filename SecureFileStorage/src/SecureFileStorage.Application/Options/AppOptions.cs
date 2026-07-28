@@ -40,3 +40,13 @@ public class DatabaseSettings
     public string Provider { get; set; } = "PostgreSql";
     public string ConnectionString { get; set; } = string.Empty;
 }
+
+public class ChatbotSettings
+{
+    public const string SectionName = "Chatbot";
+    public bool Enabled { get; set; } = true;
+    public string ApiKey { get; set; } = string.Empty;
+    public string BaseUrl { get; set; } = "https://api.openai.com/v1";
+    public string Model { get; set; } = "gpt-4o-mini";
+    public int MaxTokens { get; set; } = 400;
+}

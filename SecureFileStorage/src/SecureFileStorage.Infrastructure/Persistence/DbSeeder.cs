@@ -13,9 +13,8 @@ public static class DbSeeder
         {
             var adminRole = new Role { Id = Guid.NewGuid(), Name = "Admin", Description = "Administrateur système" };
             var userRole = new Role { Id = Guid.NewGuid(), Name = "User", Description = "Utilisateur standard" };
-            var managerRole = new Role { Id = Guid.NewGuid(), Name = "Manager", Description = "Responsable avec droits étendus" };
 
-            context.Roles.AddRange(adminRole, userRole, managerRole);
+            context.Roles.AddRange(adminRole, userRole);
 
             var admin = new User
             {

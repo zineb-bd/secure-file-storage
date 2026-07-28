@@ -2,7 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }, [token])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     configureApi(() => localStorage.getItem(TOKEN_KEY), () => {
       void logout(false)
     })

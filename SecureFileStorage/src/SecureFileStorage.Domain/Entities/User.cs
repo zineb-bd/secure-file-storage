@@ -14,5 +14,6 @@ public class User
     public ICollection<UserRole> UserRoles { get; set; } = [];
     public ICollection<Document> OwnedDocuments { get; set; } = [];
     public ICollection<DocumentPermission> DocumentPermissions { get; set; } = [];
+    public ICollection<DocumentFavorite> Favorites { get; set; } = [];
     public ICollection<AuditLog> AuditLogs { get; set; } = [];
 }

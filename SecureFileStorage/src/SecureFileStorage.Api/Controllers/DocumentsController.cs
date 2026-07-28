@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SecureFileStorage.Application.DTOs;
 using SecureFileStorage.Application.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
@@ -13,11 +14,16 @@ namespace SecureFileStorage.Api.Controllers;
 public class DocumentsController : ControllerBase
 {
     private readonly IDocumentService _documentService;
+    private readonly IDocumentImportService _documentImportService;
     private readonly ICurrentUserService _currentUser;
 
-    public DocumentsController(IDocumentService documentService, ICurrentUserService currentUser)
+    public DocumentsController(
+        IDocumentService documentService,
+        IDocumentImportService documentImportService,
+        ICurrentUserService currentUser)
     {
         _documentService = documentService;
+        _documentImportService = documentImportService;
         _currentUser = currentUser;
     }
 
@@ -52,12 +58,23 @@ public class DocumentsController : ControllerBase
         }
 
         await using var stream = file.OpenReadStream();
-        var result = await _documentService.UploadAsync(
-            stream, file.FileName, file.ContentType, _currentUser.UserId.Value,
-            new DocumentUploadRequest(
-                category, description, null, null,
-                visibility ?? "Private", publicAccessLevel, sharedUsers), ct);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        try
+        {
+            var result = await _documentService.UploadAsync(
+                stream, file.FileName, file.ContentType, _currentUser.UserId.Value,
+                new DocumentUploadRequest(
+                    category, description, null, null,
+                    visibility ?? "Private", publicAccessLevel, sharedUsers), ct);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest(new { message = "Impossible d'enregistrer le document. Vérifiez les utilisateurs partagés et réessayez." });
+        }
     }
 
     [HttpGet("shared-with-me")]
@@ -66,6 +83,46 @@ public class DocumentsController : ControllerBase
     {
         if (_currentUser.UserId is null) return Unauthorized();
         return Ok(await _documentService.GetSharedWithMeAsync(request, _currentUser.UserId.Value, ct));
+    }
+
+    [HttpGet("favorites")]
+    [SwaggerOperation(Summary = "Documents favoris", Description = "Liste les documents marqués comme favoris par l'utilisateur connecté.")]
+    public async Task<ActionResult<PagedResult<DocumentDto>>> GetFavorites([FromQuery] DocumentSearchRequest request, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        return Ok(await _documentService.GetFavoritesAsync(request, _currentUser.UserId.Value, ct));
+    }
+
+    [HttpGet("import/sources")]
+    [SwaggerOperation(Summary = "Sources d'import", Description = "Liste les sources d'importation disponibles (appareil, lien, cloud…).")]
+    public ActionResult<IEnumerable<DocumentImportSourceDto>> GetImportSources()
+    {
+        return Ok(_documentImportService.GetSources());
+    }
+
+    [HttpPost("import/url")]
+    [RequestSizeLimit(100_000_000)]
+    [SwaggerOperation(Summary = "Importer depuis une URL", Description = "Télécharge un fichier depuis un lien, le valide, le scanne, le chiffre et le stocke via le pipeline sécurisé.")]
+    public async Task<ActionResult<DocumentDto>> ImportFromUrl([FromBody] ImportFromUrlRequest request, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        try
+        {
+            var result = await _documentImportService.ImportFromUrlAsync(request, _currentUser.UserId.Value, ct);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (HttpRequestException)
+        {
+            return BadRequest(new { message = "Impossible de télécharger le fichier depuis cette URL." });
+        }
+        catch (TaskCanceledException)
+        {
+            return BadRequest(new { message = "Le téléchargement a expiré. Réessayez avec un lien plus rapide." });
+        }
     }
 
     [HttpGet]
@@ -205,6 +262,33 @@ public class DocumentsController : ControllerBase
     {
         if (_currentUser.UserId is null) return Unauthorized();
         var result = await _documentService.GetSharesAsync(id, _currentUser.UserId.Value, ct);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    [HttpGet("{id:guid}/collaborators")]
+    [SwaggerOperation(Summary = "Collaborateurs du document", Description = "Liste le propriétaire et les collaborateurs avec leurs niveaux d'accès.")]
+    public async Task<ActionResult<DocumentCollaboratorsDto>> GetCollaborators(Guid id, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        var result = await _documentService.GetCollaboratorsAsync(id, _currentUser.UserId.Value, ct);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    [HttpPost("{id:guid}/favorite")]
+    [SwaggerOperation(Summary = "Ajouter aux favoris", Description = "Marque le document comme favori pour l'utilisateur connecté.")]
+    public async Task<ActionResult<FavoriteToggleResult>> AddFavorite(Guid id, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        var result = await _documentService.AddFavoriteAsync(id, _currentUser.UserId.Value, ct);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    [HttpDelete("{id:guid}/favorite")]
+    [SwaggerOperation(Summary = "Retirer des favoris", Description = "Retire le document des favoris de l'utilisateur connecté.")]
+    public async Task<ActionResult<FavoriteToggleResult>> RemoveFavorite(Guid id, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        var result = await _documentService.RemoveFavoriteAsync(id, _currentUser.UserId.Value, ct);
         return result is null ? NotFound() : Ok(result);
     }
 

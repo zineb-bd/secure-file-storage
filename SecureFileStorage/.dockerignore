@@ -1,0 +1,14 @@
+**/.git
+**/.vs
+**/bin
+**/obj
+**/node_modules
+**/client/node_modules
+**/client/dist
+**/.vite
+**/storage
+**/*.user
+**/*.md
+!README.md
+create-eicar-test.ps1
+eicar-test.txt

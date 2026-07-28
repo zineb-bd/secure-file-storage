@@ -33,6 +33,7 @@ public class Document
     public ICollection<DocumentVersion> Versions { get; set; } = [];
     public ICollection<DocumentPermission> Permissions { get; set; } = [];
     public ICollection<DocumentShareLink> ShareLinks { get; set; } = [];
+    public ICollection<DocumentFavorite> Favorites { get; set; } = [];
 }
 
 public class DocumentVersion

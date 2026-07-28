@@ -15,7 +15,8 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../src/SecureFileStorage.Api/wwwroot',
-    emptyOutDir: false,
+    // Vercel / preview: dist. Pour embarquer dans l'API : npm run build:api
+    outDir: 'dist',
+    emptyOutDir: true,
   },
 })

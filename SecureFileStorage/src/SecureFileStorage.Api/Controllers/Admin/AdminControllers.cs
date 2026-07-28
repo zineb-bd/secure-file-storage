@@ -84,16 +84,23 @@ public class RolesController : ControllerBase
     public RolesController(IRoleService roleService) => _roleService = roleService;
 
     [HttpGet]
-    [SwaggerOperation(Summary = "Lister les rôles", Description = "Retourne tous les rôles (Admin, User, Manager).")]
+    [SwaggerOperation(Summary = "Lister les rôles", Description = "Retourne les rôles système Admin et User.")]
     public async Task<ActionResult<IEnumerable<RoleDto>>> GetAll(CancellationToken ct) =>
         Ok(await _roleService.GetAllAsync(ct));
 
     [HttpPost]
-    [SwaggerOperation(Summary = "Créer un rôle", Description = "Ajoute un nouveau rôle au système.")]
+    [SwaggerOperation(Summary = "Créer un rôle", Description = "Non disponible — seuls Admin et User existent.")]
     public async Task<ActionResult<RoleDto>> Create([FromBody] CreateRoleRequest request, CancellationToken ct)
     {
-        var role = await _roleService.CreateAsync(request, ct);
-        return CreatedAtAction(nameof(GetAll), role);
+        try
+        {
+            var role = await _roleService.CreateAsync(request, ct);
+            return CreatedAtAction(nameof(GetAll), role);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id:guid}")]

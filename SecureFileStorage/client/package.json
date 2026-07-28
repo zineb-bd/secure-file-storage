@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:api": "npm run build",
+    "build:api": "tsc -b && vite build --outDir ../src/SecureFileStorage.Api/wwwroot --emptyOutDir false",
     "i18n:extract": "node scripts/extract-i18n.mjs",
     "lint": "oxlint",
     "preview": "vite preview"

@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.Configure<StorageSettings>(configuration.GetSection(StorageSettings.SectionName));
         services.Configure<AntivirusSettings>(configuration.GetSection(AntivirusSettings.SectionName));
         services.Configure<DatabaseSettings>(configuration.GetSection(DatabaseSettings.SectionName));
+        services.Configure<ChatbotSettings>(configuration.GetSection(ChatbotSettings.SectionName));
 
         var dbSettings = configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>()
             ?? new DatabaseSettings();
@@ -45,11 +46,34 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IDocumentImportService, DocumentImportService>();
+        services.AddScoped<IDocumentImportSource, DeviceImportSource>();
+        services.AddScoped<IDocumentImportSource, UrlImportSource>();
+        services.AddScoped<IDocumentImportSource, GoogleDriveImportSource>();
+        services.AddScoped<IDocumentImportSource, OneDriveImportSource>();
+        services.AddScoped<IDocumentImportSource, DropboxImportSource>();
+        services.AddHttpClient("DocumentImport", client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(2);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("SecureFileStorage/1.0");
+        });
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IPermissionChecker, PermissionChecker>();
         services.AddScoped<IStorageConfigService, StorageConfigService>();
         services.AddScoped<StoredBlobService>();
         services.AddScoped<DashboardService>();
+
+        var chatbotSettings = configuration.GetSection(ChatbotSettings.SectionName).Get<ChatbotSettings>()
+            ?? new ChatbotSettings();
+        var baseUrl = string.IsNullOrWhiteSpace(chatbotSettings.BaseUrl)
+            ? "https://api.openai.com/v1/"
+            : chatbotSettings.BaseUrl.TrimEnd('/') + "/";
+
+        services.AddHttpClient<IChatbotService, ChatbotService>(client =>
+        {
+            client.BaseAddress = new Uri(baseUrl);
+            client.Timeout = TimeSpan.FromSeconds(45);
+        });
 
         return services;
     }

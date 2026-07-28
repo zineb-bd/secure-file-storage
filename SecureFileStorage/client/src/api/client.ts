@@ -1,6 +1,9 @@
+import { TOKEN_KEY } from '@/constants'
+import { apiUrl } from '@/api/baseUrl'
+
 type ApiOptions = RequestInit & { raw?: boolean }
 
-let tokenGetter: () => string | null = () => null
+let tokenGetter: () => string | null = () => localStorage.getItem(TOKEN_KEY)
 let onUnauthorized: () => void = () => {}
 
 export function configureApi(getToken: () => string | null, logout: () => void) {
@@ -17,20 +20,32 @@ export async function api<T = unknown>(path: string, options: ApiOptions = {}): 
   }
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const res = await fetch(path, { ...options, headers })
-
-  if (res.status === 401 && token) {
-    onUnauthorized()
-    throw new Error('Session expirée. Veuillez vous reconnecter.')
-  }
+  const res = await fetch(apiUrl(path), { ...options, headers })
 
   if (options.raw) return res as T
 
   const ct = res.headers.get('content-type') || ''
   if (ct.includes('application/json')) {
     const data = await res.json()
+    if (res.status === 401) {
+      if (token) onUnauthorized()
+      throw new Error(
+        token
+          ? 'Session expirée. Veuillez vous reconnecter.'
+          : data.message || data.title || 'Email ou mot de passe incorrect.'
+      )
+    }
     if (!res.ok) throw new Error(data.message || data.title || `Erreur ${res.status}`)
     return data as T
+  }
+
+  if (res.status === 401) {
+    if (token) onUnauthorized()
+    throw new Error(
+      token
+        ? 'Session expirée. Veuillez vous reconnecter.'
+        : 'Email ou mot de passe incorrect.'
+    )
   }
 
   if (!res.ok) throw new Error(`Erreur ${res.status}`)

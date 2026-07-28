@@ -13,6 +13,14 @@ RUN dotnet publish src/SecureFileStorage.Api/SecureFileStorage.Api.csproj -c Rel
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
-EXPOSE 8080
+RUN mkdir -p /app/storage
+
 ENV ASPNETCORE_URLS=http://+:8080
-ENTRYPOINT ["dotnet", "SecureFileStorage.Api.dll"]
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV Storage__BasePath=/app/storage
+ENV Antivirus__Enabled=false
+
+EXPOSE 8080
+
+# Railway injecte $PORT ; défaut 8080 en local/docker-compose
+ENTRYPOINT ["sh", "-c", "exec dotnet SecureFileStorage.Api.dll --urls http://0.0.0.0:${PORT:-8080}"]

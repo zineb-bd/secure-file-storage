@@ -26,4 +26,11 @@ public class DashboardController : ControllerBase
         if (_currentUser.UserId is null) return Unauthorized();
         return Ok(await _dashboard.GetStatsAsync(_currentUser.UserId.Value, ct));
     }
+
+    [HttpGet("maturity")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<DocumentMaturityScoreDto>> GetMaturity(CancellationToken ct)
+    {
+        return Ok(await _dashboard.GetMaturityScoreAsync(ct));
+    }
 }

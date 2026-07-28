@@ -62,6 +62,10 @@ public class UserService : IUserService
         {
             foreach (var roleName in request.RoleNames)
             {
+                if (!roleName.Equals("Admin", StringComparison.OrdinalIgnoreCase) &&
+                    !roleName.Equals("User", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException($"Rôle non autorisé : {roleName}. Seuls Admin et User sont disponibles.");
+
                 var role = await _roleRepository.GetByNameAsync(roleName, ct);
                 if (role is not null)
                     user.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
@@ -111,6 +115,9 @@ public class UserService : IUserService
 
 public class RoleService : IRoleService
 {
+    private static readonly HashSet<string> BuiltInRoleNames =
+        new(StringComparer.OrdinalIgnoreCase) { "Admin", "User" };
+
     private readonly IRoleRepository _roleRepository;
     private readonly ApplicationDbContext _context;
     private readonly IUnitOfWork _unitOfWork;
@@ -125,28 +132,26 @@ public class RoleService : IRoleService
     public async Task<IEnumerable<RoleDto>> GetAllAsync(CancellationToken ct = default)
     {
         var roles = await _roleRepository.GetAllAsync(ct);
-        return roles.Select(r => new RoleDto(r.Id, r.Name, r.Description));
+        return roles
+            .Where(r => BuiltInRoleNames.Contains(r.Name))
+            .OrderBy(r => r.Name == "Admin" ? 0 : 1)
+            .ThenBy(r => r.Name)
+            .Select(r => new RoleDto(r.Id, r.Name, r.Description));
     }
 
-    public async Task<RoleDto> CreateAsync(CreateRoleRequest request, CancellationToken ct = default)
-    {
-        var role = new Role
-        {
-            Id = Guid.NewGuid(),
-            Name = request.Name,
-            Description = request.Description
-        };
-        await _roleRepository.AddAsync(role, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
-        return new RoleDto(role.Id, role.Name, role.Description);
-    }
+    public Task<RoleDto> CreateAsync(CreateRoleRequest request, CancellationToken ct = default) =>
+        Task.FromException<RoleDto>(new InvalidOperationException("Seuls les rôles Admin et User sont disponibles."));
 
     public async Task<RoleDto?> UpdateAsync(Guid id, UpdateRoleRequest request, CancellationToken ct = default)
     {
         var role = await _context.Roles.FindAsync([id], ct);
         if (role is null) return null;
+        if (BuiltInRoleNames.Contains(role.Name) && request.Name is not null &&
+            !BuiltInRoleNames.Contains(request.Name))
+            throw new InvalidOperationException("Impossible de renommer un rôle système.");
 
-        if (request.Name is not null) role.Name = request.Name;
+        if (request.Name is not null && !BuiltInRoleNames.Contains(role.Name))
+            role.Name = request.Name;
         if (request.Description is not null) role.Description = request.Description;
         await _unitOfWork.SaveChangesAsync(ct);
         return new RoleDto(role.Id, role.Name, role.Description);
@@ -155,7 +160,7 @@ public class RoleService : IRoleService
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var role = await _context.Roles.FindAsync([id], ct);
-        if (role is null) return false;
+        if (role is null || BuiltInRoleNames.Contains(role.Name)) return false;
         _context.Roles.Remove(role);
         await _unitOfWork.SaveChangesAsync(ct);
         return true;
@@ -163,6 +168,9 @@ public class RoleService : IRoleService
 
     public async Task<bool> AssignRoleAsync(AssignRoleRequest request, CancellationToken ct = default)
     {
+        var role = await _context.Roles.FindAsync([request.RoleId], ct);
+        if (role is null || !BuiltInRoleNames.Contains(role.Name)) return false;
+
         var exists = await _context.UserRoles.AnyAsync(
             ur => ur.UserId == request.UserId && ur.RoleId == request.RoleId, ct);
         if (exists) return true;

@@ -113,6 +113,18 @@ function PermDeleteIcon() {
   )
 }
 
+function FavoriteIcon({ filled }: { filled?: boolean }) {
+  return (
+    <svg
+      {...iconProps}
+      fill={filled ? 'currentColor' : 'none'}
+      className={filled ? 'fav-icon-filled' : undefined}
+    >
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  )
+}
+
 const ICONS: Record<string, () => React.ReactElement> = {
   preview: PreviewIcon,
   download: DownloadIcon,
@@ -164,6 +176,7 @@ export interface DocActions {
   onPermDelete?: () => void
   onCheckout?: () => void
   onCheckin?: () => void
+  onFavorite?: () => void
 }
 
 interface DocActionButtonsProps extends DocActions {
@@ -175,6 +188,17 @@ export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProp
 
   return (
     <div className="btn-group btn-group-icons">
+      {opts.showFavorite !== false && actions.onFavorite && (
+        <button
+          type="button"
+          className={`btn btn-sm btn-icon-only btn-action-ghost fav-btn${opts.isFavorite ? ' active' : ''}`}
+          title={opts.isFavorite ? t('action.unfavorite') : t('action.favorite')}
+          aria-label={opts.isFavorite ? t('action.unfavorite') : t('action.favorite')}
+          onClick={actions.onFavorite}
+        >
+          <FavoriteIcon filled={opts.isFavorite} />
+        </button>
+      )}
       {!opts.noPreview && actions.onPreview && (
         <IconBtn action="preview" title={t('action.preview')} variant="ghost" onClick={actions.onPreview} />
       )}
@@ -182,7 +206,7 @@ export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProp
         <IconBtn action="download" title={t('action.download')} variant="primary" onClick={actions.onDownload} />
       )}
       {!opts.noShare && actions.onShare && (
-        <IconBtn action="share" title={t('action.share')} variant="ghost" onClick={actions.onShare} />
+        <IconBtn action="share" title={t('action.collaborate')} variant="ghost" onClick={actions.onShare} />
       )}
       {actions.onMetadata && (
         <IconBtn action="metadata" title={t('action.details')} variant="ghost" onClick={actions.onMetadata} />
@@ -222,6 +246,8 @@ export function docActionOptsFromDoc(d: DocumentDto, extra: Partial<DocActionOpt
     isLocked: d.isLocked,
     isLockedByCurrentUser: d.isLockedByCurrentUser,
     canModify: d.canModify,
+    isFavorite: d.isFavorite,
+    showFavorite: true,
     ...extra,
   }
 }

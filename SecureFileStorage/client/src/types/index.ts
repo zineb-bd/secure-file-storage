@@ -51,6 +51,72 @@ export interface DocumentDto {
   publicAccessLevel: string
   myAccessLevel?: string | null
   isOwner: boolean
+  isFavorite?: boolean
+}
+
+export interface FavoriteToggleResult {
+  documentId: string
+  isFavorite: boolean
+}
+
+export interface DocumentCollaborator {
+  userId?: string | null
+  userName: string
+  userEmail: string
+  role: string
+  accessLevel: string
+  permissionId?: string | null
+  grantedAt?: string | null
+  expiresAt?: string | null
+  isExpired: boolean
+}
+
+export interface DocumentCollaborators {
+  owner: DocumentCollaborator
+  collaborators: DocumentCollaborator[]
+  canManage: boolean
+}
+
+export interface DocumentImportSource {
+  id: string
+  displayName: string
+  isEnabled: boolean
+  unavailableReason?: string | null
+}
+
+export interface MaturityMetric {
+  key: string
+  value: number
+  total: number
+  percent: number
+}
+
+export interface MaturityPillar {
+  id: string
+  label: string
+  score: number
+  level: string
+  metrics: MaturityMetric[]
+}
+
+export interface MaturityRecommendation {
+  id: string
+  severity: string
+  message: string
+  actionLabel?: string | null
+  actionHref?: string | null
+  percent?: number | null
+}
+
+export interface DocumentMaturityScore {
+  overallScore: number
+  overallLevel: string
+  organization: MaturityPillar
+  security: MaturityPillar
+  collaboration: MaturityPillar
+  recommendations: MaturityRecommendation[]
+  totalDocuments: number
+  generatedAt: string
 }
 
 export interface PagedResult<T> {
@@ -220,4 +286,6 @@ export interface DocActionOpts {
   noShare?: boolean
   noArchive?: boolean
   noTrash?: boolean
+  isFavorite?: boolean
+  showFavorite?: boolean
 }

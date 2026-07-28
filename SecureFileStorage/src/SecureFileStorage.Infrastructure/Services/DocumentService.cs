@@ -66,8 +66,21 @@ public class DocumentService : IDocumentService
         ms.Position = 0;
         var (scanResult, threat) = await _antivirusService.ScanAsync(ms, fileName, ct);
         if (scanResult == AntivirusScanResult.Infected)
-            throw new InvalidOperationException($"Fichier infecté détecté : {threat}");
+        {
+            await _auditService.LogAsync(
+                userId,
+                AuditAction.AntivirusAlert,
+                "Document",
+                null,
+                $"Menace antivirus détectée — fichier rejeté : {fileName} ({threat})",
+                "",
+                success: false,
+                ct: ct);
+            throw new InvalidOperationException(
+                $"THREAT_DETECTED: The document could not be uploaded because a security threat was detected. ({threat})");
+        }
 
+        // Temporary buffer held in memory only — permanent encrypted storage happens after a clean/skipped scan.
         ms.Position = 0;
         var plainData = ms.ToArray();
 
@@ -223,6 +236,7 @@ public class DocumentService : IDocumentService
 
         var anyLockCleared = false;
         var dtos = new List<DocumentDto>();
+        var favoriteIds = await GetFavoriteIdSetAsync(userId, ct);
         foreach (var doc in items)
         {
             var hadLock = DocumentLockHelper.IsActiveLock(doc);
@@ -231,7 +245,7 @@ public class DocumentService : IDocumentService
                 anyLockCleared = true;
 
             var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin);
-            dtos.Add(MapDocument(doc, userId, isAdmin, false, canModify));
+            dtos.Add(MapDocument(doc, userId, isAdmin, false, canModify, favoriteIds.Contains(doc.Id)));
         }
 
         if (anyLockCleared)
@@ -278,6 +292,7 @@ public class DocumentService : IDocumentService
 
         var anyLockCleared = false;
         var dtos = new List<DocumentDto>();
+        var favoriteIds = await GetFavoriteIdSetAsync(userId, ct);
         foreach (var doc in paged)
         {
             var hadLock = DocumentLockHelper.IsActiveLock(doc);
@@ -286,7 +301,7 @@ public class DocumentService : IDocumentService
                 anyLockCleared = true;
 
             var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin);
-            dtos.Add(MapDocument(doc, userId, isAdmin, false, canModify));
+            dtos.Add(MapDocument(doc, userId, isAdmin, false, canModify, favoriteIds.Contains(doc.Id)));
         }
 
         if (anyLockCleared)
@@ -323,7 +338,19 @@ public class DocumentService : IDocumentService
 
         var (scanResult, threat) = await _antivirusService.ScanAsync(fileStream, fileName, ct);
         if (scanResult == AntivirusScanResult.Infected)
-            throw new InvalidOperationException($"Fichier infecté détecté : {threat}");
+        {
+            await _auditService.LogAsync(
+                userId,
+                AuditAction.AntivirusAlert,
+                "Document",
+                documentId,
+                $"Menace antivirus détectée — version rejetée : {fileName} ({threat})",
+                "",
+                success: false,
+                ct: ct);
+            throw new InvalidOperationException(
+                $"THREAT_DETECTED: The document could not be uploaded because a security threat was detected. ({threat})");
+        }
 
         using var ms = new MemoryStream();
         await fileStream.CopyToAsync(ms, ct);
@@ -986,7 +1013,160 @@ public class DocumentService : IDocumentService
         var isAdmin = user is not null &&
             user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase));
         var canModify = await _permissionChecker.CanWriteAsync(doc.Id, userId, ct);
-        return MapDocument(doc, userId, isAdmin, wasDeduplicated, canModify);
+        var isFavorite = await _context.DocumentFavorites
+            .AnyAsync(f => f.UserId == userId && f.DocumentId == doc.Id, ct);
+        return MapDocument(doc, userId, isAdmin, wasDeduplicated, canModify, isFavorite);
+    }
+
+    private async Task<HashSet<Guid>> GetFavoriteIdSetAsync(Guid userId, CancellationToken ct) =>
+        (await _context.DocumentFavorites
+            .AsNoTracking()
+            .Where(f => f.UserId == userId)
+            .Select(f => f.DocumentId)
+            .ToListAsync(ct)).ToHashSet();
+
+    public async Task<FavoriteToggleResult?> AddFavoriteAsync(
+        Guid documentId, Guid userId, CancellationToken ct = default)
+    {
+        if (!await _permissionChecker.CanReadAsync(documentId, userId, ct))
+            return null;
+
+        var doc = await _documentRepository.GetByIdAsync(documentId, ct);
+        if (doc is null || doc.Status == DocumentStatus.Deleted) return null;
+
+        var existing = await _context.DocumentFavorites
+            .FirstOrDefaultAsync(f => f.UserId == userId && f.DocumentId == documentId, ct);
+        if (existing is null)
+        {
+            await _context.DocumentFavorites.AddAsync(new DocumentFavorite
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                DocumentId = documentId,
+                CreatedAt = DateTime.UtcNow
+            }, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+            await _auditService.LogAsync(userId, AuditAction.Favorite, "Document", documentId,
+                "Ajout aux favoris", "", ct: ct);
+        }
+
+        return new FavoriteToggleResult(documentId, true);
+    }
+
+    public async Task<FavoriteToggleResult?> RemoveFavoriteAsync(
+        Guid documentId, Guid userId, CancellationToken ct = default)
+    {
+        var existing = await _context.DocumentFavorites
+            .FirstOrDefaultAsync(f => f.UserId == userId && f.DocumentId == documentId, ct);
+        if (existing is null)
+            return new FavoriteToggleResult(documentId, false);
+
+        _context.DocumentFavorites.Remove(existing);
+        await _unitOfWork.SaveChangesAsync(ct);
+        await _auditService.LogAsync(userId, AuditAction.Favorite, "Document", documentId,
+            "Retrait des favoris", "", ct: ct);
+        return new FavoriteToggleResult(documentId, false);
+    }
+
+    public async Task<PagedResult<DocumentDto>> GetFavoritesAsync(
+        DocumentSearchRequest request, Guid userId, CancellationToken ct = default)
+    {
+        var user = await _context.Users
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+
+        var isAdmin = user is not null &&
+            user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase));
+
+        var query = _context.DocumentFavorites
+            .AsNoTracking()
+            .Where(f => f.UserId == userId)
+            .Include(f => f.Document).ThenInclude(d => d.Owner)
+            .Include(f => f.Document).ThenInclude(d => d.Permissions)
+            .Include(f => f.Document).ThenInclude(d => d.LockedBy)
+            .Where(f => f.Document.Status != DocumentStatus.Deleted)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(request.FileName))
+            query = query.Where(f => f.Document.FileName.Contains(request.FileName));
+        if (!string.IsNullOrWhiteSpace(request.Category))
+            query = query.Where(f => f.Document.Category == request.Category);
+        if (!string.IsNullOrWhiteSpace(request.Status) &&
+            Enum.TryParse<DocumentStatus>(request.Status, true, out var status))
+            query = query.Where(f => f.Document.Status == status);
+
+        var favorites = await query
+            .OrderByDescending(f => f.CreatedAt)
+            .ToListAsync(ct);
+
+        var accessible = new List<Document>();
+        foreach (var fav in favorites)
+        {
+            var doc = fav.Document;
+            if (isAdmin ||
+                doc.OwnerId == userId ||
+                doc.Visibility == DocumentVisibility.Public ||
+                doc.Permissions.Any(p => p.UserId == userId && PermissionChecker.IsActive(p)))
+            {
+                accessible.Add(doc);
+            }
+        }
+
+        var total = accessible.Count;
+        var page = Math.Max(1, request.Page);
+        var pageSize = Math.Max(1, request.PageSize);
+        var paged = accessible.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        var dtos = paged.Select(doc =>
+        {
+            var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin);
+            return MapDocument(doc, userId, isAdmin, false, canModify, true);
+        }).ToList();
+
+        return new PagedResult<DocumentDto>(dtos, total, page, pageSize);
+    }
+
+    public async Task<DocumentCollaboratorsDto?> GetCollaboratorsAsync(
+        Guid documentId, Guid userId, CancellationToken ct = default)
+    {
+        if (!await _permissionChecker.CanReadAsync(documentId, userId, ct))
+            return null;
+
+        var doc = await _context.Documents
+            .AsNoTracking()
+            .Include(d => d.Owner)
+            .Include(d => d.Permissions).ThenInclude(p => p.User)
+            .FirstOrDefaultAsync(d => d.Id == documentId, ct);
+        if (doc is null) return null;
+
+        var canManage = await _permissionChecker.CanManageSharesAsync(documentId, userId, ct);
+        var owner = new DocumentCollaboratorDto(
+            doc.OwnerId,
+            $"{doc.Owner.FirstName} {doc.Owner.LastName}".Trim(),
+            doc.Owner.Email,
+            "Owner",
+            "Owner");
+
+        var collaborators = doc.Permissions
+            .OrderByDescending(p => p.GrantedAt)
+            .Select(p =>
+            {
+                var level = PermissionChecker.ResolveAccessLevel(p);
+                var expired = p.ExpiresAt.HasValue && p.ExpiresAt <= DateTime.UtcNow;
+                return new DocumentCollaboratorDto(
+                    p.UserId,
+                    $"{p.User.FirstName} {p.User.LastName}".Trim(),
+                    p.User.Email,
+                    "Collaborator",
+                    level.ToString(),
+                    p.Id,
+                    p.GrantedAt,
+                    p.ExpiresAt,
+                    expired);
+            })
+            .ToList();
+
+        return new DocumentCollaboratorsDto(owner, collaborators, canManage);
     }
 
     private async Task<DocumentDetailDto> ToDetailDtoAsync(
@@ -1014,7 +1194,8 @@ public class DocumentService : IDocumentService
             doc.PublicAccessLevel.ToString());
 
     private static DocumentDto MapDocument(
-        Document doc, Guid userId, bool isAdmin, bool wasDeduplicated = false, bool canModify = false)
+        Document doc, Guid userId, bool isAdmin, bool wasDeduplicated = false, bool canModify = false,
+        bool isFavorite = false)
     {
         var myLevel = PermissionChecker.GetEffectiveLevelOnDocument(doc, userId, isAdmin);
         return new(doc.Id, doc.FileName, doc.ContentType, doc.SizeBytes, doc.Category, doc.Description,
@@ -1031,7 +1212,8 @@ public class DocumentService : IDocumentService
             doc.Visibility.ToString(),
             doc.PublicAccessLevel.ToString(),
             myLevel?.ToString(),
-            doc.OwnerId == userId);
+            doc.OwnerId == userId,
+            isFavorite);
     }
 
     private static DocumentVisibility ParseVisibility(string? value) =>
@@ -1042,12 +1224,15 @@ public class DocumentService : IDocumentService
     {
         if (entries is null) return;
 
+        var seenUserIds = new HashSet<Guid>();
+
         foreach (var entry in entries)
         {
             if (string.IsNullOrWhiteSpace(entry.UserEmail)) continue;
             var email = entry.UserEmail.Trim();
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
-            if (user is null || user.Id == ownerId) continue;
+            var user = await _context.Users.FirstOrDefaultAsync(
+                u => u.Email.ToLower() == email.ToLower(), ct);
+            if (user is null || user.Id == ownerId || !seenUserIds.Add(user.Id)) continue;
 
             if (!TryParseAccessLevel(entry.AccessLevel, out var accessLevel))
                 accessLevel = ShareAccessLevel.Read;

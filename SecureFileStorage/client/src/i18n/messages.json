@@ -1,27 +1,55 @@
 {
   "app.title": {
-    "fr": "SecureDocs Entreprise — Stockage sécurisé",
-    "en": "SecureDocs Enterprise — Secure storage"
+    "fr": "SecureDocs — Gestion documentaire sécurisée",
+    "en": "SecureDocs — Secure Document Management"
+  },
+  "app.name": {
+    "fr": "SecureDocs",
+    "en": "SecureDocs"
   },
   "app.tagline": {
     "fr": "Gestion documentaire sécurisée",
-    "en": "Secure document management"
+    "en": "Secure Document Management"
   },
   "app.sidebarSubtitle": {
-    "fr": "Fichiers d'entreprise",
-    "en": "Enterprise files"
+    "fr": "Gestion documentaire sécurisée",
+    "en": "Secure Document Management"
+  },
+  "auth.brandDescription": {
+    "fr": "Gérez, protégez et consultez vos documents en toute sécurité, au même endroit.",
+    "en": "Manage, protect and access your documents securely in one place."
+  },
+  "auth.featureSecure": {
+    "fr": "Chiffrement et contrôle d'accès",
+    "en": "Encryption and access control"
+  },
+  "auth.featureCloud": {
+    "fr": "Stockage cloud sécurisé",
+    "en": "Secure cloud storage"
+  },
+  "auth.featureAccess": {
+    "fr": "Accès centralisé aux documents",
+    "en": "Centralized document access"
   },
   "login.title": {
     "fr": "Connexion",
     "en": "Sign in"
   },
+  "login.welcome": {
+    "fr": "Bon retour",
+    "en": "Welcome Back"
+  },
   "login.subtitle": {
-    "fr": "Accédez à votre espace de gestion documentaire.",
-    "en": "Access your document management workspace."
+    "fr": "Connectez-vous pour accéder à vos documents sécurisés",
+    "en": "Sign in to access your secure documents"
   },
   "login.email": {
     "fr": "Adresse e-mail",
-    "en": "Email address"
+    "en": "Email Address"
+  },
+  "login.emailPlaceholder": {
+    "fr": "nom@entreprise.local",
+    "en": "name@company.com"
   },
   "login.password": {
     "fr": "Mot de passe",
@@ -29,19 +57,171 @@
   },
   "login.submit": {
     "fr": "Se connecter",
-    "en": "Sign in"
+    "en": "Sign In"
+  },
+  "login.submitting": {
+    "fr": "Connexion…",
+    "en": "Signing in…"
   },
   "login.forgot": {
     "fr": "Mot de passe oublié ?",
-    "en": "Forgot password?"
+    "en": "Forgot Password?"
+  },
+  "login.remember": {
+    "fr": "Se souvenir de moi",
+    "en": "Remember Me"
+  },
+  "login.showPassword": {
+    "fr": "Afficher le mot de passe",
+    "en": "Show password"
+  },
+  "login.hidePassword": {
+    "fr": "Masquer le mot de passe",
+    "en": "Hide password"
+  },
+  "login.noAccount": {
+    "fr": "Pas encore de compte ?",
+    "en": "Don't have an account?"
+  },
+  "login.createAccount": {
+    "fr": "Créer un compte",
+    "en": "Create an account"
+  },
+  "login.invalidEmail": {
+    "fr": "Adresse e-mail invalide.",
+    "en": "Invalid email address."
+  },
+  "login.passwordMin": {
+    "fr": "Le mot de passe doit contenir au moins 8 caractères.",
+    "en": "Password must contain at least 8 characters."
+  },
+  "login.errorRequired": {
+    "fr": "Veuillez renseigner votre e-mail et votre mot de passe.",
+    "en": "Please enter your email and password."
+  },
+  "login.errorGeneric": {
+    "fr": "E-mail ou mot de passe incorrect.",
+    "en": "Invalid email or password."
   },
   "login.note": {
     "fr": "Authentification JWT — OAuth2 planifié pour une intégration SSO entreprise.",
     "en": "JWT authentication — OAuth2 planned for enterprise SSO integration."
   },
+  "register.title": {
+    "fr": "Créer votre compte",
+    "en": "Create Your Account"
+  },
+  "register.subtitle": {
+    "fr": "Commencez à gérer vos documents en toute sécurité",
+    "en": "Start managing your documents securely"
+  },
+  "register.firstName": {
+    "fr": "Prénom",
+    "en": "First Name"
+  },
+  "register.lastName": {
+    "fr": "Nom",
+    "en": "Last Name"
+  },
+  "register.firstNamePlaceholder": {
+    "fr": "Jean",
+    "en": "John"
+  },
+  "register.lastNamePlaceholder": {
+    "fr": "Dupont",
+    "en": "Doe"
+  },
+  "register.email": {
+    "fr": "Adresse e-mail",
+    "en": "Email Address"
+  },
+  "register.emailPlaceholder": {
+    "fr": "nom@entreprise.local",
+    "en": "name@company.com"
+  },
+  "register.password": {
+    "fr": "Mot de passe",
+    "en": "Password"
+  },
+  "register.confirmPassword": {
+    "fr": "Confirmer le mot de passe",
+    "en": "Confirm Password"
+  },
+  "register.terms": {
+    "fr": "J'accepte les Conditions d'utilisation et la Politique de confidentialité",
+    "en": "I agree to the Terms and Privacy Policy"
+  },
+  "register.submit": {
+    "fr": "Créer un compte",
+    "en": "Create Account"
+  },
+  "register.submitting": {
+    "fr": "Création…",
+    "en": "Creating account…"
+  },
+  "register.hasAccount": {
+    "fr": "Vous avez déjà un compte ?",
+    "en": "Already have an account?"
+  },
+  "register.signIn": {
+    "fr": "Se connecter",
+    "en": "Sign In"
+  },
+  "register.passwordMin": {
+    "fr": "Le mot de passe doit contenir au moins 8 caractères.",
+    "en": "Password must contain at least 8 characters."
+  },
+  "register.passwordMismatch": {
+    "fr": "Les mots de passe ne correspondent pas.",
+    "en": "Passwords do not match."
+  },
+  "register.invalidEmail": {
+    "fr": "Adresse e-mail invalide.",
+    "en": "Invalid email address."
+  },
+  "register.termsRequired": {
+    "fr": "Vous devez accepter les conditions pour continuer.",
+    "en": "You must agree to the Terms and Privacy Policy."
+  },
+  "register.errorRequired": {
+    "fr": "Veuillez remplir tous les champs obligatoires.",
+    "en": "Please fill in all required fields."
+  },
+  "register.errorGeneric": {
+    "fr": "Impossible de créer le compte. Réessayez.",
+    "en": "Unable to create account. Please try again."
+  },
+  "register.success": {
+    "fr": "Compte créé avec succès. Vous pouvez vous connecter.",
+    "en": "Account created successfully. You can sign in."
+  },
+  "register.strengthWeak": {
+    "fr": "Faible",
+    "en": "Weak"
+  },
+  "register.strengthFair": {
+    "fr": "Moyen",
+    "en": "Fair"
+  },
+  "register.strengthGood": {
+    "fr": "Bon",
+    "en": "Good"
+  },
+  "register.strengthStrong": {
+    "fr": "Fort",
+    "en": "Strong"
+  },
   "nav.section": {
     "fr": "Navigation",
     "en": "Navigation"
+  },
+  "sidebar.collapse": {
+    "fr": "Réduire le menu",
+    "en": "Collapse sidebar"
+  },
+  "sidebar.expand": {
+    "fr": "Étendre le menu",
+    "en": "Expand sidebar"
   },
   "nav.account": {
     "fr": "Compte",
@@ -58,6 +238,10 @@
   "nav.documents": {
     "fr": "Mes fichiers",
     "en": "My files"
+  },
+  "nav.favorites": {
+    "fr": "Favoris",
+    "en": "Favorites"
   },
   "nav.shared": {
     "fr": "Partagés avec moi",
@@ -88,11 +272,11 @@
     "en": "Roles"
   },
   "nav.audit": {
-    "fr": "Traçabilité",
-    "en": "Audit trail"
+    "fr": "Audit documentaire",
+    "en": "Document Audit"
   },
   "nav.config": {
-    "fr": "Configuration",
+    "fr": "Paramètres",
     "en": "Settings"
   },
   "nav.upload": {
@@ -132,12 +316,12 @@
     "en": "Sign out"
   },
   "page.dashboard.title": {
-    "fr": "Tableau de bord",
-    "en": "Dashboard"
+    "fr": "Accueil",
+    "en": "Home"
   },
   "page.dashboard.subtitle": {
-    "fr": "Vue d'ensemble de votre espace documentaire",
-    "en": "Overview of your document workspace"
+    "fr": "Votre espace documentaire sécurisé",
+    "en": "Your secure document workspace"
   },
   "page.documents.title": {
     "fr": "Mes documents",
@@ -146,6 +330,14 @@
   "page.documents.subtitle": {
     "fr": "Gérez et organisez vos fichiers",
     "en": "Manage and organize your files"
+  },
+  "page.favorites.title": {
+    "fr": "Documents favoris",
+    "en": "Favorite Documents"
+  },
+  "page.favorites.subtitle": {
+    "fr": "Retrouvez rapidement les documents que vous avez marqués",
+    "en": "Quickly find documents you marked as favorites"
   },
   "page.shared.title": {
     "fr": "Partagés avec moi",
@@ -164,20 +356,20 @@
     "en": "Documents grouped by category"
   },
   "page.archived.title": {
-    "fr": "Documents archivés",
-    "en": "Archived documents"
+    "fr": "Archives",
+    "en": "Archives"
   },
   "page.archived.subtitle": {
-    "fr": "Documents mis en archive",
-    "en": "Documents placed in archive"
+    "fr": "Consultez et restaurez vos documents archivés",
+    "en": "Manage and restore your archived documents"
   },
   "page.trash.title": {
     "fr": "Corbeille",
     "en": "Trash"
   },
   "page.trash.subtitle": {
-    "fr": "Documents supprimés — restaurez-les ou videz la corbeille",
-    "en": "Deleted documents — restore them or empty the trash"
+    "fr": "Consultez et restaurez vos documents supprimés",
+    "en": "Manage and restore your deleted documents"
   },
   "page.profile.title": {
     "fr": "Mon profil",
@@ -192,32 +384,32 @@
     "en": "Users"
   },
   "page.adminUsers.subtitle": {
-    "fr": "Gestion des comptes utilisateurs",
-    "en": "User account management"
+    "fr": "Gérez les utilisateurs et leurs droits d'accès",
+    "en": "Manage users and their access permissions"
   },
   "page.adminRoles.title": {
     "fr": "Rôles & permissions",
     "en": "Roles & permissions"
   },
   "page.adminRoles.subtitle": {
-    "fr": "Gestion des rôles et affectations",
-    "en": "Role and assignment management"
+    "fr": "Deux rôles système : Admin et User",
+    "en": "Two system roles: Admin and User"
   },
   "page.adminAudit.title": {
-    "fr": "Traçabilité des documents",
-    "en": "Document audit trail"
+    "fr": "Audit documentaire",
+    "en": "Document Audit"
   },
   "page.adminAudit.subtitle": {
-    "fr": "Historique des opérations sur les fichiers (téléversement, consultation, modification, archivage…)",
-    "en": "History of file operations (upload, view, edit, archive…)"
+    "fr": "Suivez et surveillez toutes les activités sur les documents",
+    "en": "Track and monitor all document activities"
   },
   "page.adminConfig.title": {
-    "fr": "Configuration système",
-    "en": "System configuration"
+    "fr": "Paramètres",
+    "en": "Settings"
   },
   "page.adminConfig.subtitle": {
-    "fr": "Stockage et sécurité",
-    "en": "Storage and security"
+    "fr": "Configurez et gérez votre plateforme de gestion documentaire",
+    "en": "Configure and manage your document management system"
   },
   "stat.totalDocs": {
     "fr": "Documents totaux",
@@ -439,6 +631,18 @@
     "fr": "Partager",
     "en": "Share"
   },
+  "action.collaborate": {
+    "fr": "Collaborer",
+    "en": "Collaborate"
+  },
+  "action.favorite": {
+    "fr": "Ajouter aux favoris",
+    "en": "Add to Favorites"
+  },
+  "action.unfavorite": {
+    "fr": "Retirer des favoris",
+    "en": "Remove from Favorites"
+  },
   "action.details": {
     "fr": "Détails",
     "en": "Details"
@@ -527,9 +731,25 @@
     "fr": "Libération",
     "en": "Unlock"
   },
+  "action.PermissionChange": {
+    "fr": "Modification des permissions",
+    "en": "Permission Changed"
+  },
+  "action.IntegrityCheck": {
+    "fr": "Vérification d'intégrité",
+    "en": "Integrity Check"
+  },
+  "action.AntivirusAlert": {
+    "fr": "Alerte antivirus",
+    "en": "Antivirus Alert"
+  },
   "access.read": {
     "fr": "Lecture",
     "en": "Read"
+  },
+  "access.view": {
+    "fr": "Consultation",
+    "en": "View"
   },
   "access.preview": {
     "fr": "Prévisualisation",
@@ -542,6 +762,10 @@
   "access.write": {
     "fr": "Modification",
     "en": "Write"
+  },
+  "access.edit": {
+    "fr": "Édition",
+    "en": "Edit"
   },
   "role.user": {
     "fr": "Utilisateur",
@@ -803,6 +1027,38 @@
     "fr": "La modification de photo de profil sera bientôt disponible.",
     "en": "Profile photo editing will be available soon."
   },
+  "profile.avatarChange": {
+    "fr": "Changer la photo de profil",
+    "en": "Change profile photo"
+  },
+  "profile.avatarSaved": {
+    "fr": "Photo de profil mise à jour.",
+    "en": "Profile photo updated."
+  },
+  "profile.avatarRemoved": {
+    "fr": "Photo de profil supprimée.",
+    "en": "Profile photo removed."
+  },
+  "profile.avatarRemove": {
+    "fr": "Supprimer la photo",
+    "en": "Remove photo"
+  },
+  "profile.avatarRemoveConfirm": {
+    "fr": "Supprimer votre photo de profil ?",
+    "en": "Remove your profile photo?"
+  },
+  "profile.avatarInvalidType": {
+    "fr": "Format non pris en charge. Utilisez JPEG, PNG, WebP ou GIF.",
+    "en": "Unsupported format. Use JPEG, PNG, WebP, or GIF."
+  },
+  "profile.avatarTooLarge": {
+    "fr": "L'image ne doit pas dépasser 2 Mo.",
+    "en": "Image must not exceed 2 MB."
+  },
+  "profile.avatarError": {
+    "fr": "Impossible de traiter l'image. Réessayez.",
+    "en": "Could not process the image. Please try again."
+  },
   "profile.logoutConfirm": {
     "fr": "Voulez-vous vous déconnecter de cette session ?",
     "en": "Do you want to sign out of this session?"
@@ -902,6 +1158,466 @@
   "upload.vis.public": {
     "fr": "Tous les utilisateurs authentifiés pourront accéder selon le niveau choisi.",
     "en": "All authenticated users can access based on the selected level."
+  },
+  "upload.title": {
+    "fr": "Téléverser un document",
+    "en": "Upload Document"
+  },
+  "upload.subtitle": {
+    "fr": "Téléversez et gérez vos documents en toute sécurité",
+    "en": "Securely upload and manage your documents"
+  },
+  "upload.versionTitle": {
+    "fr": "Nouvelle version du document",
+    "en": "Upload New Version"
+  },
+  "upload.versionSubtitle": {
+    "fr": "Créez une nouvelle version sécurisée d'un document existant",
+    "en": "Create a new secure version of an existing document"
+  },
+  "upload.backToDocuments": {
+    "fr": "Retour aux documents",
+    "en": "Back to Documents"
+  },
+  "upload.secureBadge": {
+    "fr": "Téléversement sécurisé",
+    "en": "Secure upload"
+  },
+  "upload.emptyTitle": {
+    "fr": "Téléversez vos documents en toute sécurité",
+    "en": "Upload your documents securely"
+  },
+  "upload.emptyHint": {
+    "fr": "Glissez-déposez vos fichiers ici ou parcourez votre appareil.",
+    "en": "Drag and drop your files here or browse from your device."
+  },
+  "upload.dropAria": {
+    "fr": "Zone de téléversement de fichiers",
+    "en": "File upload drop zone"
+  },
+  "upload.replaceFile": {
+    "fr": "Cliquez ou glissez pour remplacer le fichier",
+    "en": "Click or drag to replace the file"
+  },
+  "upload.chooseFiles": {
+    "fr": "Choisir un fichier",
+    "en": "Choose Files"
+  },
+  "upload.supportedFormats": {
+    "fr": "Formats pris en charge",
+    "en": "Supported formats"
+  },
+  "upload.maxSize": {
+    "fr": "Taille maximale : {max} Mo",
+    "en": "Maximum file size: {max} MB"
+  },
+  "upload.selectedFiles": {
+    "fr": "Fichier sélectionné",
+    "en": "Selected file"
+  },
+  "upload.removeFile": {
+    "fr": "Retirer le fichier",
+    "en": "Remove file"
+  },
+  "upload.statusReady": {
+    "fr": "Prêt",
+    "en": "Ready"
+  },
+  "upload.statusUploading": {
+    "fr": "Téléversement…",
+    "en": "Uploading"
+  },
+  "upload.statusUploaded": {
+    "fr": "Téléversé",
+    "en": "Uploaded"
+  },
+  "upload.statusFailed": {
+    "fr": "Échec",
+    "en": "Failed"
+  },
+  "upload.progressLabel": {
+    "fr": "Téléversement du document…",
+    "en": "Uploading document…"
+  },
+  "upload.docInfo": {
+    "fr": "Informations du document",
+    "en": "Document Information"
+  },
+  "upload.docName": {
+    "fr": "Nom du document",
+    "en": "Document Name"
+  },
+  "upload.docNamePlaceholder": {
+    "fr": "Défini par le nom du fichier",
+    "en": "Derived from file name"
+  },
+  "upload.docNameHint": {
+    "fr": "Le nom est dérivé du fichier téléversé.",
+    "en": "The name is derived from the uploaded file."
+  },
+  "upload.owner": {
+    "fr": "Propriétaire",
+    "en": "Owner"
+  },
+  "upload.description": {
+    "fr": "Description",
+    "en": "Description"
+  },
+  "upload.accessVisibility": {
+    "fr": "Accès et visibilité",
+    "en": "Access & Visibility"
+  },
+  "upload.visCard.private": {
+    "fr": "Accès réservé au propriétaire et aux utilisateurs autorisés.",
+    "en": "Only the owner and authorized users can access."
+  },
+  "upload.visCard.shared": {
+    "fr": "Partagez avec des utilisateurs spécifiques et leurs permissions.",
+    "en": "Share with specific users and their permissions."
+  },
+  "upload.visCard.public": {
+    "fr": "Accessible à tous les utilisateurs authentifiés selon le niveau choisi.",
+    "en": "Available to authenticated users based on the selected level."
+  },
+  "upload.sharedUsers": {
+    "fr": "Utilisateurs autorisés",
+    "en": "Authorized users"
+  },
+  "upload.sharedUsersRequired": {
+    "fr": "Ajoutez au moins un utilisateur valide pour un document partagé.",
+    "en": "Add at least one valid user for a shared document."
+  },
+  "upload.addUser": {
+    "fr": "Utilisateur",
+    "en": "User"
+  },
+  "upload.publicLevel": {
+    "fr": "Niveau d'accès public",
+    "en": "Public access level"
+  },
+  "upload.metadata": {
+    "fr": "Métadonnées",
+    "en": "Metadata"
+  },
+  "upload.autoFields": {
+    "fr": "Automatique",
+    "en": "Automatic"
+  },
+  "upload.metaType": {
+    "fr": "Type de document",
+    "en": "Document Type"
+  },
+  "upload.metaCreated": {
+    "fr": "Date de création",
+    "en": "Creation Date"
+  },
+  "upload.metaCreatedAuto": {
+    "fr": "Définie automatiquement à l'enregistrement",
+    "en": "Set automatically on save"
+  },
+  "upload.security": {
+    "fr": "Sécurité",
+    "en": "Security"
+  },
+  "upload.security.antivirus": {
+    "fr": "Analyse antivirus",
+    "en": "Antivirus Scan"
+  },
+  "upload.security.encryption": {
+    "fr": "Chiffrement AES-256",
+    "en": "AES-256 Encryption"
+  },
+  "upload.security.integrity": {
+    "fr": "Contrôle d'intégrité SHA-256",
+    "en": "SHA-256 Integrity Check"
+  },
+  "upload.security.accessControl": {
+    "fr": "Contrôle d'accès",
+    "en": "Access Control"
+  },
+  "upload.security.audit": {
+    "fr": "Journalisation d'audit",
+    "en": "Audit Logging"
+  },
+  "upload.pipelineTitle": {
+    "fr": "Validation de sécurité en cours",
+    "en": "Security validation in progress"
+  },
+  "upload.pipeline.validate": {
+    "fr": "Vérification du type et de la taille",
+    "en": "File type and size validation"
+  },
+  "upload.pipeline.tempStore": {
+    "fr": "Stockage temporaire",
+    "en": "Temporary storage"
+  },
+  "upload.pipeline.scan": {
+    "fr": "Analyse antivirus",
+    "en": "Antivirus scan"
+  },
+  "upload.pipeline.hash": {
+    "fr": "Calcul du hash SHA-256",
+    "en": "SHA-256 hash computation"
+  },
+  "upload.pipeline.encrypt": {
+    "fr": "Chiffrement AES-256",
+    "en": "AES-256 encryption"
+  },
+  "upload.pipeline.store": {
+    "fr": "Stockage sécurisé",
+    "en": "Secure storage"
+  },
+  "upload.pipeline.audit": {
+    "fr": "Journalisation de l'opération",
+    "en": "Audit logging"
+  },
+  "upload.scan.title": {
+    "fr": "Analyse de sécurité",
+    "en": "Security scan"
+  },
+  "upload.scan.scanning": {
+    "fr": "Analyse du document à la recherche de menaces…",
+    "en": "Scanning document for threats..."
+  },
+  "upload.scan.safeTitle": {
+    "fr": "✓ Fichier sûr",
+    "en": "✓ File Safe"
+  },
+  "upload.scan.safeBody": {
+    "fr": "Votre document a été analysé et est sûr à stocker.",
+    "en": "Your document has been scanned and is safe to store."
+  },
+  "upload.scan.threatTitle": {
+    "fr": "⚠ Menace de sécurité détectée",
+    "en": "⚠ Security Threat Detected"
+  },
+  "upload.scan.threatBody": {
+    "fr": "Le document n'a pas pu être téléversé car une menace de sécurité a été détectée.",
+    "en": "The document could not be uploaded because a security threat was detected."
+  },
+  "upload.scan.skippedTitle": {
+    "fr": "Analyse antivirus non exécutée",
+    "en": "Antivirus scan skipped"
+  },
+  "upload.scan.skippedBody": {
+    "fr": "Le service antivirus est désactivé. Le fichier n'est pas marqué comme « sûr ».",
+    "en": "The antivirus service is disabled. The file is not marked as Safe."
+  },
+  "upload.scan.errorTitle": {
+    "fr": "Analyse antivirus impossible",
+    "en": "Antivirus scan unavailable"
+  },
+  "upload.scan.errorBody": {
+    "fr": "Le scan n'a pas pu être confirmé. Le statut « sûr » n'est pas affiché.",
+    "en": "The scan could not be confirmed. Safe status is not shown."
+  },
+  "maturity.title": {
+    "fr": "Score de maturité documentaire",
+    "en": "Document Management Maturity Score"
+  },
+  "maturity.subtitle": {
+    "fr": "Vision globale de l'organisation, de la sécurité et de la collaboration.",
+    "en": "Enterprise-wide view of organization, security and collaboration."
+  },
+  "maturity.overall": {
+    "fr": "Score global",
+    "en": "Overall Maturity Score"
+  },
+  "maturity.overallHint": {
+    "fr": "Calculé sur {count} documents actifs à partir des données réelles du système.",
+    "en": "Calculated across {count} active documents from live system data."
+  },
+  "maturity.level.excellent": {
+    "fr": "Excellent",
+    "en": "Excellent"
+  },
+  "maturity.level.good": {
+    "fr": "Bon",
+    "en": "Good"
+  },
+  "maturity.level.needs": {
+    "fr": "À améliorer",
+    "en": "Needs Improvement"
+  },
+  "maturity.pillar.organization": {
+    "fr": "Organisation documentaire",
+    "en": "Document organization"
+  },
+  "maturity.pillar.security": {
+    "fr": "Sécurité",
+    "en": "Security"
+  },
+  "maturity.pillar.collaboration": {
+    "fr": "Collaboration",
+    "en": "Collaboration"
+  },
+  "maturity.metric.categorized": {
+    "fr": "Documents catégorisés",
+    "en": "Categorized documents"
+  },
+  "maturity.metric.metadata": {
+    "fr": "Métadonnées complètes",
+    "en": "Complete metadata"
+  },
+  "maturity.metric.organized": {
+    "fr": "Organisation avancée",
+    "en": "Advanced organization"
+  },
+  "maturity.metric.encrypted": {
+    "fr": "Documents chiffrés",
+    "en": "Encrypted documents"
+  },
+  "maturity.metric.antivirusClean": {
+    "fr": "Analysés antivirus (Clean)",
+    "en": "Antivirus clean"
+  },
+  "maturity.metric.integrityHash": {
+    "fr": "Intégrité SHA-256",
+    "en": "SHA-256 integrity"
+  },
+  "maturity.metric.permissions": {
+    "fr": "Protégés par permissions",
+    "en": "Permission-protected"
+  },
+  "maturity.metric.rbac": {
+    "fr": "Couverture RBAC",
+    "en": "RBAC coverage"
+  },
+  "maturity.metric.shared": {
+    "fr": "Documents partagés",
+    "en": "Shared documents"
+  },
+  "maturity.metric.collaborators": {
+    "fr": "Avec collaborateurs",
+    "en": "With collaborators"
+  },
+  "maturity.metric.activeUsers": {
+    "fr": "Utilisateurs collaborateurs",
+    "en": "Collaborating users"
+  },
+  "maturity.recommendations": {
+    "fr": "Recommandations d'amélioration",
+    "en": "Improvement Recommendations"
+  },
+  "maturity.noRecommendations": {
+    "fr": "Aucune recommandation pour le moment. Excellent travail !",
+    "en": "No recommendations right now. Great work!"
+  },
+  "maturity.viewDetails": {
+    "fr": "Voir les détails",
+    "en": "View Details"
+  },
+  "upload.summary": {
+    "fr": "Résumé du téléversement",
+    "en": "Upload Summary"
+  },
+  "upload.summaryEmpty": {
+    "fr": "Sélectionnez un fichier pour voir le résumé.",
+    "en": "Select a file to see the summary."
+  },
+  "upload.summaryFile": {
+    "fr": "Nom du fichier",
+    "en": "File Name"
+  },
+  "upload.summaryType": {
+    "fr": "Type",
+    "en": "File Type"
+  },
+  "upload.summarySize": {
+    "fr": "Taille",
+    "en": "File Size"
+  },
+  "upload.summaryVisibility": {
+    "fr": "Visibilité",
+    "en": "Visibility"
+  },
+  "upload.summaryVersion": {
+    "fr": "Nouvelle version",
+    "en": "New version"
+  },
+  "upload.summarySecurity": {
+    "fr": "Statut de sécurité",
+    "en": "Security Status"
+  },
+  "upload.summarySecurityOk": {
+    "fr": "Protection active",
+    "en": "Protection enabled"
+  },
+  "upload.submitSecure": {
+    "fr": "Téléverser en sécurité",
+    "en": "Upload Securely"
+  },
+  "upload.uploading": {
+    "fr": "Téléversement…",
+    "en": "Uploading…"
+  },
+  "upload.successTitle": {
+    "fr": "Document téléversé avec succès",
+    "en": "Document uploaded successfully"
+  },
+  "upload.selectFile": {
+    "fr": "Sélectionnez un fichier.",
+    "en": "Select a file."
+  },
+  "upload.errorEmpty": {
+    "fr": "Le fichier est vide.",
+    "en": "The file is empty."
+  },
+  "upload.errorTooLarge": {
+    "fr": "Taille maximale dépassée ({max} Mo).",
+    "en": "Maximum file size exceeded ({max} MB)."
+  },
+  "upload.errorInvalidType": {
+    "fr": "Type de fichier non autorisé.",
+    "en": "File type not allowed."
+  },
+  "upload.errorGeneric": {
+    "fr": "Échec du téléversement.",
+    "en": "Upload failed."
+  },
+  "upload.documentNotFound": {
+    "fr": "Document introuvable.",
+    "en": "Document not found."
+  },
+  "upload.versionSection": {
+    "fr": "Nouvelle version",
+    "en": "Upload as a new version"
+  },
+  "upload.existingDocument": {
+    "fr": "Document existant",
+    "en": "Existing Document"
+  },
+  "upload.currentVersion": {
+    "fr": "Version actuelle",
+    "en": "Current Version"
+  },
+  "upload.newVersion": {
+    "fr": "Nouvelle version",
+    "en": "New Version"
+  },
+  "upload.changeComment": {
+    "fr": "Commentaire de version",
+    "en": "Version comment"
+  },
+  "upload.changeCommentPlaceholder": {
+    "fr": "Décrivez les modifications apportées…",
+    "en": "Describe what changed…"
+  },
+  "upload.versionConfirm": {
+    "fr": "Je confirme la création d'une nouvelle version",
+    "en": "I confirm creating a new version"
+  },
+  "upload.versionConfirmRequired": {
+    "fr": "Confirmez la création de la nouvelle version.",
+    "en": "Confirm the new version upload."
+  },
+  "page.upload.title": {
+    "fr": "Téléverser un document",
+    "en": "Upload Document"
+  },
+  "page.upload.subtitle": {
+    "fr": "Téléversez et gérez vos documents en toute sécurité",
+    "en": "Securely upload and manage your documents"
   },
   "cat.newCategory": {
     "fr": "Nouvelle catégorie",
@@ -1070,5 +1786,2397 @@
   "cat.desc.default": {
     "fr": "Documents de cette catégorie.",
     "en": "Documents in this category."
+  },
+  "cat.viewGrid": {
+    "fr": "Vue grille",
+    "en": "Grid view"
+  },
+  "cat.viewList": {
+    "fr": "Vue liste",
+    "en": "List view"
+  },
+  "cat.viewMode": {
+    "fr": "Mode d'affichage",
+    "en": "View mode"
+  },
+  "cat.breadcrumbDocs": {
+    "fr": "Documents",
+    "en": "Documents"
+  },
+  "cat.docSearchPlaceholder": {
+    "fr": "Rechercher un document…",
+    "en": "Search a document…"
+  },
+  "cat.filterSize": {
+    "fr": "Taille min. (Ko)",
+    "en": "Min. size (KB)"
+  },
+  "cat.noResults": {
+    "fr": "Aucun résultat",
+    "en": "No results"
+  },
+  "cat.noResultsDesc": {
+    "fr": "Aucune catégorie ou document ne correspond à votre recherche.",
+    "en": "No category or document matches your search."
+  },
+  "cat.moveToCategory": {
+    "fr": "Déplacer les documents vers",
+    "en": "Move documents to"
+  },
+  "cat.builtinProtected": {
+    "fr": "Les catégories intégrées ne peuvent pas être supprimées.",
+    "en": "Built-in categories cannot be deleted."
+  },
+  "favorites.added": {
+    "fr": "Document ajouté aux favoris.",
+    "en": "Document added to favorites."
+  },
+  "favorites.removed": {
+    "fr": "Document retiré des favoris.",
+    "en": "Document removed from favorites."
+  },
+  "favorites.empty": {
+    "fr": "Aucun document favori pour le moment.",
+    "en": "No favorite documents yet."
+  },
+  "collab.document": {
+    "fr": "Document",
+    "en": "Document"
+  },
+  "collab.tab.collaborators": {
+    "fr": "Collaborateurs",
+    "en": "Collaborators"
+  },
+  "collab.tab.links": {
+    "fr": "Liens de partage",
+    "en": "Share links"
+  },
+  "collab.listTitle": {
+    "fr": "Collaborateurs",
+    "en": "Collaborators"
+  },
+  "collab.sharedWith": {
+    "fr": "Partagé avec",
+    "en": "Shared with"
+  },
+  "collab.role.owner": {
+    "fr": "Propriétaire",
+    "en": "Owner"
+  },
+  "collab.invite": {
+    "fr": "Inviter des collaborateurs",
+    "en": "Invite collaborators"
+  },
+  "collab.searchUsers": {
+    "fr": "Rechercher des utilisateurs",
+    "en": "Search users"
+  },
+  "collab.searchPlaceholder": {
+    "fr": "Nom ou e-mail…",
+    "en": "Name or email…"
+  },
+  "collab.noUsers": {
+    "fr": "Aucun utilisateur disponible.",
+    "en": "No users available."
+  },
+  "collab.add": {
+    "fr": "Ajouter",
+    "en": "Add"
+  },
+  "collab.remove": {
+    "fr": "Retirer",
+    "en": "Remove"
+  },
+  "collab.changeAccess": {
+    "fr": "Modifier l'accès",
+    "en": "Change access"
+  },
+  "collab.none": {
+    "fr": "Aucun collaborateur pour l'instant.",
+    "en": "No collaborators yet."
+  },
+  "collab.expired": {
+    "fr": "Expiré",
+    "en": "Expired"
+  },
+  "collab.linkTitle": {
+    "fr": "Lien de partage",
+    "en": "Share link"
+  },
+  "collab.createLink": {
+    "fr": "Créer un lien",
+    "en": "Create link"
+  },
+  "collab.expires": {
+    "fr": "expire",
+    "en": "expires"
+  },
+  "collab.revoke": {
+    "fr": "Révoquer",
+    "en": "Revoke"
+  },
+  "upload.sources": {
+    "fr": "Sources d'ajout",
+    "en": "Add sources"
+  },
+  "upload.source.device": {
+    "fr": "Depuis l'appareil",
+    "en": "Upload from Device"
+  },
+  "upload.source.url": {
+    "fr": "Depuis un lien",
+    "en": "Import from Link"
+  },
+  "upload.source.googledrive": {
+    "fr": "Google Drive",
+    "en": "Google Drive"
+  },
+  "upload.source.onedrive": {
+    "fr": "OneDrive",
+    "en": "OneDrive"
+  },
+  "upload.source.dropbox": {
+    "fr": "Dropbox",
+    "en": "Dropbox"
+  },
+  "upload.soon": {
+    "fr": "Bientôt",
+    "en": "Soon"
+  },
+  "upload.cloudSoon": {
+    "fr": "Cette source cloud sera disponible prochainement.",
+    "en": "This cloud source will be available soon."
+  },
+  "upload.urlRequired": {
+    "fr": "Veuillez saisir une URL valide.",
+    "en": "Please enter a valid URL."
+  },
+  "upload.urlLabel": {
+    "fr": "URL du document",
+    "en": "Document URL"
+  },
+  "upload.urlFileName": {
+    "fr": "Nom du fichier (optionnel)",
+    "en": "File name (optional)"
+  },
+  "upload.urlHint": {
+    "fr": "Le fichier sera téléchargé, validé, scanné et chiffré avant stockage.",
+    "en": "The file will be downloaded, validated, scanned and encrypted before storage."
+  },
+  "upload.urlSecurityHint": {
+    "fr": "Même pipeline de sécurité que l'upload local : validation, antivirus, chiffrement.",
+    "en": "Same security pipeline as local upload: validation, antivirus, encryption."
+  },
+  "upload.statusQueued": {
+    "fr": "En file",
+    "en": "Queued"
+  },
+  "upload.queueCount": {
+    "fr": "Fichiers",
+    "en": "Files"
+  },
+  "archive.statTotal": {
+    "fr": "Documents archivés",
+    "en": "Total archived documents"
+  },
+  "archive.statMonth": {
+    "fr": "Archivés ce mois",
+    "en": "Archived this month"
+  },
+  "archive.statStorage": {
+    "fr": "Stockage archivé",
+    "en": "Total archived storage"
+  },
+  "archive.statCategories": {
+    "fr": "Catégories",
+    "en": "Categories"
+  },
+  "archive.searchPlaceholder": {
+    "fr": "Rechercher un document archivé…",
+    "en": "Search archived documents…"
+  },
+  "archive.sortBy": {
+    "fr": "Trier par",
+    "en": "Sort by"
+  },
+  "archive.sortArchived": {
+    "fr": "Date d'archivage (récent)",
+    "en": "Archive date (newest)"
+  },
+  "archive.sortArchivedAsc": {
+    "fr": "Date d'archivage (ancien)",
+    "en": "Archive date (oldest)"
+  },
+  "archive.sortName": {
+    "fr": "Nom (A–Z)",
+    "en": "Name (A–Z)"
+  },
+  "archive.sortSize": {
+    "fr": "Taille",
+    "en": "Size"
+  },
+  "archive.sortCategory": {
+    "fr": "Catégorie",
+    "en": "Category"
+  },
+  "archive.sortOwner": {
+    "fr": "Propriétaire",
+    "en": "Owner"
+  },
+  "archive.sortCreated": {
+    "fr": "Date de création",
+    "en": "Creation date"
+  },
+  "archive.archivedDate": {
+    "fr": "Date d'archivage",
+    "en": "Archive date"
+  },
+  "archive.filterFrom": {
+    "fr": "Archivé depuis",
+    "en": "Archived from"
+  },
+  "archive.filterTo": {
+    "fr": "Archivé jusqu'au",
+    "en": "Archived until"
+  },
+  "archive.openDetails": {
+    "fr": "Voir les détails",
+    "en": "Open details"
+  },
+  "archive.detailsTitle": {
+    "fr": "Détails du document",
+    "en": "Document details"
+  },
+  "archive.versionHistory": {
+    "fr": "Historique des versions",
+    "en": "Version history"
+  },
+  "archive.loading": {
+    "fr": "Chargement…",
+    "en": "Loading…"
+  },
+  "archive.emptyTitle": {
+    "fr": "Vos archives sont vides",
+    "en": "Your archive is empty"
+  },
+  "archive.emptyDesc": {
+    "fr": "Les documents archivés apparaîtront ici.",
+    "en": "Archived documents will appear here."
+  },
+  "archive.viewDocuments": {
+    "fr": "Voir les documents",
+    "en": "View Documents"
+  },
+  "archive.restoreConfirmTitle": {
+    "fr": "Restaurer le document",
+    "en": "Restore document"
+  },
+  "archive.restoreConfirmMsg": {
+    "fr": "Voulez-vous vraiment restaurer « {name} » ?",
+    "en": "Are you sure you want to restore \"{name}\"?"
+  },
+  "archive.restoreConfirmBulk": {
+    "fr": "Restaurer {count} document(s) sélectionné(s) ?",
+    "en": "Restore {count} selected document(s)?"
+  },
+  "archive.deleteConfirmTitle": {
+    "fr": "Suppression définitive",
+    "en": "Permanent deletion"
+  },
+  "archive.deleteConfirmMsg": {
+    "fr": "Cette action est définitive et ne peut pas être annulée.",
+    "en": "This action is permanent and cannot be undone."
+  },
+  "archive.restored": {
+    "fr": "Document restauré avec succès.",
+    "en": "Document restored successfully."
+  },
+  "archive.deleted": {
+    "fr": "Document supprimé définitivement.",
+    "en": "Document permanently deleted."
+  },
+  "archive.restoredBulk": {
+    "fr": "{count} document(s) restauré(s).",
+    "en": "{count} document(s) restored."
+  },
+  "archive.deletedBulk": {
+    "fr": "{count} document(s) supprimé(s).",
+    "en": "{count} document(s) deleted."
+  },
+  "archive.selected": {
+    "fr": "{count} sélectionné(s)",
+    "en": "{count} selected"
+  },
+  "archive.restoreSelected": {
+    "fr": "Restaurer la sélection",
+    "en": "Restore selected"
+  },
+  "archive.deleteSelected": {
+    "fr": "Supprimer définitivement",
+    "en": "Delete permanently"
+  },
+  "archive.clearSelection": {
+    "fr": "Annuler la sélection",
+    "en": "Clear selection"
+  },
+  "archive.selectAll": {
+    "fr": "Tout sélectionner",
+    "en": "Select all"
+  },
+  "trash.statTotal": {
+    "fr": "Documents supprimés",
+    "en": "Total Deleted Documents"
+  },
+  "trash.statRecent": {
+    "fr": "Supprimés récemment",
+    "en": "Recently Deleted"
+  },
+  "trash.statStorage": {
+    "fr": "Stockage en corbeille",
+    "en": "Storage in Trash"
+  },
+  "trash.statSelected": {
+    "fr": "Éléments sélectionnés",
+    "en": "Items Selected"
+  },
+  "trash.searchPlaceholder": {
+    "fr": "Rechercher un document supprimé…",
+    "en": "Search deleted documents…"
+  },
+  "trash.sortBy": {
+    "fr": "Trier par",
+    "en": "Sort by"
+  },
+  "trash.sortDeleted": {
+    "fr": "Date de suppression (récent)",
+    "en": "Deletion date (newest)"
+  },
+  "trash.sortDeletedAsc": {
+    "fr": "Date de suppression (ancien)",
+    "en": "Deletion date (oldest)"
+  },
+  "trash.sortName": {
+    "fr": "Nom (A–Z)",
+    "en": "Name (A–Z)"
+  },
+  "trash.sortSize": {
+    "fr": "Taille",
+    "en": "Size"
+  },
+  "trash.sortCategory": {
+    "fr": "Catégorie",
+    "en": "Category"
+  },
+  "trash.sortOwner": {
+    "fr": "Propriétaire",
+    "en": "Owner"
+  },
+  "trash.sortCreated": {
+    "fr": "Date de création",
+    "en": "Creation date"
+  },
+  "trash.deletedDate": {
+    "fr": "Date de suppression",
+    "en": "Deletion date"
+  },
+  "trash.originalCategory": {
+    "fr": "Catégorie d'origine",
+    "en": "Original category"
+  },
+  "trash.filterFrom": {
+    "fr": "Supprimé depuis",
+    "en": "Deleted from"
+  },
+  "trash.filterTo": {
+    "fr": "Supprimé jusqu'au",
+    "en": "Deleted until"
+  },
+  "trash.openDetails": {
+    "fr": "Voir les détails",
+    "en": "View Details"
+  },
+  "trash.detailsTitle": {
+    "fr": "Détails du document",
+    "en": "Document details"
+  },
+  "trash.versionHistory": {
+    "fr": "Historique des versions",
+    "en": "Version history"
+  },
+  "trash.loading": {
+    "fr": "Chargement…",
+    "en": "Loading…"
+  },
+  "trash.emptyTitle": {
+    "fr": "Votre corbeille est vide",
+    "en": "Your Trash is Empty"
+  },
+  "trash.emptyDesc": {
+    "fr": "Les documents supprimés apparaîtront ici.",
+    "en": "Deleted documents will appear here."
+  },
+  "trash.viewDocuments": {
+    "fr": "Voir les documents",
+    "en": "View Documents"
+  },
+  "trash.restoreConfirmTitle": {
+    "fr": "Restaurer le document",
+    "en": "Restore document"
+  },
+  "trash.restoreConfirmMsg": {
+    "fr": "Voulez-vous vraiment restaurer « {name} » ?",
+    "en": "Are you sure you want to restore this document?"
+  },
+  "trash.restoreConfirmBulk": {
+    "fr": "Restaurer {count} document(s) sélectionné(s) ?",
+    "en": "Restore {count} selected document(s)?"
+  },
+  "trash.deleteConfirmTitle": {
+    "fr": "Suppression définitive",
+    "en": "Permanent deletion"
+  },
+  "trash.deleteConfirmMsg": {
+    "fr": "Cette action est définitive et ne peut pas être annulée.",
+    "en": "This action is permanent and cannot be undone."
+  },
+  "trash.deleteConfirmBulk": {
+    "fr": "Voulez-vous supprimer définitivement {count} document(s) ?",
+    "en": "Are you sure you want to permanently delete {count} documents?"
+  },
+  "trash.understandPermanent": {
+    "fr": "Je comprends que cette action est irréversible",
+    "en": "I understand this action cannot be undone"
+  },
+  "trash.restored": {
+    "fr": "Document restauré avec succès.",
+    "en": "Document restored successfully."
+  },
+  "trash.deleted": {
+    "fr": "Document supprimé définitivement.",
+    "en": "Document permanently deleted."
+  },
+  "trash.restoredBulk": {
+    "fr": "{count} document(s) restauré(s).",
+    "en": "{count} document(s) restored."
+  },
+  "trash.deletedBulk": {
+    "fr": "{count} document(s) supprimé(s) définitivement.",
+    "en": "{count} document(s) permanently deleted."
+  },
+  "trash.selected": {
+    "fr": "{count} sélectionné(s)",
+    "en": "{count} selected"
+  },
+  "trash.restoreSelected": {
+    "fr": "Restaurer la sélection",
+    "en": "Restore Selected"
+  },
+  "trash.deleteSelected": {
+    "fr": "Supprimer définitivement",
+    "en": "Delete Permanently"
+  },
+  "trash.clearSelection": {
+    "fr": "Annuler la sélection",
+    "en": "Clear selection"
+  },
+  "trash.selectAll": {
+    "fr": "Tout sélectionner",
+    "en": "Select all"
+  },
+  "trash.emptyTrashTitle": {
+    "fr": "Vider la corbeille",
+    "en": "Empty trash"
+  },
+  "trash.emptyTrashConfirm": {
+    "fr": "Supprimer définitivement {count} document(s) de la corbeille ? Cette action est irréversible.",
+    "en": "Permanently delete {count} document(s) from trash? This cannot be undone."
+  },
+  "trash.emptied": {
+    "fr": "Corbeille vidée.",
+    "en": "Trash emptied."
+  },
+  "btn.close": {
+    "fr": "Fermer",
+    "en": "Close"
+  },
+  "btn.confirm": {
+    "fr": "Confirmer",
+    "en": "Confirm"
+  },
+  "users.statTotal": {
+    "fr": "Utilisateurs totaux",
+    "en": "Total Users"
+  },
+  "users.statActive": {
+    "fr": "Utilisateurs actifs",
+    "en": "Active Users"
+  },
+  "users.statInactive": {
+    "fr": "Utilisateurs inactifs",
+    "en": "Inactive Users"
+  },
+  "users.statAdmins": {
+    "fr": "Administrateurs",
+    "en": "Administrators"
+  },
+  "users.statNewMonth": {
+    "fr": "Nouveaux ce mois",
+    "en": "New Users This Month"
+  },
+  "users.searchPlaceholder": {
+    "fr": "Rechercher par nom, prénom ou e-mail…",
+    "en": "Search by name, first name or email…"
+  },
+  "users.sortBy": {
+    "fr": "Trier par",
+    "en": "Sort by"
+  },
+  "users.sortName": {
+    "fr": "Nom (A → Z)",
+    "en": "Name (A → Z)"
+  },
+  "users.sortNameDesc": {
+    "fr": "Nom (Z → A)",
+    "en": "Name (Z → A)"
+  },
+  "users.sortCreated": {
+    "fr": "Date d'inscription (récent)",
+    "en": "Registration date (newest)"
+  },
+  "users.sortCreatedAsc": {
+    "fr": "Date d'inscription (ancien)",
+    "en": "Registration date (oldest)"
+  },
+  "users.sortLastLogin": {
+    "fr": "Dernière connexion",
+    "en": "Last login"
+  },
+  "users.addUser": {
+    "fr": "Ajouter un utilisateur",
+    "en": "Add User"
+  },
+  "users.addTitle": {
+    "fr": "Nouvel utilisateur",
+    "en": "Add New User"
+  },
+  "users.firstName": {
+    "fr": "Prénom",
+    "en": "First Name"
+  },
+  "users.lastName": {
+    "fr": "Nom",
+    "en": "Last Name"
+  },
+  "users.phone": {
+    "fr": "Téléphone",
+    "en": "Phone"
+  },
+  "users.password": {
+    "fr": "Mot de passe",
+    "en": "Password"
+  },
+  "users.confirmPassword": {
+    "fr": "Confirmer le mot de passe",
+    "en": "Confirm Password"
+  },
+  "users.createUser": {
+    "fr": "Créer l'utilisateur",
+    "en": "Create User"
+  },
+  "users.created": {
+    "fr": "Utilisateur créé avec succès.",
+    "en": "User created successfully."
+  },
+  "users.updated": {
+    "fr": "Utilisateur mis à jour.",
+    "en": "User updated successfully."
+  },
+  "users.invalidEmail": {
+    "fr": "Adresse e-mail invalide.",
+    "en": "Invalid email address."
+  },
+  "users.passwordMin": {
+    "fr": "Le mot de passe doit contenir au moins 8 caractères.",
+    "en": "Password must be at least 8 characters."
+  },
+  "users.passwordMismatch": {
+    "fr": "Les mots de passe ne correspondent pas.",
+    "en": "Passwords do not match."
+  },
+  "users.viewProfile": {
+    "fr": "Voir le profil",
+    "en": "View Profile"
+  },
+  "users.editUser": {
+    "fr": "Modifier l'utilisateur",
+    "en": "Edit User"
+  },
+  "users.changeRole": {
+    "fr": "Changer le rôle",
+    "en": "Change Role"
+  },
+  "users.managePermissions": {
+    "fr": "Gérer les permissions",
+    "en": "Manage Permissions"
+  },
+  "users.activate": {
+    "fr": "Activer",
+    "en": "Activate"
+  },
+  "users.activateSelected": {
+    "fr": "Activer la sélection",
+    "en": "Activate Selected"
+  },
+  "users.deactivateSelected": {
+    "fr": "Désactiver la sélection",
+    "en": "Deactivate Selected"
+  },
+  "users.deleteSelected": {
+    "fr": "Supprimer la sélection",
+    "en": "Delete Selected"
+  },
+  "users.selectedCount": {
+    "fr": "{count} sélectionné(s)",
+    "en": "{count} selected"
+  },
+  "users.colAvatar": {
+    "fr": "Avatar",
+    "en": "Avatar"
+  },
+  "users.colFullName": {
+    "fr": "Nom complet",
+    "en": "Full Name"
+  },
+  "users.lastLogin": {
+    "fr": "Dernière connexion",
+    "en": "Last Login"
+  },
+  "users.notAvailable": {
+    "fr": "Non disponible",
+    "en": "Not available"
+  },
+  "users.filterFrom": {
+    "fr": "Inscription du",
+    "en": "Registered from"
+  },
+  "users.filterTo": {
+    "fr": "Inscription au",
+    "en": "Registered to"
+  },
+  "users.emptyTitle": {
+    "fr": "Commencez par ajouter votre premier utilisateur",
+    "en": "Start by adding your first user"
+  },
+  "users.emptyDesc": {
+    "fr": "Aucun compte utilisateur n'existe encore sur la plateforme.",
+    "en": "No user accounts exist on the platform yet."
+  },
+  "users.noResults": {
+    "fr": "Aucun utilisateur trouvé",
+    "en": "No users found"
+  },
+  "users.noResultsDesc": {
+    "fr": "Aucun utilisateur ne correspond à vos critères de recherche.",
+    "en": "No users match your search criteria."
+  },
+  "users.emailReadOnly": {
+    "fr": "L'e-mail ne peut pas être modifié ici.",
+    "en": "Email cannot be changed here."
+  },
+  "users.roleEditHint": {
+    "fr": "Utilisez « Changer le rôle » pour modifier les droits.",
+    "en": "Use « Change Role » to modify access rights."
+  },
+  "users.roleChangeWarning": {
+    "fr": "Changer le rôle de cet utilisateur modifiera ses droits d'accès.",
+    "en": "Changing this user's role will modify their access permissions."
+  },
+  "users.applyRole": {
+    "fr": "Appliquer le rôle",
+    "en": "Apply Role"
+  },
+  "users.roleUpdated": {
+    "fr": "Rôle mis à jour.",
+    "en": "Role updated."
+  },
+  "users.roleNotFound": {
+    "fr": "Rôle introuvable.",
+    "en": "Role not found."
+  },
+  "users.permissionsTitle": {
+    "fr": "Permissions",
+    "en": "Permissions"
+  },
+  "users.permissionsReadOnly": {
+    "fr": "Les permissions sont définies par le rôle (RBAC). Affichage informatif uniquement.",
+    "en": "Permissions are defined by role (RBAC). Display only."
+  },
+  "users.documentsSection": {
+    "fr": "Documents",
+    "en": "Documents"
+  },
+  "users.adminSection": {
+    "fr": "Administration",
+    "en": "Administration"
+  },
+  "users.adminFullAccess": {
+    "fr": "Les administrateurs disposent de tous les droits.",
+    "en": "Administrators have full access."
+  },
+  "users.recentActivity": {
+    "fr": "Activité récente",
+    "en": "Recent Activity"
+  },
+  "users.noActivity": {
+    "fr": "Aucune activité enregistrée.",
+    "en": "No recorded activity."
+  },
+  "users.loadingProfile": {
+    "fr": "Chargement du profil…",
+    "en": "Loading profile…"
+  },
+  "users.sharedDocs": {
+    "fr": "Documents partagés",
+    "en": "Shared documents"
+  },
+  "users.deactivateConfirmTitle": {
+    "fr": "Désactiver l'utilisateur",
+    "en": "Deactivate user"
+  },
+  "users.deactivateConfirmMsg": {
+    "fr": "Êtes-vous sûr de vouloir désactiver cet utilisateur ? Il ne pourra plus se connecter.",
+    "en": "Are you sure you want to deactivate this user? They will no longer be able to sign in."
+  },
+  "users.deactivateConfirmBulk": {
+    "fr": "Désactiver {count} utilisateur(s) ?",
+    "en": "Deactivate {count} user(s)?"
+  },
+  "users.activateConfirmTitle": {
+    "fr": "Activer l'utilisateur",
+    "en": "Activate user"
+  },
+  "users.activateConfirmMsg": {
+    "fr": "Réactiver ce compte utilisateur ?",
+    "en": "Reactivate this user account?"
+  },
+  "users.activateConfirmBulk": {
+    "fr": "Activer {count} utilisateur(s) ?",
+    "en": "Activate {count} user(s)?"
+  },
+  "users.activated": {
+    "fr": "Utilisateur activé.",
+    "en": "User activated."
+  },
+  "users.activatedBulk": {
+    "fr": "{count} utilisateur(s) activé(s).",
+    "en": "{count} user(s) activated."
+  },
+  "users.deactivated": {
+    "fr": "Utilisateur désactivé.",
+    "en": "User deactivated."
+  },
+  "users.deactivatedBulk": {
+    "fr": "{count} utilisateur(s) désactivé(s).",
+    "en": "{count} user(s) deactivated."
+  },
+  "users.deleteConfirmTitle": {
+    "fr": "Supprimer l'utilisateur",
+    "en": "Delete user"
+  },
+  "users.deleteConfirmMsg": {
+    "fr": "Cette action peut affecter les documents appartenant à cet utilisateur.",
+    "en": "This action may affect documents owned by this user."
+  },
+  "users.deleteConfirmBulk": {
+    "fr": "Supprimer {count} utilisateur(s) ? Cette action est irréversible.",
+    "en": "Delete {count} user(s)? This cannot be undone."
+  },
+  "users.deleteAck": {
+    "fr": "Je comprends les conséquences de cette suppression.",
+    "en": "I understand the consequences of this deletion."
+  },
+  "users.deleted": {
+    "fr": "Utilisateur supprimé.",
+    "en": "User deleted."
+  },
+  "users.deletedBulk": {
+    "fr": "{count} utilisateur(s) supprimé(s).",
+    "en": "{count} user(s) deleted."
+  },
+  "roles.manager": {
+    "fr": "Responsable",
+    "en": "Manager"
+  },
+  "roles.statTotal": {
+    "fr": "Rôles totaux",
+    "en": "Total Roles"
+  },
+  "roles.statActive": {
+    "fr": "Rôles actifs",
+    "en": "Active Roles"
+  },
+  "roles.statPermissions": {
+    "fr": "Permissions totales",
+    "en": "Total Permissions"
+  },
+  "roles.statUsersWithRoles": {
+    "fr": "Utilisateurs avec rôle",
+    "en": "Users with Roles"
+  },
+  "roles.searchPlaceholder": {
+    "fr": "Rechercher par nom ou description…",
+    "en": "Search by name or description…"
+  },
+  "roles.sortBy": {
+    "fr": "Trier par",
+    "en": "Sort by"
+  },
+  "roles.sortName": {
+    "fr": "Nom (A → Z)",
+    "en": "Name (A → Z)"
+  },
+  "roles.sortNameDesc": {
+    "fr": "Nom (Z → A)",
+    "en": "Name (Z → A)"
+  },
+  "roles.sortUsers": {
+    "fr": "Nombre d'utilisateurs",
+    "en": "User count"
+  },
+  "roles.sortPermissions": {
+    "fr": "Nombre de permissions",
+    "en": "Permission count"
+  },
+  "roles.createRole": {
+    "fr": "Créer un rôle",
+    "en": "Create Role"
+  },
+  "roles.createTitle": {
+    "fr": "Nouveau rôle",
+    "en": "Create New Role"
+  },
+  "roles.roleName": {
+    "fr": "Nom du rôle",
+    "en": "Role Name"
+  },
+  "roles.roleDescription": {
+    "fr": "Description",
+    "en": "Description"
+  },
+  "roles.assignPermissions": {
+    "fr": "Attribuer les permissions",
+    "en": "Assign Permissions"
+  },
+  "roles.created": {
+    "fr": "Rôle créé avec succès.",
+    "en": "Role created successfully."
+  },
+  "roles.updated": {
+    "fr": "Rôle mis à jour.",
+    "en": "Role updated successfully."
+  },
+  "roles.deleted": {
+    "fr": "Rôle supprimé.",
+    "en": "Role deleted."
+  },
+  "roles.nameRequired": {
+    "fr": "Le nom du rôle est requis.",
+    "en": "Role name is required."
+  },
+  "roles.viewDetails": {
+    "fr": "Voir les détails",
+    "en": "View Details"
+  },
+  "roles.editRole": {
+    "fr": "Modifier le rôle",
+    "en": "Edit Role"
+  },
+  "roles.managePermissions": {
+    "fr": "Gérer les permissions",
+    "en": "Manage Permissions"
+  },
+  "roles.deleteRole": {
+    "fr": "Supprimer le rôle",
+    "en": "Delete Role"
+  },
+  "roles.assignRole": {
+    "fr": "Affecter le rôle",
+    "en": "Assign Role"
+  },
+  "roles.saveChanges": {
+    "fr": "Enregistrer",
+    "en": "Save Changes"
+  },
+  "roles.systemRole": {
+    "fr": "Rôle système",
+    "en": "System Role"
+  },
+  "roles.systemNameLocked": {
+    "fr": "Le nom d'un rôle système ne peut pas être modifié.",
+    "en": "System role name cannot be changed."
+  },
+  "roles.noDescription": {
+    "fr": "Aucune description",
+    "en": "No description"
+  },
+  "roles.usersCount": {
+    "fr": "Utilisateurs",
+    "en": "Users"
+  },
+  "roles.permissionsCount": {
+    "fr": "Permissions",
+    "en": "Permissions"
+  },
+  "roles.filterType": {
+    "fr": "Type de rôle",
+    "en": "Role type"
+  },
+  "roles.filterSystem": {
+    "fr": "Rôle système",
+    "en": "System Role"
+  },
+  "roles.filterCustom": {
+    "fr": "Rôle personnalisé",
+    "en": "Custom Role"
+  },
+  "roles.emptyTitle": {
+    "fr": "Aucun rôle disponible",
+    "en": "No roles available"
+  },
+  "roles.emptyDesc": {
+    "fr": "Aucun rôle n'existe encore dans le système.",
+    "en": "No roles exist in the system yet."
+  },
+  "roles.emptyDescTwo": {
+    "fr": "Les rôles Admin et User seront affichés ici une fois l'API connectée.",
+    "en": "Admin and User roles will appear here once the API is connected."
+  },
+  "roles.twoRolesHint": {
+    "fr": "Seuls les rôles système Admin et User sont disponibles. La création de rôles personnalisés n'est pas autorisée.",
+    "en": "Only the Admin and User system roles are available. Custom role creation is not allowed."
+  },
+  "roles.noResults": {
+    "fr": "Aucun rôle trouvé",
+    "en": "No roles found"
+  },
+  "roles.noResultsDesc": {
+    "fr": "Aucun rôle ne correspond à vos critères.",
+    "en": "No roles match your criteria."
+  },
+  "roles.permissionsReadOnly": {
+    "fr": "Les permissions sont dérivées du rôle selon le RBAC applicatif (affichage informatif).",
+    "en": "Permissions are derived from the role in the application RBAC (display only)."
+  },
+  "roles.selectAll": {
+    "fr": "Tout sélectionner",
+    "en": "Select All"
+  },
+  "roles.deselectAll": {
+    "fr": "Tout désélectionner",
+    "en": "Deselect All"
+  },
+  "roles.permissionTotal": {
+    "fr": "{count} / {total} permissions actives",
+    "en": "{count} / {total} active permissions"
+  },
+  "roles.usersWithRole": {
+    "fr": "Utilisateurs avec ce rôle",
+    "en": "Users with this role"
+  },
+  "roles.noUsersInRole": {
+    "fr": "Aucun utilisateur n'a ce rôle.",
+    "en": "No users have this role."
+  },
+  "roles.assignIntro": {
+    "fr": "Affecter le rôle « {role} » à un utilisateur.",
+    "en": "Assign the « {role} » role to a user."
+  },
+  "roles.selectUser": {
+    "fr": "Sélectionner un utilisateur",
+    "en": "Select a user"
+  },
+  "roles.assignedRole": {
+    "fr": "Rôle affecté",
+    "en": "Assigned Role"
+  },
+  "roles.inheritedPermissions": {
+    "fr": "Permissions héritées du rôle",
+    "en": "Permissions inherited from Role"
+  },
+  "roles.removeRoleNote": {
+    "fr": "Le retrait d'un rôle n'est pas disponible via l'API actuelle. L'affectation est additive.",
+    "en": "Removing a role is not available via the current API. Assignment is additive."
+  },
+  "roles.assigned": {
+    "fr": "Rôle affecté à l'utilisateur.",
+    "en": "Role assigned to user."
+  },
+  "roles.deleteConfirmMsg": {
+    "fr": "Ce rôle peut affecter les utilisateurs qui lui sont actuellement associés.",
+    "en": "This role may affect users currently assigned to it."
+  },
+  "roles.deleteUsersWarning": {
+    "fr": "{count} utilisateur(s) possèdent encore ce rôle.",
+    "en": "{count} user(s) still have this role."
+  },
+  "roles.deleteAck": {
+    "fr": "Je comprends les conséquences de cette suppression.",
+    "en": "I understand the consequences of this deletion."
+  },
+  "roles.systemDeleteBlocked": {
+    "fr": "Les rôles système ne peuvent pas être supprimés.",
+    "en": "System roles cannot be deleted."
+  },
+  "roles.deleteFailed": {
+    "fr": "Impossible de supprimer ce rôle.",
+    "en": "Unable to delete this role."
+  },
+  "roles.catDocuments": {
+    "fr": "Documents",
+    "en": "Documents"
+  },
+  "roles.catUsers": {
+    "fr": "Utilisateurs",
+    "en": "Users"
+  },
+  "roles.catCategories": {
+    "fr": "Catégories",
+    "en": "Categories"
+  },
+  "roles.catAudit": {
+    "fr": "Audit",
+    "en": "Audit"
+  },
+  "roles.catAdministration": {
+    "fr": "Administration",
+    "en": "Administration"
+  },
+  "roles.permDocView": {
+    "fr": "Consulter les documents",
+    "en": "View Documents"
+  },
+  "roles.permDocUpload": {
+    "fr": "Téléverser des documents",
+    "en": "Upload Documents"
+  },
+  "roles.permDocDownload": {
+    "fr": "Télécharger des documents",
+    "en": "Download Documents"
+  },
+  "roles.permDocPreview": {
+    "fr": "Prévisualiser des documents",
+    "en": "Preview Documents"
+  },
+  "roles.permDocEdit": {
+    "fr": "Modifier des documents",
+    "en": "Edit Documents"
+  },
+  "roles.permDocDelete": {
+    "fr": "Supprimer des documents",
+    "en": "Delete Documents"
+  },
+  "roles.permDocArchive": {
+    "fr": "Archiver des documents",
+    "en": "Archive Documents"
+  },
+  "roles.permUsersView": {
+    "fr": "Voir les utilisateurs",
+    "en": "View Users"
+  },
+  "roles.permUsersCreate": {
+    "fr": "Créer des utilisateurs",
+    "en": "Create Users"
+  },
+  "roles.permUsersEdit": {
+    "fr": "Modifier des utilisateurs",
+    "en": "Edit Users"
+  },
+  "roles.permUsersDelete": {
+    "fr": "Supprimer des utilisateurs",
+    "en": "Delete Users"
+  },
+  "roles.permUsersActivate": {
+    "fr": "Activer / Désactiver des utilisateurs",
+    "en": "Activate / Deactivate Users"
+  },
+  "roles.permCatView": {
+    "fr": "Voir les catégories",
+    "en": "View Categories"
+  },
+  "roles.permCatCreate": {
+    "fr": "Créer des catégories",
+    "en": "Create Categories"
+  },
+  "roles.permCatEdit": {
+    "fr": "Modifier des catégories",
+    "en": "Edit Categories"
+  },
+  "roles.permCatDelete": {
+    "fr": "Supprimer des catégories",
+    "en": "Delete Categories"
+  },
+  "roles.permAuditView": {
+    "fr": "Voir les journaux d'audit",
+    "en": "View Audit Logs"
+  },
+  "roles.permAuditSearch": {
+    "fr": "Rechercher dans l'audit",
+    "en": "Search Audit Logs"
+  },
+  "roles.permAuditExport": {
+    "fr": "Exporter l'audit",
+    "en": "Export Audit Logs"
+  },
+  "roles.permAdminRoles": {
+    "fr": "Gérer les rôles",
+    "en": "Manage Roles"
+  },
+  "roles.permAdminPermissions": {
+    "fr": "Gérer les permissions",
+    "en": "Manage Permissions"
+  },
+  "roles.permAdminStorage": {
+    "fr": "Gérer le stockage",
+    "en": "Manage Storage"
+  },
+  "roles.permAdminSecurity": {
+    "fr": "Gérer la sécurité",
+    "en": "Manage Security Settings"
+  },
+  "audit.statTotal": {
+    "fr": "Activités totales",
+    "en": "Total Activities"
+  },
+  "audit.statToday": {
+    "fr": "Activités aujourd'hui",
+    "en": "Activities Today"
+  },
+  "audit.statSuccess": {
+    "fr": "Actions réussies",
+    "en": "Successful Actions"
+  },
+  "audit.statFailed": {
+    "fr": "Actions échouées",
+    "en": "Failed Actions"
+  },
+  "audit.statDenied": {
+    "fr": "Accès refusés",
+    "en": "Access Denied"
+  },
+  "audit.statSecurity": {
+    "fr": "Alertes sécurité",
+    "en": "Security Alerts"
+  },
+  "audit.searchPlaceholder": {
+    "fr": "Rechercher par utilisateur, action, document, IP…",
+    "en": "Search by user, action, document, IP…"
+  },
+  "audit.refresh": {
+    "fr": "Actualiser",
+    "en": "Refresh"
+  },
+  "audit.exportLogs": {
+    "fr": "Exporter (CSV)",
+    "en": "Export Logs (CSV)"
+  },
+  "audit.exported": {
+    "fr": "Journaux exportés avec succès.",
+    "en": "Logs exported successfully."
+  },
+  "audit.exportFailed": {
+    "fr": "Échec de l'export.",
+    "en": "Export failed."
+  },
+  "audit.viewMode": {
+    "fr": "Mode d'affichage",
+    "en": "View mode"
+  },
+  "audit.applyFilters": {
+    "fr": "Appliquer les filtres",
+    "en": "Apply filters"
+  },
+  "audit.period.today": {
+    "fr": "Aujourd'hui",
+    "en": "Today"
+  },
+  "audit.period.yesterday": {
+    "fr": "Hier",
+    "en": "Yesterday"
+  },
+  "audit.period.last7": {
+    "fr": "7 derniers jours",
+    "en": "Last 7 Days"
+  },
+  "audit.period.last30": {
+    "fr": "30 derniers jours",
+    "en": "Last 30 Days"
+  },
+  "audit.period.custom": {
+    "fr": "Personnalisé",
+    "en": "Custom Range"
+  },
+  "audit.colDate": {
+    "fr": "Date & heure",
+    "en": "Date & Time"
+  },
+  "audit.colUser": {
+    "fr": "Utilisateur",
+    "en": "User"
+  },
+  "audit.colAction": {
+    "fr": "Action",
+    "en": "Action"
+  },
+  "audit.colResource": {
+    "fr": "Ressource",
+    "en": "Resource"
+  },
+  "audit.colResourceType": {
+    "fr": "Type",
+    "en": "Resource Type"
+  },
+  "audit.colIp": {
+    "fr": "Adresse IP",
+    "en": "IP Address"
+  },
+  "audit.colStatus": {
+    "fr": "Statut",
+    "en": "Status"
+  },
+  "audit.colDetails": {
+    "fr": "Détails",
+    "en": "Details"
+  },
+  "audit.status.success": {
+    "fr": "Succès",
+    "en": "Success"
+  },
+  "audit.status.failed": {
+    "fr": "Échec",
+    "en": "Failed"
+  },
+  "audit.status.denied": {
+    "fr": "Refusé",
+    "en": "Denied"
+  },
+  "audit.resourceDocument": {
+    "fr": "Document",
+    "en": "Document"
+  },
+  "audit.anonymous": {
+    "fr": "Anonyme",
+    "en": "Anonymous"
+  },
+  "audit.detailsTitle": {
+    "fr": "Détails de l'activité",
+    "en": "Activity Details"
+  },
+  "audit.resourceId": {
+    "fr": "ID ressource",
+    "en": "Resource ID"
+  },
+  "audit.deviceBrowser": {
+    "fr": "Appareil / Navigateur",
+    "en": "Device / Browser"
+  },
+  "audit.description": {
+    "fr": "Description",
+    "en": "Description"
+  },
+  "audit.additionalDetails": {
+    "fr": "Informations complémentaires",
+    "en": "Additional Details"
+  },
+  "audit.emptyTitle": {
+    "fr": "Aucune activité trouvée",
+    "en": "No activities found"
+  },
+  "audit.emptyDesc": {
+    "fr": "Essayez de modifier votre recherche ou vos filtres.",
+    "en": "Try changing your search or filters."
+  },
+  "audit.securityTitle": {
+    "fr": "Alertes de sécurité",
+    "en": "Security Alerts"
+  },
+  "audit.antivirusDetection": {
+    "fr": "Détection antivirus",
+    "en": "Antivirus detection"
+  },
+  "audit.level.critical": {
+    "fr": "Critique",
+    "en": "Critical"
+  },
+  "audit.level.high": {
+    "fr": "Élevé",
+    "en": "High"
+  },
+  "audit.level.medium": {
+    "fr": "Moyen",
+    "en": "Medium"
+  },
+  "audit.level.low": {
+    "fr": "Faible",
+    "en": "Low"
+  },
+  "audit.paginationInfo": {
+    "fr": "{from}–{to} sur {total} résultats",
+    "en": "{from}–{to} of {total} results"
+  },
+  "audit.page": {
+    "fr": "page",
+    "en": "page"
+  },
+  "audit.prevPage": {
+    "fr": "Précédent",
+    "en": "Previous"
+  },
+  "audit.nextPage": {
+    "fr": "Suivant",
+    "en": "Next"
+  },
+  "docAudit.statTotal": {
+    "fr": "Activités documentaires",
+    "en": "Total Document Activities"
+  },
+  "docAudit.statUploaded": {
+    "fr": "Documents téléversés",
+    "en": "Documents Uploaded"
+  },
+  "docAudit.statDownloaded": {
+    "fr": "Documents téléchargés",
+    "en": "Documents Downloaded"
+  },
+  "docAudit.statModified": {
+    "fr": "Documents modifiés",
+    "en": "Documents Modified"
+  },
+  "docAudit.statShared": {
+    "fr": "Documents partagés",
+    "en": "Documents Shared"
+  },
+  "docAudit.statArchived": {
+    "fr": "Documents archivés",
+    "en": "Documents Archived"
+  },
+  "docAudit.statRestored": {
+    "fr": "Documents restaurés",
+    "en": "Documents Restored"
+  },
+  "docAudit.statDeleted": {
+    "fr": "Documents supprimés",
+    "en": "Documents Deleted"
+  },
+  "docAudit.searchPlaceholder": {
+    "fr": "Rechercher par document, utilisateur, catégorie, type…",
+    "en": "Search by document, user, category, type…"
+  },
+  "docAudit.export": {
+    "fr": "Exporter (CSV)",
+    "en": "Export (CSV)"
+  },
+  "docAudit.clearFilters": {
+    "fr": "Effacer les filtres",
+    "en": "Clear Filters"
+  },
+  "docAudit.colDocument": {
+    "fr": "Document",
+    "en": "Document"
+  },
+  "docAudit.colCategory": {
+    "fr": "Catégorie",
+    "en": "Category"
+  },
+  "docAudit.colVersion": {
+    "fr": "Version",
+    "en": "Version"
+  },
+  "docAudit.emptyTitle": {
+    "fr": "Aucune activité documentaire trouvée",
+    "en": "No document activity found"
+  },
+  "docAudit.emptyDesc": {
+    "fr": "Les activités documentaires apparaîtront ici lorsque les utilisateurs interagiront avec les fichiers.",
+    "en": "Document activities will appear here when users interact with documents."
+  },
+  "docAudit.detailsTitle": {
+    "fr": "Détails de l'activité",
+    "en": "Activity Details"
+  },
+  "docAudit.activityDetails": {
+    "fr": "Informations sur l'activité",
+    "en": "Activity Information"
+  },
+  "docAudit.documentHistory": {
+    "fr": "Historique du document",
+    "en": "Document History"
+  },
+  "docAudit.lifecycleTimeline": {
+    "fr": "Cycle de vie",
+    "en": "Document Lifecycle"
+  },
+  "docAudit.versionHistory": {
+    "fr": "Historique des versions",
+    "en": "Version History"
+  },
+  "docAudit.versionDetail": {
+    "fr": "Détails de la version {version}",
+    "en": "Version {version} Details"
+  },
+  "docAudit.noHistory": {
+    "fr": "Aucun historique disponible pour ce document.",
+    "en": "No history available for this document."
+  },
+  "docAudit.viewInPage": {
+    "fr": "Voir dans la page",
+    "en": "View in page"
+  },
+  "docAudit.sha256": {
+    "fr": "Hash SHA-256",
+    "en": "SHA-256 Hash"
+  },
+  "docAudit.integrityTitle": {
+    "fr": "Intégrité du document",
+    "en": "Document Integrity"
+  },
+  "docAudit.integrityVerified": {
+    "fr": "Intégrité vérifiée",
+    "en": "Verified"
+  },
+  "docAudit.integrityFailed": {
+    "fr": "Échec de la vérification d'intégrité",
+    "en": "Integrity Check Failed"
+  },
+  "docAudit.lastVerification": {
+    "fr": "Dernière vérification",
+    "en": "Last verification"
+  },
+  "docAudit.hashAvailable": {
+    "fr": "Empreinte disponible",
+    "en": "Hash available"
+  },
+  "docAudit.noVerificationYet": {
+    "fr": "Aucune vérification d'intégrité enregistrée pour le moment.",
+    "en": "No integrity verification recorded yet."
+  },
+  "docAudit.action.versionCreated": {
+    "fr": "Version créée",
+    "en": "Version Created"
+  },
+  "docAudit.action.movedToTrash": {
+    "fr": "Déplacé vers la corbeille",
+    "en": "Moved to Trash"
+  },
+  "docAudit.action.permanentlyDeleted": {
+    "fr": "Suppression définitive",
+    "en": "Permanently Deleted"
+  },
+  "docAudit.filter.upload": {
+    "fr": "Téléversement",
+    "en": "Upload"
+  },
+  "docAudit.filter.view": {
+    "fr": "Consultation",
+    "en": "View"
+  },
+  "docAudit.filter.preview": {
+    "fr": "Prévisualisation",
+    "en": "Preview"
+  },
+  "docAudit.filter.download": {
+    "fr": "Téléchargement",
+    "en": "Download"
+  },
+  "docAudit.filter.edit": {
+    "fr": "Modification",
+    "en": "Edit"
+  },
+  "docAudit.filter.versionCreated": {
+    "fr": "Version créée",
+    "en": "Version Created"
+  },
+  "docAudit.filter.share": {
+    "fr": "Partage",
+    "en": "Share"
+  },
+  "docAudit.filter.archive": {
+    "fr": "Archivage",
+    "en": "Archive"
+  },
+  "docAudit.filter.restore": {
+    "fr": "Restauration",
+    "en": "Restore"
+  },
+  "docAudit.filter.trash": {
+    "fr": "Corbeille",
+    "en": "Move to Trash"
+  },
+  "docAudit.filter.delete": {
+    "fr": "Suppression définitive",
+    "en": "Delete"
+  },
+  "settings.navigation": {
+    "fr": "Navigation des paramètres",
+    "en": "Settings navigation"
+  },
+  "settings.nav.general": {
+    "fr": "Général",
+    "en": "General"
+  },
+  "settings.nav.security": {
+    "fr": "Sécurité",
+    "en": "Security"
+  },
+  "settings.nav.documentSecurity": {
+    "fr": "Sécurité documentaire",
+    "en": "Document Security"
+  },
+  "settings.nav.storage": {
+    "fr": "Stockage",
+    "en": "Storage"
+  },
+  "settings.nav.documents": {
+    "fr": "Documents",
+    "en": "Documents"
+  },
+  "settings.nav.trashArchive": {
+    "fr": "Corbeille & archives",
+    "en": "Trash & Archive"
+  },
+  "settings.nav.notifications": {
+    "fr": "Notifications",
+    "en": "Notifications"
+  },
+  "settings.nav.system": {
+    "fr": "Système",
+    "en": "System"
+  },
+  "settings.generalDesc": {
+    "fr": "Paramètres généraux de la plateforme et préférences d'affichage.",
+    "en": "General platform settings and display preferences."
+  },
+  "settings.securityDesc": {
+    "fr": "Authentification, sessions et gestion des clés de chiffrement.",
+    "en": "Authentication, sessions and encryption key management."
+  },
+  "settings.documentSecurityDesc": {
+    "fr": "Protection, chiffrement et intégrité des documents.",
+    "en": "Document protection, encryption and integrity."
+  },
+  "settings.storageDesc": {
+    "fr": "Configuration du stockage et utilisation de l'espace disque.",
+    "en": "Storage configuration and disk usage."
+  },
+  "settings.documentsDesc": {
+    "fr": "Règles de gestion et limites applicables aux documents.",
+    "en": "Document management rules and limits."
+  },
+  "settings.trashArchiveDesc": {
+    "fr": "Politiques de rétention pour la corbeille et les archives.",
+    "en": "Retention policies for trash and archives."
+  },
+  "settings.notificationsDesc": {
+    "fr": "Types de notifications générées par le système.",
+    "en": "Notification types generated by the system."
+  },
+  "settings.systemDesc": {
+    "fr": "État de santé et informations sur l'infrastructure.",
+    "en": "Health status and infrastructure information."
+  },
+  "settings.saveChanges": {
+    "fr": "Enregistrer",
+    "en": "Save Changes"
+  },
+  "settings.saved": {
+    "fr": "Modifications enregistrées.",
+    "en": "Changes saved successfully."
+  },
+  "settings.saveFailed": {
+    "fr": "Échec de l'enregistrement.",
+    "en": "Failed to save changes."
+  },
+  "settings.serverManaged": {
+    "fr": "Géré par le serveur",
+    "en": "Server-managed"
+  },
+  "settings.enabled": {
+    "fr": "Activé",
+    "en": "Enabled"
+  },
+  "settings.disabled": {
+    "fr": "Désactivé",
+    "en": "Disabled"
+  },
+  "settings.active": {
+    "fr": "Actif",
+    "en": "Active"
+  },
+  "settings.notConfigured": {
+    "fr": "Non configuré",
+    "en": "Not configured"
+  },
+  "settings.notAvailable": {
+    "fr": "Non disponible",
+    "en": "Not available"
+  },
+  "settings.unlimited": {
+    "fr": "Illimité",
+    "en": "Unlimited"
+  },
+  "settings.appName": {
+    "fr": "Nom de l'application",
+    "en": "Application name"
+  },
+  "settings.appDescription": {
+    "fr": "Description",
+    "en": "Description"
+  },
+  "settings.appDescriptionValue": {
+    "fr": "Plateforme sécurisée de stockage et de gestion documentaire",
+    "en": "Secure document storage and management platform"
+  },
+  "settings.language": {
+    "fr": "Langue",
+    "en": "Language"
+  },
+  "settings.languageHint": {
+    "fr": "Préférence d'affichage enregistrée localement dans votre navigateur.",
+    "en": "Display preference saved locally in your browser."
+  },
+  "settings.timezone": {
+    "fr": "Fuseau horaire",
+    "en": "Timezone"
+  },
+  "settings.timezoneHint": {
+    "fr": "Détecté automatiquement depuis votre navigateur.",
+    "en": "Automatically detected from your browser."
+  },
+  "settings.securityLevel": {
+    "fr": "Niveau de sécurité",
+    "en": "Security Level"
+  },
+  "settings.securityLevel.strong": {
+    "fr": "Élevé",
+    "en": "Strong"
+  },
+  "settings.securityLevel.medium": {
+    "fr": "Moyen",
+    "en": "Medium"
+  },
+  "settings.securityLevel.basic": {
+    "fr": "Basique",
+    "en": "Basic"
+  },
+  "settings.jwtAuth": {
+    "fr": "Authentification JWT",
+    "en": "JWT Authentication"
+  },
+  "settings.jwtAuthDesc": {
+    "fr": "Authentification par jetons JWT pour toutes les requêtes API.",
+    "en": "JWT token authentication for all API requests."
+  },
+  "settings.sessionExpiration": {
+    "fr": "Expiration de session",
+    "en": "Session expiration"
+  },
+  "settings.minutesValue": {
+    "fr": "{count} minutes",
+    "en": "{count} minutes"
+  },
+  "settings.passwordPolicy": {
+    "fr": "Politique de mot de passe",
+    "en": "Password policy"
+  },
+  "settings.passwordPolicyValue": {
+    "fr": "Hachage BCrypt activé",
+    "en": "BCrypt hashing enabled"
+  },
+  "settings.maxLoginAttempts": {
+    "fr": "Tentatives de connexion max.",
+    "en": "Maximum login attempts"
+  },
+  "settings.accountLockout": {
+    "fr": "Verrouillage de compte",
+    "en": "Account lockout"
+  },
+  "settings.twoFactor": {
+    "fr": "Authentification à deux facteurs",
+    "en": "Two-Factor Authentication"
+  },
+  "settings.twoFactorDesc": {
+    "fr": "Couche de sécurité supplémentaire à la connexion.",
+    "en": "Additional security layer at sign-in."
+  },
+  "settings.encryptionKeys": {
+    "fr": "Clés de chiffrement",
+    "en": "Encryption Keys"
+  },
+  "settings.encryptionKeysDesc": {
+    "fr": "Gestion sécurisée des clés maîtres. Les clés ne sont jamais affichées.",
+    "en": "Secure master key management. Keys are never displayed."
+  },
+  "settings.keyStatus": {
+    "fr": "Statut de la clé",
+    "en": "Encryption Key Status"
+  },
+  "settings.keyStatusActive": {
+    "fr": "Clé active",
+    "en": "Active key"
+  },
+  "settings.lastKeyRotation": {
+    "fr": "Dernière rotation",
+    "en": "Last Key Rotation"
+  },
+  "settings.keyIdentifier": {
+    "fr": "Identifiant de clé",
+    "en": "Key identifier"
+  },
+  "settings.rotateKey": {
+    "fr": "Rotation de clé",
+    "en": "Key Rotation"
+  },
+  "settings.rotateKeyConfirmTitle": {
+    "fr": "Confirmer la rotation de clé",
+    "en": "Confirm key rotation"
+  },
+  "settings.rotateKeyConfirmDesc": {
+    "fr": "Cette action génère une nouvelle clé maître de chiffrement. Assurez-vous que tous les services sont prêts avant de continuer.",
+    "en": "This action generates a new master encryption key. Ensure all services are ready before continuing."
+  },
+  "settings.keyRotated": {
+    "fr": "Clé de chiffrement rotée avec succès.",
+    "en": "Encryption key rotated successfully."
+  },
+  "settings.encryptionAtRest": {
+    "fr": "Chiffrement au repos",
+    "en": "Encryption at Rest"
+  },
+  "settings.encryptionAtRestDesc": {
+    "fr": "Les fichiers sont chiffrés avant stockage.",
+    "en": "Files are encrypted before storage."
+  },
+  "settings.aes256": {
+    "fr": "Chiffrement AES-256",
+    "en": "AES-256 Encryption"
+  },
+  "settings.aes256Desc": {
+    "fr": "Algorithme AES-256 en mode CBC pour le chiffrement des données.",
+    "en": "AES-256 CBC algorithm for data encryption."
+  },
+  "settings.sha256": {
+    "fr": "Vérification SHA-256",
+    "en": "SHA-256 Integrity Check"
+  },
+  "settings.sha256Desc": {
+    "fr": "Empreinte SHA-256 pour vérifier l'intégrité des documents.",
+    "en": "SHA-256 hash to verify document integrity."
+  },
+  "settings.antivirusScan": {
+    "fr": "Analyse antivirus",
+    "en": "Antivirus Scan"
+  },
+  "settings.antivirusScanDesc": {
+    "fr": "Analyse des fichiers téléversés via ClamAV (si activé côté serveur).",
+    "en": "Scans uploaded files via ClamAV (when enabled on server)."
+  },
+  "settings.digitalSignature": {
+    "fr": "Signature numérique",
+    "en": "Digital Signature"
+  },
+  "settings.digitalSignatureDesc": {
+    "fr": "Signature cryptographique des documents.",
+    "en": "Cryptographic document signing."
+  },
+  "settings.antivirusAlerts": {
+    "fr": "Alertes antivirus récentes",
+    "en": "Recent antivirus alerts"
+  },
+  "settings.storageUsage": {
+    "fr": "Utilisation du stockage",
+    "en": "Storage Usage"
+  },
+  "settings.usedStorage": {
+    "fr": "Stockage utilisé",
+    "en": "Used Storage"
+  },
+  "settings.logicalStorage": {
+    "fr": "Stockage logique",
+    "en": "Logical Storage"
+  },
+  "settings.storageUsageHint": {
+    "fr": "Les capacités totales sont définies par l'infrastructure hôte.",
+    "en": "Total capacity is defined by the host infrastructure."
+  },
+  "settings.storageConfig": {
+    "fr": "Configuration du stockage",
+    "en": "Storage Configuration"
+  },
+  "settings.storageType": {
+    "fr": "Type de stockage",
+    "en": "Storage Type"
+  },
+  "settings.storageLocation": {
+    "fr": "Emplacement",
+    "en": "Storage Location"
+  },
+  "settings.storage.local": {
+    "fr": "Système de fichiers local",
+    "en": "Local File System"
+  },
+  "settings.storage.s3": {
+    "fr": "S3 / MinIO",
+    "en": "S3 / MinIO"
+  },
+  "settings.storage.nas": {
+    "fr": "NAS",
+    "en": "NAS"
+  },
+  "settings.databaseProvider": {
+    "fr": "Base de données",
+    "en": "Database provider"
+  },
+  "settings.s3AccessKey": {
+    "fr": "Clé d'accès S3",
+    "en": "S3 access key"
+  },
+  "settings.s3SecretKey": {
+    "fr": "Clé secrète S3",
+    "en": "S3 secret key"
+  },
+  "settings.lastUpdated": {
+    "fr": "Dernière mise à jour",
+    "en": "Last updated"
+  },
+  "settings.maxFileSize": {
+    "fr": "Taille maximale des fichiers",
+    "en": "Maximum File Size"
+  },
+  "settings.allowedTypes": {
+    "fr": "Types de fichiers autorisés",
+    "en": "Allowed File Types"
+  },
+  "settings.maxVersions": {
+    "fr": "Versions max. par document",
+    "en": "Maximum Versions per Document"
+  },
+  "settings.autoArchiving": {
+    "fr": "Archivage automatique",
+    "en": "Automatic Archiving"
+  },
+  "settings.autoArchivingDesc": {
+    "fr": "Archivage automatique des documents inactifs.",
+    "en": "Automatically archive inactive documents."
+  },
+  "settings.autoDeletion": {
+    "fr": "Suppression automatique",
+    "en": "Automatic Deletion"
+  },
+  "settings.autoDeletionDesc": {
+    "fr": "Suppression programmée des documents expirés.",
+    "en": "Scheduled deletion of expired documents."
+  },
+  "settings.retentionPeriod": {
+    "fr": "Durée de conservation",
+    "en": "Retention Period"
+  },
+  "settings.trashAutoDelete": {
+    "fr": "Suppression auto. de la corbeille",
+    "en": "Automatic deletion from Trash"
+  },
+  "settings.trashAutoDeleteDesc": {
+    "fr": "Suppression automatique des documents en corbeille après expiration.",
+    "en": "Automatically delete trashed documents after expiration."
+  },
+  "settings.trashRetention": {
+    "fr": "Durée de rétention (corbeille)",
+    "en": "Trash retention period"
+  },
+  "settings.permanentDeleteWarning": {
+    "fr": "La suppression définitive ne peut pas être annulée.",
+    "en": "Permanent deletion cannot be undone."
+  },
+  "settings.notificationsNotConfigurable": {
+    "fr": "La configuration des notifications n'est pas encore disponible côté serveur. Les notifications système sont générées automatiquement.",
+    "en": "Notification configuration is not yet available on the server. System notifications are generated automatically."
+  },
+  "settings.notif.shared": {
+    "fr": "Document partagé",
+    "en": "Document shared"
+  },
+  "settings.notif.sharedDesc": {
+    "fr": "Lorsqu'un document est partagé avec un utilisateur.",
+    "en": "When a document is shared with a user."
+  },
+  "settings.notif.downloaded": {
+    "fr": "Document téléchargé",
+    "en": "Document downloaded"
+  },
+  "settings.notif.downloadedDesc": {
+    "fr": "Lorsqu'un document est téléchargé.",
+    "en": "When a document is downloaded."
+  },
+  "settings.notif.accessRequest": {
+    "fr": "Demande d'accès",
+    "en": "Document access request"
+  },
+  "settings.notif.accessRequestDesc": {
+    "fr": "Lorsqu'un accès est demandé à un document.",
+    "en": "When access to a document is requested."
+  },
+  "settings.notif.restored": {
+    "fr": "Document restauré",
+    "en": "Document restored"
+  },
+  "settings.notif.restoredDesc": {
+    "fr": "Lorsqu'un document est restauré depuis la corbeille ou les archives.",
+    "en": "When a document is restored from trash or archives."
+  },
+  "settings.notif.securityAlert": {
+    "fr": "Alerte de sécurité",
+    "en": "Security alert"
+  },
+  "settings.notif.securityAlertDesc": {
+    "fr": "Alertes antivirus et incidents de sécurité.",
+    "en": "Antivirus alerts and security incidents."
+  },
+  "settings.checkSystemStatus": {
+    "fr": "Vérifier l'état du système",
+    "en": "Check System Status"
+  },
+  "settings.checking": {
+    "fr": "Vérification…",
+    "en": "Checking…"
+  },
+  "settings.systemChecked": {
+    "fr": "État du système actualisé.",
+    "en": "System status refreshed."
+  },
+  "settings.appVersion": {
+    "fr": "Version de l'application",
+    "en": "Application Version"
+  },
+  "settings.apiVersion": {
+    "fr": "Version de l'API",
+    "en": "API Version"
+  },
+  "settings.databaseStatus": {
+    "fr": "État de la base de données",
+    "en": "Database Status"
+  },
+  "settings.storageStatus": {
+    "fr": "État du stockage",
+    "en": "Storage Status"
+  },
+  "settings.antivirusStatus": {
+    "fr": "État antivirus",
+    "en": "Antivirus Status"
+  },
+  "settings.encryptionStatus": {
+    "fr": "État du chiffrement",
+    "en": "Encryption Status"
+  },
+  "settings.status.operational": {
+    "fr": "Opérationnel",
+    "en": "Operational"
+  },
+  "settings.status.warning": {
+    "fr": "Avertissement",
+    "en": "Warning"
+  },
+  "settings.status.error": {
+    "fr": "Erreur",
+    "en": "Error"
+  },
+  "settings.lastHealthCheck": {
+    "fr": "Dernière vérification",
+    "en": "Last health check"
+  },
+  "settings.backupRecovery": {
+    "fr": "Sauvegarde & restauration",
+    "en": "Backup & Recovery"
+  },
+  "settings.backupNotAvailable": {
+    "fr": "La sauvegarde et la restauration ne sont pas disponibles via l'API actuelle.",
+    "en": "Backup and recovery are not available through the current API."
+  },
+  "home.welcome": {
+    "fr": "Bon retour, {name}",
+    "en": "Welcome back, {name}"
+  },
+  "home.subtitle": {
+    "fr": "Gérez et accédez à vos documents en toute sécurité.",
+    "en": "Manage and access your documents securely."
+  },
+  "home.quickActions": {
+    "fr": "Actions rapides",
+    "en": "Quick Actions"
+  },
+  "home.action.upload": {
+    "fr": "Téléverser",
+    "en": "Upload Document"
+  },
+  "home.action.documents": {
+    "fr": "Mes documents",
+    "en": "My Documents"
+  },
+  "home.action.shared": {
+    "fr": "Partagés avec moi",
+    "en": "Shared with Me"
+  },
+  "home.action.categories": {
+    "fr": "Catégories",
+    "en": "Categories"
+  },
+  "home.action.archived": {
+    "fr": "Archives",
+    "en": "Archives"
+  },
+  "home.action.trash": {
+    "fr": "Corbeille",
+    "en": "Trash"
+  },
+  "home.stat.total": {
+    "fr": "Documents totaux",
+    "en": "Total Documents"
+  },
+  "home.stat.shared": {
+    "fr": "Partagés avec moi",
+    "en": "Shared Documents"
+  },
+  "home.stat.sharedByYou": {
+    "fr": "{count} partagés par vous",
+    "en": "{count} shared by you"
+  },
+  "home.stat.archived": {
+    "fr": "Documents archivés",
+    "en": "Archived Documents"
+  },
+  "home.stat.storage": {
+    "fr": "Stockage utilisé",
+    "en": "Storage Used"
+  },
+  "home.stat.recent": {
+    "fr": "Documents récents",
+    "en": "Recent Documents"
+  },
+  "home.stat.favorites": {
+    "fr": "Favoris",
+    "en": "Favorite Documents"
+  },
+  "home.recentDocs": {
+    "fr": "Documents récents",
+    "en": "Recent Documents"
+  },
+  "home.viewAllDocs": {
+    "fr": "Voir tous les documents",
+    "en": "View All Documents"
+  },
+  "home.storage": {
+    "fr": "Stockage",
+    "en": "Storage"
+  },
+  "home.storageUsed": {
+    "fr": "Espace utilisé",
+    "en": "Storage used"
+  },
+  "home.logicalStorage": {
+    "fr": "Stockage logique",
+    "en": "Logical storage"
+  },
+  "home.storageHint": {
+    "fr": "Aucun quota global n'est défini — les valeurs reflètent votre utilisation réelle.",
+    "en": "No global quota is configured — values reflect your actual usage."
+  },
+  "home.sharedWithMe": {
+    "fr": "Partagés avec moi",
+    "en": "Shared with Me"
+  },
+  "home.viewShared": {
+    "fr": "Voir les documents partagés",
+    "en": "View Shared Documents"
+  },
+  "home.noShared": {
+    "fr": "Aucun document partagé pour le moment.",
+    "en": "No shared documents yet."
+  },
+  "home.sharedBy": {
+    "fr": "Partagé par {name}",
+    "en": "Shared by {name}"
+  },
+  "home.recentActivity": {
+    "fr": "Activité récente",
+    "en": "Recent Activity"
+  },
+  "home.myCategories": {
+    "fr": "Mes catégories",
+    "en": "My Categories"
+  },
+  "home.noCategories": {
+    "fr": "Aucune catégorie pour le moment.",
+    "en": "No categories yet."
+  },
+  "home.categoryCount": {
+    "fr": "{count} documents",
+    "en": "{count} documents"
+  },
+  "home.favorites": {
+    "fr": "Favoris",
+    "en": "Favorites"
+  },
+  "home.viewFavorites": {
+    "fr": "Voir tous les favoris",
+    "en": "View All Favorites"
+  },
+  "home.emptyTitle": {
+    "fr": "Commencez à gérer vos documents",
+    "en": "Start managing your documents"
+  },
+  "home.emptyDesc": {
+    "fr": "Téléversez votre premier document et gérez-le en toute sécurité depuis un seul endroit.",
+    "en": "Upload your first document and manage it securely in one place."
+  },
+  "home.emptyCta": {
+    "fr": "Téléverser votre premier document",
+    "en": "Upload Your First Document"
+  },
+  "home.aDocument": {
+    "fr": "Un document",
+    "en": "A document"
+  },
+  "home.activity.Upload": {
+    "fr": "« {doc} » a été téléversé",
+    "en": "{doc} was uploaded"
+  },
+  "home.activity.Download": {
+    "fr": "« {doc} » a été téléchargé",
+    "en": "{doc} was downloaded"
+  },
+  "home.activity.View": {
+    "fr": "« {doc} » a été consulté",
+    "en": "{doc} was viewed"
+  },
+  "home.activity.Preview": {
+    "fr": "« {doc} » a été prévisualisé",
+    "en": "{doc} was previewed"
+  },
+  "home.activity.Update": {
+    "fr": "« {doc} » a été modifié",
+    "en": "{doc} was modified"
+  },
+  "home.activity.Share": {
+    "fr": "« {doc} » a été partagé",
+    "en": "{doc} was shared"
+  },
+  "home.activity.Archive": {
+    "fr": "« {doc} » a été archivé",
+    "en": "{doc} was archived"
+  },
+  "home.activity.Restore": {
+    "fr": "« {doc} » a été restauré",
+    "en": "{doc} was restored"
+  },
+  "home.activity.Delete": {
+    "fr": "« {doc} » a été supprimé",
+    "en": "{doc} was deleted"
+  },
+  "home.access.Read": {
+    "fr": "Consultation",
+    "en": "View"
+  },
+  "home.access.Download": {
+    "fr": "Téléchargement",
+    "en": "Download"
+  },
+  "home.access.Write": {
+    "fr": "Modification",
+    "en": "Edit"
+  },
+  "home.access.Preview": {
+    "fr": "Prévisualisation",
+    "en": "Preview"
+  },
+  "adminDash.title": {
+    "fr": "Vue d'administration",
+    "en": "Administration Overview"
+  },
+  "adminDash.subtitle": {
+    "fr": "Supervision globale de la plateforme et accès rapide aux outils d'administration.",
+    "en": "Global platform supervision and quick access to administration tools."
+  },
+  "adminDash.users": {
+    "fr": "Utilisateurs",
+    "en": "Users"
+  },
+  "adminDash.quickLinks": {
+    "fr": "Accès administration",
+    "en": "Administration"
+  },
+  "adminDash.usersDesc": {
+    "fr": "Gérer les comptes utilisateurs",
+    "en": "Manage user accounts"
+  },
+  "adminDash.rolesDesc": {
+    "fr": "Rôles et permissions",
+    "en": "Roles and permissions"
+  },
+  "adminDash.auditDesc": {
+    "fr": "Traçabilité documentaire",
+    "en": "Document audit trail"
+  },
+  "adminDash.configDesc": {
+    "fr": "Paramètres système",
+    "en": "System settings"
+  },
+  "chat.title": {
+    "fr": "Assistant SecureDocs",
+    "en": "SecureDocs Assistant"
+  },
+  "chat.open": {
+    "fr": "Ouvrir l'assistant",
+    "en": "Open assistant"
+  },
+  "chat.close": {
+    "fr": "Fermer l'assistant",
+    "en": "Close assistant"
+  },
+  "chat.placeholder": {
+    "fr": "Posez votre question…",
+    "en": "Ask your question…"
+  },
+  "chat.send": {
+    "fr": "Envoyer",
+    "en": "Send"
+  },
+  "chat.welcome": {
+    "fr": "Bonjour{name} ! Je peux vous aider à utiliser SecureDocs. Choisissez une suggestion ou posez une question.",
+    "en": "Hello{name}! I can help you use SecureDocs. Pick a suggestion or ask a question."
+  },
+  "chat.typing": {
+    "fr": "L'assistant réfléchit…",
+    "en": "Assistant is thinking…"
+  },
+  "chat.error": {
+    "fr": "Impossible d'obtenir une réponse pour le moment. Réessayez ou choisissez une suggestion ci-dessous.",
+    "en": "Unable to get a reply right now. Try again or pick a suggestion below."
+  },
+  "chat.fallback": {
+    "fr": "Je n'ai pas trouvé de réponse précise. Voici des sujets sur lesquels je peux vous aider : téléversement, partage, corbeille, catégories, sécurité. Reformulez votre question ou utilisez une suggestion.",
+    "en": "I couldn't find a precise answer. Topics I can help with: upload, sharing, trash, categories, security. Rephrase your question or use a suggestion."
+  },
+  "chat.suggest.upload": {
+    "fr": "Comment uploader un fichier ?",
+    "en": "How do I upload a file?"
+  },
+  "chat.suggest.documents": {
+    "fr": "Où voir mes documents ?",
+    "en": "Where are my documents?"
+  },
+  "chat.suggest.share": {
+    "fr": "Comment partager un document ?",
+    "en": "How do I share a document?"
+  },
+  "chat.suggest.categories": {
+    "fr": "À quoi servent les catégories ?",
+    "en": "What are categories for?"
+  },
+  "chat.suggest.archive": {
+    "fr": "Comment archiver un document ?",
+    "en": "How do I archive a document?"
+  },
+  "chat.suggest.trash": {
+    "fr": "Où est la corbeille ?",
+    "en": "Where is the trash?"
+  },
+  "chat.suggest.profile": {
+    "fr": "Comment gérer mon profil ?",
+    "en": "How do I manage my profile?"
+  },
+  "chat.suggest.dashboard": {
+    "fr": "Que montre le tableau de bord ?",
+    "en": "What does the dashboard show?"
+  },
+  "chat.suggest.roles": {
+    "fr": "Comment gérer les rôles ?",
+    "en": "How do I manage roles?"
+  },
+  "chat.suggest.users": {
+    "fr": "Comment gérer les utilisateurs ?",
+    "en": "How do I manage users?"
+  },
+  "chat.suggest.audit": {
+    "fr": "Qu'est-ce que l'audit ?",
+    "en": "What is the audit log?"
+  },
+  "chat.suggest.config": {
+    "fr": "Où sont les paramètres système ?",
+    "en": "Where are system settings?"
+  },
+  "chat.suggest.security": {
+    "fr": "Comment les fichiers sont-ils sécurisés ?",
+    "en": "How are files secured?"
+  },
+  "chat.suggest.help": {
+    "fr": "Que peux-tu faire ?",
+    "en": "What can you do?"
+  },
+  "chat.faq.greeting": {
+    "fr": "Bonjour ! Je suis l'assistant SecureDocs. Posez-moi une question sur le téléversement, le partage, l'archive, la corbeille ou la sécurité.",
+    "en": "Hello! I'm the SecureDocs assistant. Ask me about uploading, sharing, archives, trash, or security."
+  },
+  "chat.faq.help": {
+    "fr": "Je peux vous guider sur : téléversement, documents, partage, catégories, archive, corbeille, profil, tableau de bord, et (admin) utilisateurs, rôles, audit, configuration. Cliquez une suggestion ou décrivez votre besoin.",
+    "en": "I can guide you on: upload, documents, sharing, categories, archive, trash, profile, dashboard, and (admin) users, roles, audit, settings. Click a suggestion or describe what you need."
+  },
+  "chat.faq.upload": {
+    "fr": "Pour téléverser un fichier : ouvrez Documents → Téléverser (ou le bouton Upload dans la barre du haut). Glissez-déposez votre fichier, renseignez éventuellement la catégorie et la description, puis validez. Le fichier est chiffré avant stockage.",
+    "en": "To upload a file: open Documents → Upload (or the Upload button in the top bar). Drag and drop your file, optionally set category and description, then confirm. The file is encrypted before storage."
+  },
+  "chat.faq.documents": {
+    "fr": "Vos documents actifs se trouvent dans le menu Documents. Vous pouvez rechercher, prévisualiser, télécharger, partager ou archiver. Les documents partagés avec vous apparaissent sous Partagés.",
+    "en": "Your active documents are under Documents. You can search, preview, download, share, or archive. Files shared with you appear under Shared."
+  },
+  "chat.faq.share": {
+    "fr": "Pour partager : ouvrez un document, utilisez le partage pour inviter un utilisateur (niveau d'accès) ou créer un lien. Les fichiers reçus sont listés dans Partagés.",
+    "en": "To share: open a document, invite a user with an access level, or create a share link. Files shared with you appear under Shared."
+  },
+  "chat.faq.categories": {
+    "fr": "Les catégories permettent d'organiser vos documents. Attribuez une catégorie à l'upload ou via les métadonnées, puis filtrez depuis la page Catégories.",
+    "en": "Categories help organize documents. Set a category on upload or in metadata, then filter from the Categories page."
+  },
+  "chat.faq.archive": {
+    "fr": "Archiver retire un document de la liste active sans le supprimer. Retrouvez-le dans Archivés, puis restaurez-le si besoin.",
+    "en": "Archiving removes a document from the active list without deleting it. Find it under Archived, then restore when needed."
+  },
+  "chat.faq.trash": {
+    "fr": "La Corbeille contient les documents supprimés. Vous pouvez les restaurer ou les supprimer définitivement. Vider la corbeille est irréversible.",
+    "en": "Trash holds deleted documents. You can restore them or permanently delete them. Emptying trash is irreversible."
+  },
+  "chat.faq.profile": {
+    "fr": "Dans Profil, mettez à jour vos informations, changez votre mot de passe, et gérez vos préférences (thème, langue, avatar).",
+    "en": "In Profile, update your details, change your password, and manage preferences (theme, language, avatar)."
+  },
+  "chat.faq.dashboard": {
+    "fr": "Le tableau de bord résume votre activité : nombre de documents, stockage, éléments récents et accès rapide aux actions courantes.",
+    "en": "The dashboard summarizes your activity: document count, storage, recent items, and quick access to common actions."
+  },
+  "chat.faq.roles": {
+    "fr": "Les administrateurs gèrent les rôles dans Admin → Rôles : création, description et permissions associées aux comptes.",
+    "en": "Administrators manage roles under Admin → Roles: create roles, set descriptions, and assign permissions to accounts."
+  },
+  "chat.faq.users": {
+    "fr": "Les administrateurs gèrent les comptes dans Admin → Utilisateurs : création, activation/désactivation et attribution de rôles.",
+    "en": "Administrators manage accounts under Admin → Users: create users, activate/deactivate, and assign roles."
+  },
+  "chat.faq.audit": {
+    "fr": "L'audit (Admin → Audit) journalise les actions importantes (connexion, upload, téléchargement, partage, suppression) pour la traçabilité.",
+    "en": "Audit (Admin → Audit) logs important actions (login, upload, download, share, delete) for traceability."
+  },
+  "chat.faq.config": {
+    "fr": "La configuration système (Admin → Configuration) permet d'ajuster les paramètres de stockage et options liées à la plateforme.",
+    "en": "System configuration (Admin → Config) lets you adjust storage settings and related platform options."
+  },
+  "chat.faq.security": {
+    "fr": "SecureDocs chiffre les fichiers avant stockage, contrôle l'accès par rôles et permissions, et peut vérifier l'intégrité (hash). Les sessions sont protégées par JWT.",
+    "en": "SecureDocs encrypts files before storage, enforces role-based access, and can verify integrity (hash). Sessions are protected with JWT."
   }
 }

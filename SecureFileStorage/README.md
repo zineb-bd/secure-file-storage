@@ -37,6 +37,10 @@ SecureFileStorage/
 
 ## Démarrage rapide
 
+### Déploiement en ligne (Vercel + Railway)
+
+Voir **[DEPLOY.md](DEPLOY.md)** : frontend sur Vercel, API + PostgreSQL sur Railway.
+
 ### 1. Installer le SDK .NET 8
 
 ```powershell
@@ -124,7 +128,7 @@ Invoke-RestMethod -Method POST -Uri "http://localhost:5001/api/documents" `
 ## Sécurité
 
 - **JWT** : Authentification par token Bearer
-- **RBAC** : Rôles Admin, Manager, User + permissions par document
+- **RBAC** : Rôles Admin et User + permissions par document
 - **AES-256** : Chiffrement au repos avec clé par fichier
 - **SHA-256** : Empreinte d'intégrité vérifiable
 - **ClamAV** : Scan antivirus avant stockage (activable via config)

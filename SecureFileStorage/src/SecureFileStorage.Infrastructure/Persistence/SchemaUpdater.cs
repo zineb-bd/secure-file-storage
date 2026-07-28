@@ -11,6 +11,10 @@ public static class SchemaUpdater
                 ADD COLUMN IF NOT EXISTS "AccessLevel" integer NOT NULL DEFAULT 0;
             ALTER TABLE "DocumentPermissions"
                 ADD COLUMN IF NOT EXISTS "ExpiresAt" timestamp with time zone NULL;
+            ALTER TABLE "DocumentPermissions"
+                ADD COLUMN IF NOT EXISTS "GrantedById" uuid NULL;
+            ALTER TABLE "DocumentPermissions"
+                ADD COLUMN IF NOT EXISTS "GrantedAt" timestamp with time zone NOT NULL DEFAULT NOW();
             CREATE TABLE IF NOT EXISTS "DocumentShareLinks" (
                 "Id" uuid NOT NULL,
                 "DocumentId" uuid NOT NULL,
@@ -74,6 +78,35 @@ public static class SchemaUpdater
             ALTER TABLE "Documents"
                 ADD COLUMN IF NOT EXISTS "PublicAccessLevel" integer NOT NULL DEFAULT 0;
             CREATE INDEX IF NOT EXISTS "IX_Documents_Visibility" ON "Documents" ("Visibility");
+            INSERT INTO "UserRoles" ("UserId", "RoleId")
+            SELECT DISTINCT ur."UserId", user_role."Id"
+            FROM "UserRoles" ur
+            INNER JOIN "Roles" extra ON ur."RoleId" = extra."Id" AND extra."Name" NOT IN ('Admin', 'User')
+            CROSS JOIN (SELECT "Id" FROM "Roles" WHERE "Name" = 'User' LIMIT 1) user_role
+            WHERE NOT EXISTS (
+                SELECT 1 FROM "UserRoles" ur2
+                INNER JOIN "Roles" r ON ur2."RoleId" = r."Id"
+                WHERE ur2."UserId" = ur."UserId" AND r."Name" IN ('Admin', 'User')
+            );
+            DELETE FROM "UserRoles" ur
+            USING "Roles" r
+            WHERE ur."RoleId" = r."Id" AND r."Name" NOT IN ('Admin', 'User');
+            DELETE FROM "Roles" WHERE "Name" NOT IN ('Admin', 'User');
+            CREATE TABLE IF NOT EXISTS "DocumentFavorites" (
+                "Id" uuid NOT NULL,
+                "UserId" uuid NOT NULL,
+                "DocumentId" uuid NOT NULL,
+                "CreatedAt" timestamp with time zone NOT NULL DEFAULT NOW(),
+                CONSTRAINT "PK_DocumentFavorites" PRIMARY KEY ("Id"),
+                CONSTRAINT "FK_DocumentFavorites_Users_UserId"
+                    FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_DocumentFavorites_Documents_DocumentId"
+                    FOREIGN KEY ("DocumentId") REFERENCES "Documents" ("Id") ON DELETE CASCADE
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_DocumentFavorites_UserId_DocumentId"
+                ON "DocumentFavorites" ("UserId", "DocumentId");
+            CREATE INDEX IF NOT EXISTS "IX_DocumentFavorites_DocumentId"
+                ON "DocumentFavorites" ("DocumentId");
             """, ct);
     }
 }

@@ -66,6 +66,24 @@ public interface IDocumentService
     Task<bool> PermanentDeleteAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<DocumentDto?> CheckOutAsync(Guid documentId, Guid userId, DocumentLockRequest? request = null, CancellationToken ct = default);
     Task<DocumentDto?> CheckInAsync(Guid documentId, Guid userId, CancellationToken ct = default);
+    Task<FavoriteToggleResult?> AddFavoriteAsync(Guid documentId, Guid userId, CancellationToken ct = default);
+    Task<FavoriteToggleResult?> RemoveFavoriteAsync(Guid documentId, Guid userId, CancellationToken ct = default);
+    Task<PagedResult<DocumentDto>> GetFavoritesAsync(DocumentSearchRequest request, Guid userId, CancellationToken ct = default);
+    Task<DocumentCollaboratorsDto?> GetCollaboratorsAsync(Guid documentId, Guid userId, CancellationToken ct = default);
+}
+
+public interface IDocumentImportService
+{
+    IReadOnlyList<DocumentImportSourceDto> GetSources();
+    Task<DocumentDto> ImportFromUrlAsync(ImportFromUrlRequest request, Guid userId, CancellationToken ct = default);
+}
+
+public interface IDocumentImportSource
+{
+    string Id { get; }
+    string DisplayName { get; }
+    bool IsEnabled { get; }
+    string? UnavailableReason { get; }
 }
 
 public interface IAuditService
@@ -155,4 +173,9 @@ public interface IPermissionChecker
     Task<bool> CanRestoreFromTrashAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<bool> CanManageSharesAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     bool IsAdmin(IEnumerable<string> roles);
+}
+
+public interface IChatbotService
+{
+    Task<ChatResponse> AskAsync(ChatRequest request, CancellationToken ct = default);
 }

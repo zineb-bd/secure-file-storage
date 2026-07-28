@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api, downloadBlob } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { useI18n } from '@/i18n/I18nContext'
 import { fmtDate, fmtSize } from '@/utils/format'
+import { toggleFavoriteApi } from '@/utils/favoritesApi'
 import type { DocumentDto, DocActionOpts } from '@/types'
 import { FileIcon } from './FileIcon'
 import {
@@ -25,6 +26,7 @@ interface DocumentTableProps {
   onChanged?: () => void
   showOwner?: boolean
   sharedMode?: boolean
+  showFavorite?: boolean
 }
 
 export function DocumentTable({
@@ -34,6 +36,7 @@ export function DocumentTable({
   onChanged,
   showOwner = true,
   sharedMode = false,
+  showFavorite = true,
 }: DocumentTableProps) {
   const { t, locale } = useI18n()
   const { isAdmin } = useAuth()
@@ -41,6 +44,19 @@ export function DocumentTable({
   const [metadata, setMetadata] = useState<DocumentDto | null>(null)
   const [share, setShare] = useState<DocumentDto | null>(null)
   const [versions, setVersions] = useState<DocumentDto | null>(null)
+  const [localDocs, setLocalDocs] = useState<DocumentDto[] | null>(null)
+  const [toast, setToast] = useState('')
+
+  useEffect(() => {
+    setLocalDocs(null)
+  }, [documents])
+
+  const docs = localDocs ?? documents
+
+  const showToast = (message: string) => {
+    setToast(message)
+    window.setTimeout(() => setToast(''), 4200)
+  }
 
   const confirmPermanentDelete = (label?: string) =>
     window.confirm(
@@ -54,6 +70,19 @@ export function DocumentTable({
       onShare: () => setShare(doc),
       onMetadata: () => setMetadata(doc),
       onVersions: () => setVersions(doc),
+      onFavorite: async () => {
+        const result = await toggleFavoriteApi(doc.id, !!doc.isFavorite)
+        setLocalDocs((prev) => {
+          const base = prev ?? documents
+          return base.map((d) =>
+            d.id === doc.id ? { ...d, isFavorite: result.isFavorite } : d
+          )
+        })
+        showToast(
+          result.isFavorite ? t('favorites.added') : t('favorites.removed')
+        )
+        onChanged?.()
+      },
       onArchive: async () => {
         await api(`/api/documents/${doc.id}/archive`, { method: 'POST' })
         onChanged?.()
@@ -87,15 +116,16 @@ export function DocumentTable({
         onChanged?.()
       },
     }),
-    [actionOpts.showPermDelete, onChanged]
+    [actionOpts.showPermDelete, documents, onChanged, t]
   )
 
-  if (!documents.length) {
+  if (!docs.length) {
     return <div className="empty-state">{emptyMsg || t('empty.none')}</div>
   }
 
   return (
     <>
+      {toast && <div className="profile-toast profile-toast-success">{toast}</div>}
       <table className="data-table">
         <thead>
           <tr>
@@ -113,10 +143,12 @@ export function DocumentTable({
           </tr>
         </thead>
         <tbody>
-          {documents.map((d) => {
+          {docs.map((d) => {
             const opts = {
               ...docActionOptsFromDoc(d, actionOpts),
               showPermDelete: actionOpts.showPermDelete && isAdmin,
+              showFavorite: showFavorite && actionOpts.showFavorite !== false,
+              isFavorite: d.isFavorite,
             }
             return (
               <tr key={d.id}>
