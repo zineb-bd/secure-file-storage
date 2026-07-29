@@ -1,11 +1,12 @@
-# Blueprint Render — SecureDocs (API + Postgres, plan free)
-# Dashboard : New → Blueprint → ce dépôt GitHub
+# Blueprint Render — API SecureDocs (Docker)
+# Frontend reste sur Vercel. Postgres : Neon (gratuit) recommandé.
+# Déploiement : https://dashboard.render.com/blueprint/new?repo=https://github.com/zineb-bd/secure-file-storage
+
 services:
   - type: web
     name: securedocs-api
     runtime: docker
     plan: free
-    region: frankfurt
     rootDir: SecureFileStorage
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -16,9 +17,7 @@ services:
       - key: Database__Provider
         value: PostgreSql
       - key: Database__ConnectionString
-        fromDatabase:
-          name: securedocs-db
-          property: connectionString
+        sync: false
       - key: Jwt__Secret
         generateValue: true
       - key: Jwt__Issuer
@@ -37,10 +36,3 @@ services:
         value: "false"
       - key: Chatbot__Enabled
         value: "false"
-
-databases:
-  - name: securedocs-db
-    plan: free
-    region: frankfurt
-    databaseName: securedocs
-    user: securedocs
