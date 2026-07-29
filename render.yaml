@@ -1,0 +1,46 @@
+# Blueprint Render — SecureDocs (API + Postgres, plan free)
+# Dashboard : New → Blueprint → ce dépôt GitHub
+services:
+  - type: web
+    name: securedocs-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    rootDir: SecureFileStorage
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Database__Provider
+        value: PostgreSql
+      - key: Database__ConnectionString
+        fromDatabase:
+          name: securedocs-db
+          property: connectionString
+      - key: Jwt__Secret
+        generateValue: true
+      - key: Jwt__Issuer
+        value: SecureFileStorage
+      - key: Jwt__Audience
+        value: SecureFileStorageClients
+      - key: Jwt__ExpirationMinutes
+        value: "60"
+      - key: Encryption__MasterKey
+        generateValue: true
+      - key: Storage__Provider
+        value: LocalFileSystem
+      - key: Storage__BasePath
+        value: /app/storage
+      - key: Antivirus__Enabled
+        value: "false"
+      - key: Chatbot__Enabled
+        value: "false"
+
+databases:
+  - name: securedocs-db
+    plan: free
+    region: frankfurt
+    databaseName: securedocs
+    user: securedocs

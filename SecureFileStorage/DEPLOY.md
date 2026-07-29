@@ -1,50 +1,48 @@
-# Déploiement SecureDocs — Vercel (frontend) + Railway (API)
+# Déploiement SecureDocs — Vercel (frontend) + Render (API, gratuit)
 
 Vercel n'héberge **pas** ASP.NET Core ni PostgreSQL.
-Architecture : frontend React sur Vercel, API + base sur Railway.
+Architecture recommandée (gratuit) : frontend React sur Vercel, API + Postgres sur Render.
 
 ```
 Utilisateur → https://votre-app.vercel.app
                     │
                     │  VITE_API_BASE_URL
                     ▼
-           https://votre-api.up.railway.app  (+ Postgres + volume /app/storage)
+           https://securedocs-api.onrender.com  (+ Postgres free)
 ```
+
+> Railway n'offre plus de plan gratuit durable (essai puis Hobby payant).
+> Le fichier `render.yaml` à la racine du dépôt définit l'API + la base.
+
+### Limites du plan free Render
+- L'API s'endort après ~15 min d'inactivité (cold start 30–60 s).
+- Disque **éphémère** (fichiers uploadés perdus au redémarrage).
+- Postgres free expire ~30 jours (renouveler ou migrer vers Neon).
 
 ---
 
-## 1. Backend sur Railway
+## 1. Backend sur Render (gratuit)
 
 ### Prérequis
-- Compte [Railway](https://railway.app)
-- Repo Git poussé (dossier `SecureFileStorage` = racine Docker)
+- Compte [Render](https://dashboard.render.com)
+- Repo GitHub poussé (contient `render.yaml` + `SecureFileStorage/Dockerfile`)
 
-### Étapes
-1. **New Project** → **Deploy from GitHub** (ou CLI).
-2. **Root Directory** du service API : `SecureFileStorage` (si le repo contient ce dossier).
-3. Railway détecte [`Dockerfile`](Dockerfile) + [`railway.toml`](railway.toml).
-4. Ajouter un plugin **PostgreSQL**.
-5. Sur le service API, variables (voir aussi [`.env.railway.example`](.env.railway.example)) :
-
-| Variable | Valeur |
-|---|---|
-| `Database__Provider` | `PostgreSql` |
-| `Database__ConnectionString` | Connection string Npgsql du Postgres Railway (`SSL Mode=Require` souvent requis) |
-| `Jwt__Secret` | Chaîne aléatoire ≥ 32 caractères |
-| `Encryption__MasterKey` | Chaîne aléatoire forte |
-| `ASPNETCORE_ENVIRONMENT` | `Production` |
-| `Storage__BasePath` | `/app/storage` |
-| `Antivirus__Enabled` | `false` |
-
-6. Attacher un **Volume** au service API, mount path : `/app/storage`.
-7. **Generate Domain** sur le service API → noter l'URL, ex. `https://securedocs-api.up.railway.app`.
-8. Tester : `GET https://…/health` → `{ "status": "healthy", … }`.
+### Étapes (Blueprint)
+1. Dashboard → **New** → **Blueprint**.
+2. Connecter le repo `secure-file-storage`.
+3. Render lit [`render.yaml`](../render.yaml) → crée `securedocs-api` + `securedocs-db`.
+4. Apply → attendre le build Docker (plusieurs minutes).
+5. Noter l'URL du service, ex. `https://securedocs-api.onrender.com`.
+6. Tester : `GET https://…/health` → `{ "status": "healthy", … }`.
 
 ### Compte admin initial
 Après le premier démarrage (seed) :
 - Email : `admin@entreprise.local`
 - Mot de passe : `Admin123!`  
 **Changez-le immédiatement** en production.
+
+### Alternative payante : Railway
+Voir aussi [`Dockerfile`](Dockerfile), [`railway.toml`](railway.toml) et [`.env.railway.example`](.env.railway.example) si vous passez au plan Hobby Railway.
 
 ---
 
@@ -65,7 +63,7 @@ Après le premier démarrage (seed) :
 
 | Name | Value |
 |---|---|
-| `VITE_API_BASE_URL` | `https://votre-api.up.railway.app` (sans slash final) |
+| `VITE_API_BASE_URL` | `https://securedocs-api.onrender.com` (sans slash final) |
 
 8. Deploy → URL du type `https://securedocs.vercel.app`.
 
@@ -87,13 +85,12 @@ npm run build:api
 
 ## 3. Checklist de validation
 
-- [ ] `/health` OK sur Railway
+- [ ] `/health` OK sur Render
 - [ ] Login depuis l'URL Vercel
-- [ ] Upload d'un document
+- [ ] Upload d'un document (attention : disque éphémère en free)
 - [ ] Favoris / collaboration
 - [ ] Dashboard admin (maturité)
 - [ ] Mot de passe admin changé
-- [ ] Secrets JWT / chiffrement distincts de ceux du développement
 
 ---
 
@@ -103,5 +100,6 @@ npm run build:api
 |---|---|
 | Login / API en erreur CORS ou réseau | `VITE_API_BASE_URL` absente, incorrecte, ou rebuild Vercel non refait après ajout de la variable |
 | 500 au démarrage API | `Database__ConnectionString` invalide / SSL |
-| Upload OK puis fichiers perdus | Volume `/app/storage` non monté |
+| Premier appel très lent | Cold start Render free (~30–60 s) |
+| Upload OK puis fichiers perdus | Disque éphémère (pas de volume persistant en free) |
 | Page blanche sur refresh Vercel | Vérifier `vercel.json` (rewrites vers `index.html`) |
