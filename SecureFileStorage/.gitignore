@@ -5,9 +5,10 @@ out/
 publish/
 
 ## Stockage local des fichiers uploadés (pas le code Infrastructure/Storage)
-/storage/
-SecureFileStorage/storage/
-**/Api/storage/
+# Sur Windows, "storage/" ignore aussi "Storage/" → exceptions nécessaires
+storage/
+!**/Infrastructure/Storage/
+!**/Infrastructure/Storage/**
 
 ## IDE
 .vs/
