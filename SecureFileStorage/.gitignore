@@ -4,8 +4,10 @@ obj/
 out/
 publish/
 
-## Stockage local
-storage/
+## Stockage local des fichiers uploadés (pas le code Infrastructure/Storage)
+/storage/
+SecureFileStorage/storage/
+**/Api/storage/
 
 ## IDE
 .vs/
