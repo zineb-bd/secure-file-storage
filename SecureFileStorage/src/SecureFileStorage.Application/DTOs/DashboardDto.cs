@@ -13,6 +13,21 @@ public record RecentActivityDto(string Action, string DocumentName, Guid? Docume
 
 public record NotificationDto(string Type, string Message, DateTime Date);
 
+public record UserNotificationDto(
+    Guid Id,
+    string Type,
+    string Message,
+    Guid? DocumentId,
+    string? DocumentName,
+    Guid? ActorId,
+    string? ActorName,
+    bool IsRead,
+    DateTime CreatedAt);
+
+public record NotificationListDto(
+    IEnumerable<UserNotificationDto> Items,
+    int UnreadCount);
+
 public record MaturityPillarDto(
     string Id,
     string Label,

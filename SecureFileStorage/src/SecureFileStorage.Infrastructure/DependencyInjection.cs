@@ -60,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IPermissionChecker, PermissionChecker>();
         services.AddScoped<IStorageConfigService, StorageConfigService>();
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<StoredBlobService>();
         services.AddScoped<DashboardService>();
 

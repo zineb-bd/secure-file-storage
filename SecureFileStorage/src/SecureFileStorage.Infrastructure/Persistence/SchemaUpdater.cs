@@ -107,6 +107,29 @@ public static class SchemaUpdater
                 ON "DocumentFavorites" ("UserId", "DocumentId");
             CREATE INDEX IF NOT EXISTS "IX_DocumentFavorites_DocumentId"
                 ON "DocumentFavorites" ("DocumentId");
+            ALTER TABLE "StorageConfigurations"
+                ADD COLUMN IF NOT EXISTS "ConnectionString" text NULL;
+            CREATE TABLE IF NOT EXISTS "UserNotifications" (
+                "Id" uuid NOT NULL,
+                "UserId" uuid NOT NULL,
+                "ActorId" uuid NULL,
+                "Type" character varying(64) NOT NULL,
+                "Message" character varying(1000) NOT NULL,
+                "DocumentId" uuid NULL,
+                "IsRead" boolean NOT NULL DEFAULT FALSE,
+                "CreatedAt" timestamp with time zone NOT NULL DEFAULT NOW(),
+                CONSTRAINT "PK_UserNotifications" PRIMARY KEY ("Id"),
+                CONSTRAINT "FK_UserNotifications_Users_UserId"
+                    FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_UserNotifications_Users_ActorId"
+                    FOREIGN KEY ("ActorId") REFERENCES "Users" ("Id") ON DELETE SET NULL,
+                CONSTRAINT "FK_UserNotifications_Documents_DocumentId"
+                    FOREIGN KEY ("DocumentId") REFERENCES "Documents" ("Id") ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS "IX_UserNotifications_UserId_CreatedAt"
+                ON "UserNotifications" ("UserId", "CreatedAt");
+            CREATE INDEX IF NOT EXISTS "IX_UserNotifications_UserId_IsRead"
+                ON "UserNotifications" ("UserId", "IsRead");
             """, ct);
     }
 }

@@ -27,6 +27,7 @@ public class DocumentService : IDocumentService
     private readonly IAntivirusService _antivirusService;
     private readonly IPermissionChecker _permissionChecker;
     private readonly IAuditService _auditService;
+    private readonly INotificationService _notificationService;
     private readonly ApplicationDbContext _context;
     private readonly IUnitOfWork _unitOfWork;
     private readonly StoredBlobService _storedBlobService;
@@ -38,6 +39,7 @@ public class DocumentService : IDocumentService
         IAntivirusService antivirusService,
         IPermissionChecker permissionChecker,
         IAuditService auditService,
+        INotificationService notificationService,
         ApplicationDbContext context,
         IUnitOfWork unitOfWork,
         StoredBlobService storedBlobService)
@@ -48,6 +50,7 @@ public class DocumentService : IDocumentService
         _antivirusService = antivirusService;
         _permissionChecker = permissionChecker;
         _auditService = auditService;
+        _notificationService = notificationService;
         _context = context;
         _unitOfWork = unitOfWork;
         _storedBlobService = storedBlobService;
@@ -143,6 +146,13 @@ public class DocumentService : IDocumentService
             deduplicated
                 ? $"Téléversement de {fileName} (contenu dédupliqué — hash {hash[..12]}…)"
                 : $"Téléversement de {fileName}", "", ct: ct);
+
+        var sharedRecipientIds = document.Permissions.Select(p => p.UserId).Distinct().ToList();
+        if (sharedRecipientIds.Count > 0)
+        {
+            await _notificationService.NotifyDocumentSharedManyAsync(
+                sharedRecipientIds, userId, documentId, fileName, ct);
+        }
 
         var saved = await _documentRepository.GetByIdAsync(documentId, ct);
         return await ToDtoAsync(saved!, userId, deduplicated, ct);
@@ -520,6 +530,19 @@ public class DocumentService : IDocumentService
         await _unitOfWork.SaveChangesAsync(ct);
         await _auditService.LogAsync(grantedById, AuditAction.PermissionChange, "Document", documentId,
             $"Permission {permission} accordée à {request.UserId}", "", ct: ct);
+
+        var docForNotif = await _documentRepository.GetByIdAsync(documentId, ct);
+        if (docForNotif is not null)
+        {
+            await _notificationService.NotifyDocumentSharedAsync(
+                request.UserId,
+                grantedById,
+                documentId,
+                docForNotif.FileName,
+                permission.ToString(),
+                ct);
+        }
+
         return true;
     }
 
@@ -788,6 +811,14 @@ public class DocumentService : IDocumentService
         await _unitOfWork.SaveChangesAsync(ct);
         await _auditService.LogAsync(sharedById, AuditAction.Share, "Document", documentId,
             $"Partage {accessLevel} avec {targetUserId} jusqu'à {(expiresAt?.ToString("O") ?? "sans limite")}", "", ct: ct);
+
+        await _notificationService.NotifyDocumentSharedAsync(
+            targetUserId.Value,
+            sharedById,
+            documentId,
+            doc.FileName,
+            accessLevel.ToString(),
+            ct);
 
         var target = await _context.Users.FirstAsync(u => u.Id == targetUserId, ct);
         return MapUserShare(existing, target);
@@ -1273,18 +1304,26 @@ public class StorageConfigService : IStorageConfigService
     public async Task<StorageConfigDto> UpdateAsync(UpdateStorageConfigRequest request, CancellationToken ct = default)
     {
         var existing = await _context.StorageConfigurations.Where(c => c.IsActive).ToListAsync(ct);
+        var previous = existing.OrderByDescending(c => c.UpdatedAt).FirstOrDefault();
         foreach (var c in existing) c.IsActive = false;
+
+        var connectionString = ResolveConnectionString(request.ConnectionString, previous?.ConnectionString);
 
         var config = new StorageConfiguration
         {
             Id = Guid.NewGuid(),
-            ProviderType = Enum.Parse<StorageProviderType>(request.ProviderType, true),
+            ProviderType = Enum.TryParse<StorageProviderType>(request.ProviderType, true, out var provider)
+                ? provider
+                : previous?.ProviderType ?? StorageProviderType.LocalFileSystem,
             DatabaseProvider = Enum.Parse<DatabaseProviderType>(request.DatabaseProvider, true),
-            BasePath = request.BasePath,
-            S3Endpoint = request.S3Endpoint,
-            S3Bucket = request.S3Bucket,
-            S3AccessKey = request.S3AccessKey,
-            S3SecretKey = request.S3SecretKey,
+            BasePath = string.IsNullOrWhiteSpace(request.BasePath)
+                ? previous?.BasePath ?? "./storage"
+                : request.BasePath,
+            ConnectionString = connectionString,
+            S3Endpoint = request.S3Endpoint ?? previous?.S3Endpoint,
+            S3Bucket = request.S3Bucket ?? previous?.S3Bucket,
+            S3AccessKey = request.S3AccessKey ?? previous?.S3AccessKey,
+            S3SecretKey = request.S3SecretKey ?? previous?.S3SecretKey,
             IsActive = true,
             UpdatedAt = DateTime.UtcNow
         };
@@ -1294,7 +1333,24 @@ public class StorageConfigService : IStorageConfigService
         return Map(config);
     }
 
+    private static string? ResolveConnectionString(string? incoming, string? previous)
+    {
+        if (string.IsNullOrWhiteSpace(incoming)) return previous;
+        if (incoming.Contains("********", StringComparison.Ordinal)) return previous;
+        return incoming.Trim();
+    }
+
     private static StorageConfigDto Map(StorageConfiguration c) =>
         new(c.Id, c.ProviderType.ToString(), c.DatabaseProvider.ToString(), c.BasePath,
-            c.S3Endpoint, c.S3Bucket, c.IsActive, c.UpdatedAt);
+            MaskConnectionString(c.ConnectionString), c.S3Endpoint, c.S3Bucket, c.IsActive, c.UpdatedAt);
+
+    private static string? MaskConnectionString(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return System.Text.RegularExpressions.Regex.Replace(
+            value,
+            @"(Password|Pwd)\s*=\s*[^;]+",
+            "$1=********",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    }
 }

@@ -121,6 +121,29 @@ public interface IStorageConfigService
     Task<StorageConfigDto> UpdateAsync(UpdateStorageConfigRequest request, CancellationToken ct = default);
 }
 
+public interface INotificationService
+{
+    Task NotifyDocumentSharedAsync(
+        Guid recipientUserId,
+        Guid actorUserId,
+        Guid documentId,
+        string documentName,
+        string accessLevel,
+        CancellationToken ct = default);
+
+    Task NotifyDocumentSharedManyAsync(
+        IEnumerable<Guid> recipientUserIds,
+        Guid actorUserId,
+        Guid documentId,
+        string documentName,
+        CancellationToken ct = default);
+
+    Task<NotificationListDto> GetForUserAsync(Guid userId, int take = 40, CancellationToken ct = default);
+    Task<int> GetUnreadCountAsync(Guid userId, CancellationToken ct = default);
+    Task<bool> MarkAsReadAsync(Guid userId, Guid notificationId, CancellationToken ct = default);
+    Task MarkAllAsReadAsync(Guid userId, CancellationToken ct = default);
+}
+
 public interface ICurrentUserService
 {
     Guid? UserId { get; }

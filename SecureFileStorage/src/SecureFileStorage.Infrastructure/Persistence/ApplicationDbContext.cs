@@ -16,6 +16,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<DocumentPermission> DocumentPermissions => Set<DocumentPermission>();
     public DbSet<DocumentShareLink> DocumentShareLinks => Set<DocumentShareLink>();
     public DbSet<DocumentFavorite> DocumentFavorites => Set<DocumentFavorite>();
+    public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<StorageConfiguration> StorageConfigurations => Set<StorageConfiguration>();
     public DbSet<EncryptionKeyRecord> EncryptionKeys => Set<EncryptionKeyRecord>();
@@ -92,6 +93,18 @@ public class ApplicationDbContext : DbContext
             e.HasIndex(x => new { x.UserId, x.DocumentId }).IsUnique();
             e.HasOne(x => x.User).WithMany(u => u.Favorites).HasForeignKey(x => x.UserId);
             e.HasOne(x => x.Document).WithMany(d => d.Favorites).HasForeignKey(x => x.DocumentId);
+        });
+
+        modelBuilder.Entity<UserNotification>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Type).HasMaxLength(64);
+            e.Property(x => x.Message).HasMaxLength(1000);
+            e.HasIndex(x => new { x.UserId, x.CreatedAt });
+            e.HasIndex(x => new { x.UserId, x.IsRead });
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Actor).WithMany().HasForeignKey(x => x.ActorId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(x => x.Document).WithMany().HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<AuditLog>(e =>
