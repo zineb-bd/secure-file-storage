@@ -323,6 +323,14 @@
     "fr": "Actualiser",
     "en": "Refresh"
   },
+  "notif.section.new": {
+    "fr": "Nouvelles",
+    "en": "New"
+  },
+  "notif.section.previous": {
+    "fr": "Précédentes",
+    "en": "Previous"
+  },
   "topbar.themeDark": {
     "fr": "Mode sombre / clair",
     "en": "Dark / light mode"

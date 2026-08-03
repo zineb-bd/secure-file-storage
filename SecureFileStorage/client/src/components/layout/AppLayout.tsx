@@ -95,7 +95,7 @@ export function AppLayout() {
     try {
       setNotifLoading(true)
       setNotifError('')
-      const data = await api<NotificationList>('/api/notifications?take=30')
+      const data = await api<NotificationList>('/api/notifications?take=100')
       const items = Array.isArray(data?.items) ? data.items : []
       setNotifications(items)
       setUnreadCount(typeof data?.unreadCount === 'number' ? data.unreadCount : items.filter((n) => !n.isRead).length)
@@ -164,6 +164,28 @@ export function AppLayout() {
     navigate('/shared')
   }
 
+  const notifTypeLabel = (type: string) => {
+    if (type === 'DocumentShared') return t('notif.type.shared')
+    if (type === 'ShareSent') return t('notif.type.sent')
+    return type
+  }
+
+  const renderNotifItem = (n: UserNotification) => (
+    <button
+      key={n.id}
+      type="button"
+      className={`notif-item${!n.isRead ? ' unread' : ' read'}`}
+      onClick={() => void openNotification(n)}
+    >
+      <div className="notif-item-type">{notifTypeLabel(n.type)}</div>
+      <div className="notif-item-message">{n.message}</div>
+      <div className="notif-item-date">{formatNotifDate(n.createdAt, lang)}</div>
+    </button>
+  )
+
+  const unreadNotifications = notifications.filter((n) => !n.isRead)
+  const previousNotifications = notifications.filter((n) => n.isRead)
+
   const routeMeta = ROUTE_META[location.pathname] ?? ROUTE_META['/']
   const breadcrumb = t(routeMeta.titleKey)
   const breadcrumbSub = routeMeta.subtitleKey ? t(routeMeta.subtitleKey) : ''
@@ -188,11 +210,6 @@ export function AppLayout() {
 
   const roleLabel = isAdmin ? t('role.admin') : t('role.user')
   const avatarUrl = useProfileAvatar(user?.email)
-  const notifTypeLabel = (type: string) => {
-    if (type === 'DocumentShared') return t('notif.type.shared')
-    if (type === 'ShareSent') return t('notif.type.sent')
-    return type
-  }
 
   return (
     <div className="app-layout">
@@ -340,18 +357,20 @@ export function AppLayout() {
                   ) : notifications.length === 0 ? (
                     <div className="notif-empty">{t('empty.notifications')}</div>
                   ) : (
-                    notifications.map((n) => (
-                      <button
-                        key={n.id}
-                        type="button"
-                        className={`notif-item${!n.isRead ? ' unread' : ''}`}
-                        onClick={() => void openNotification(n)}
-                      >
-                        <div className="notif-item-type">{notifTypeLabel(n.type)}</div>
-                        <div className="notif-item-message">{n.message}</div>
-                        <div className="notif-item-date">{formatNotifDate(n.createdAt, lang)}</div>
-                      </button>
-                    ))
+                    <div className="notif-panel-body">
+                      {unreadNotifications.length > 0 && (
+                        <section className="notif-section" aria-label={t('notif.section.new')}>
+                          <div className="notif-section-title">{t('notif.section.new')}</div>
+                          {unreadNotifications.map(renderNotifItem)}
+                        </section>
+                      )}
+                      {previousNotifications.length > 0 && (
+                        <section className="notif-section" aria-label={t('notif.section.previous')}>
+                          <div className="notif-section-title">{t('notif.section.previous')}</div>
+                          {previousNotifications.map(renderNotifItem)}
+                        </section>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

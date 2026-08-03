@@ -1386,9 +1386,11 @@ code {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 340px;
-  max-height: 400px;
-  overflow-y: auto;
+  width: 360px;
+  max-height: min(70vh, 520px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -1405,6 +1407,28 @@ code {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+}
+
+.notif-panel-body {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.notif-section-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.55rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--bg-elevated) 92%, var(--bg-surface));
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .notif-panel-actions {
@@ -1455,6 +1479,10 @@ code {
 
 .notif-item.unread {
   background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+}
+
+.notif-item.read .notif-item-message {
+  color: var(--text-muted);
 }
 
 .notif-item:last-child {
