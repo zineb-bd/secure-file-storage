@@ -22,6 +22,8 @@ public class StorageConfiguration
     public StorageProviderType ProviderType { get; set; }
     public DatabaseProviderType DatabaseProvider { get; set; }
     public string BasePath { get; set; } = string.Empty;
+    /// <summary>Chaîne de connexion cible pour le fournisseur de base choisi.</summary>
+    public string? ConnectionString { get; set; }
     public string? S3Endpoint { get; set; }
     public string? S3Bucket { get; set; }
     public string? S3AccessKey { get; set; }
