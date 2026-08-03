@@ -5,7 +5,6 @@ import { I18nProvider } from '@/i18n/I18nContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute, AdminRoute } from '@/components/auth/ProtectedRoute'
 import { LoginPage } from '@/pages/LoginPage'
-import { RegisterPage } from '@/pages/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { DocumentsPage } from '@/pages/DocumentsPage'
 import { UploadPage } from '@/pages/UploadPage'
@@ -16,7 +15,6 @@ import { ArchivedPage } from '@/pages/ArchivedPage'
 import { TrashPage } from '@/pages/TrashPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
-import { AdminRolesPage } from '@/pages/admin/AdminRolesPage'
 import { AdminAuditPage } from '@/pages/admin/AdminAuditPage'
 import { AdminConfigPage } from '@/pages/admin/AdminPages'
 
@@ -28,7 +26,7 @@ export default function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/register" element={<Navigate to="/login" replace />} />
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route index element={<DashboardPage />} />
@@ -42,7 +40,6 @@ export default function App() {
                   <Route path="profile" element={<ProfilePage />} />
                   <Route element={<AdminRoute />}>
                     <Route path="admin/users" element={<AdminUsersPage />} />
-                    <Route path="admin/roles" element={<AdminRolesPage />} />
                     <Route path="admin/audit" element={<AdminAuditPage />} />
                     <Route path="admin/config" element={<AdminConfigPage />} />
                   </Route>

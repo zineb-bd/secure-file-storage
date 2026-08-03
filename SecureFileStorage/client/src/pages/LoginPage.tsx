@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useI18n } from '@/i18n/I18nContext'
 import { AuthLayout } from '@/components/auth/AuthLayout'
@@ -149,11 +149,6 @@ export function LoginPage() {
           )}
         </button>
       </form>
-
-      <p className="auth-switch">
-        {t('login.noAccount')}{' '}
-        <Link to="/register">{t('login.createAccount')}</Link>
-      </p>
 
       <p className="auth-note">{t('login.note')}</p>
     </AuthLayout>

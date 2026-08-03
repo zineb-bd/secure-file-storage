@@ -29,11 +29,13 @@ public class AuthController : ControllerBase
 
     [HttpPost("register")]
     [AllowAnonymous]
-    [SwaggerOperation(Summary = "Inscription", Description = "Créer un nouveau compte utilisateur.")]
-    public async Task<ActionResult<UserDto>> Register([FromBody] RegisterRequest request, CancellationToken ct)
+    [SwaggerOperation(Summary = "Inscription (désactivée)", Description = "L'auto-inscription est désactivée. Les comptes sont créés par un administrateur.")]
+    public ActionResult Register([FromBody] RegisterRequest _)
     {
-        var result = await _authService.RegisterAsync(request, ct);
-        return result is null ? Conflict(new { message = "Email déjà utilisé." }) : Ok(result);
+        return StatusCode(403, new
+        {
+            message = "La création de compte est désactivée. Contactez un administrateur."
+        });
     }
 
     [HttpPost("logout")]
