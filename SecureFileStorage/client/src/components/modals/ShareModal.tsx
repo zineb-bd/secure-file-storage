@@ -45,6 +45,7 @@ export function ShareModal({ doc, onClose }: ShareModalProps) {
   const [accessLevel, setAccessLevel] = useState('Read')
   const [linkResult, setLinkResult] = useState<CreateShareLinkResponse | null>(null)
   const [msg, setMsg] = useState('')
+  const [msgOk, setMsgOk] = useState(false)
   const [busy, setBusy] = useState(false)
 
   const canManage = collaborators?.canManage ?? false
@@ -92,8 +93,10 @@ export function ShareModal({ doc, onClose }: ShareModalProps) {
     if (!selectedEmails.length || !canManage) return
     setBusy(true)
     setMsg('')
+    setMsgOk(false)
     try {
-      for (const email of selectedEmails) {
+      const invited = [...selectedEmails]
+      for (const email of invited) {
         await api(`/api/documents/${doc.id}/share/user`, {
           method: 'POST',
           body: JSON.stringify({ userEmail: email, accessLevel }),
@@ -102,7 +105,16 @@ export function ShareModal({ doc, onClose }: ShareModalProps) {
       setSelectedEmails([])
       setUserQuery('')
       await load()
+      setMsgOk(true)
+      setMsg(
+        t('collab.inviteSent', {
+          count: String(invited.length),
+          emails: invited.join(', '),
+        }),
+      )
+      window.dispatchEvent(new CustomEvent('sfs:notifications-changed'))
     } catch (err) {
+      setMsgOk(false)
       setMsg(err instanceof Error ? err.message : 'Erreur')
     } finally {
       setBusy(false)
@@ -157,7 +169,7 @@ export function ShareModal({ doc, onClose }: ShareModalProps) {
       <p className="form-hint">
         {t('collab.document')}: <strong>{doc.fileName}</strong>
       </p>
-      {msg && <div className="msg error">{msg}</div>}
+      {msg && <div className={`msg${msgOk ? ' success' : ' error'}`}>{msg}</div>}
 
       <div className="collab-tabs" role="tablist">
         <button

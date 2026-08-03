@@ -28,12 +28,23 @@ public class NotificationService : INotificationService
         if (recipientUserId == actorUserId) return;
 
         var actorName = await ResolveActorNameAsync(actorUserId, ct);
+        var recipient = await _context.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == recipientUserId, ct);
+        var recipientLabel = recipient is null
+            ? "le collaborateur"
+            : $"{recipient.FirstName} {recipient.LastName}".Trim();
+        if (string.IsNullOrWhiteSpace(recipientLabel) || recipientLabel == "le collaborateur")
+            recipientLabel = recipient?.Email ?? "le collaborateur";
+
         var levelLabel = string.IsNullOrWhiteSpace(accessLevel) ? "lecture" : accessLevel.ToLowerInvariant() switch
         {
             "write" or "écriture" or "ecriture" => "écriture",
             _ => "lecture"
         };
 
+        var now = DateTime.UtcNow;
+
+        // Destinataire
         await _context.UserNotifications.AddAsync(new UserNotification
         {
             Id = Guid.NewGuid(),
@@ -42,7 +53,19 @@ public class NotificationService : INotificationService
             Type = "DocumentShared",
             DocumentId = documentId,
             Message = $"{actorName} a partagé « {documentName} » avec vous ({levelLabel}).",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
+        }, ct);
+
+        // Confirmation pour l'expéditeur (sinon la cloche du partageur reste vide)
+        await _context.UserNotifications.AddAsync(new UserNotification
+        {
+            Id = Guid.NewGuid(),
+            UserId = actorUserId,
+            ActorId = actorUserId,
+            Type = "ShareSent",
+            DocumentId = documentId,
+            Message = $"Vous avez partagé « {documentName} » avec {recipientLabel} ({levelLabel}).",
+            CreatedAt = now
         }, ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
@@ -77,6 +100,19 @@ public class NotificationService : INotificationService
                 CreatedAt = now
             }, ct);
         }
+
+        await _context.UserNotifications.AddAsync(new UserNotification
+        {
+            Id = Guid.NewGuid(),
+            UserId = actorUserId,
+            ActorId = actorUserId,
+            Type = "ShareSent",
+            DocumentId = documentId,
+            Message = recipients.Count == 1
+                ? $"Vous avez partagé « {documentName} » avec 1 collaborateur."
+                : $"Vous avez partagé « {documentName} » avec {recipients.Count} collaborateurs.",
+            CreatedAt = now
+        }, ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
     }

@@ -769,7 +769,9 @@ public class DocumentService : IDocumentService
         var targetUserId = request.UserId;
         if (targetUserId is null && !string.IsNullOrWhiteSpace(request.UserEmail))
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.UserEmail.Trim(), ct);
+            var email = request.UserEmail.Trim().ToLowerInvariant();
+            var user = await _context.Users.FirstOrDefaultAsync(
+                u => u.Email.ToLower() == email, ct);
             if (user is null) return null;
             targetUserId = user.Id;
         }

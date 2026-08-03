@@ -291,6 +291,38 @@
     "fr": "Notifications",
     "en": "Notifications"
   },
+  "notif.type.shared": {
+    "fr": "Partage",
+    "en": "Shared"
+  },
+  "notif.type.sent": {
+    "fr": "Envoyé",
+    "en": "Sent"
+  },
+  "notif.markAllRead": {
+    "fr": "Tout marquer comme lu",
+    "en": "Mark all as read"
+  },
+  "notif.loading": {
+    "fr": "Chargement…",
+    "en": "Loading…"
+  },
+  "notif.disabled": {
+    "fr": "Notifications désactivées dans le profil.",
+    "en": "Notifications disabled in your profile."
+  },
+  "notif.loadError": {
+    "fr": "Impossible de charger les notifications. L’API est peut-être en veille — réessayez.",
+    "en": "Could not load notifications. The API may be waking up — try again."
+  },
+  "notif.retry": {
+    "fr": "Réessayer",
+    "en": "Retry"
+  },
+  "notif.refresh": {
+    "fr": "Actualiser",
+    "en": "Refresh"
+  },
   "topbar.themeDark": {
     "fr": "Mode sombre / clair",
     "en": "Dark / light mode"
@@ -324,12 +356,60 @@
     "en": "Your secure document workspace"
   },
   "page.documents.title": {
-    "fr": "Mes documents",
-    "en": "My documents"
+    "fr": "Mes fichiers",
+    "en": "My files"
   },
   "page.documents.subtitle": {
-    "fr": "Gérez et organisez vos fichiers",
-    "en": "Manage and organize your files"
+    "fr": "Recherchez, filtrez et organisez tous vos documents.",
+    "en": "Search, filter and organize all your documents."
+  },
+  "files.stat.total": {
+    "fr": "Fichiers",
+    "en": "Files"
+  },
+  "files.stat.active": {
+    "fr": "Actifs",
+    "en": "Active"
+  },
+  "files.stat.shared": {
+    "fr": "Partagés",
+    "en": "Shared"
+  },
+  "files.stat.size": {
+    "fr": "Volume",
+    "en": "Size"
+  },
+  "files.listTitle": {
+    "fr": "Tous les fichiers",
+    "en": "All files"
+  },
+  "files.count": {
+    "fr": "{count} document(s)",
+    "en": "{count} document(s)"
+  },
+  "files.loading": {
+    "fr": "Chargement…",
+    "en": "Loading…"
+  },
+  "files.clearFilters": {
+    "fr": "Réinitialiser",
+    "en": "Clear filters"
+  },
+  "files.emptyTitle": {
+    "fr": "Aucun fichier pour le moment",
+    "en": "No files yet"
+  },
+  "files.emptyDesc": {
+    "fr": "Importez votre premier document pour commencer à organiser votre espace.",
+    "en": "Upload your first document to start organizing your space."
+  },
+  "files.emptyFilteredTitle": {
+    "fr": "Aucun résultat",
+    "en": "No results"
+  },
+  "files.emptyFilteredDesc": {
+    "fr": "Aucun fichier ne correspond à vos filtres. Essayez d’élargir la recherche.",
+    "en": "No files match your filters. Try broadening your search."
   },
   "page.favorites.title": {
     "fr": "Documents favoris",
@@ -662,6 +742,10 @@
   "action.trash": {
     "fr": "Mettre à la corbeille",
     "en": "Move to trash"
+  },
+  "action.more": {
+    "fr": "Plus d’actions",
+    "en": "More actions"
   },
   "action.permDelete": {
     "fr": "Suppression définitive",
@@ -1092,8 +1176,8 @@
     "en": "No recent activity."
   },
   "empty.notifications": {
-    "fr": "Aucune notification.",
-    "en": "No notifications."
+    "fr": "Aucune notification. Elles apparaissent ici quand quelqu’un partage un document avec vous.",
+    "en": "No notifications. They appear here when someone shares a document with you."
   },
   "empty.documents": {
     "fr": "Aucun document récent.",
@@ -1839,6 +1923,46 @@
     "fr": "Aucun document favori pour le moment.",
     "en": "No favorite documents yet."
   },
+  "fav.stat.total": {
+    "fr": "Favoris",
+    "en": "Favorites"
+  },
+  "fav.stat.categories": {
+    "fr": "Catégories",
+    "en": "Categories"
+  },
+  "fav.stat.shared": {
+    "fr": "Partagés",
+    "en": "Shared"
+  },
+  "fav.stat.size": {
+    "fr": "Volume",
+    "en": "Size"
+  },
+  "fav.listTitle": {
+    "fr": "Documents favoris",
+    "en": "Favorite documents"
+  },
+  "fav.count": {
+    "fr": "{count} favori(s)",
+    "en": "{count} favorite(s)"
+  },
+  "fav.emptyTitle": {
+    "fr": "Aucun favori",
+    "en": "No favorites"
+  },
+  "fav.emptyDesc": {
+    "fr": "Marquez des documents d’une étoile depuis Mes fichiers pour les retrouver ici.",
+    "en": "Star documents from My files to find them here."
+  },
+  "cat.listTitle": {
+    "fr": "Toutes les catégories",
+    "en": "All categories"
+  },
+  "cat.count": {
+    "fr": "{count} catégorie(s)",
+    "en": "{count} categor(ies)"
+  },
   "collab.document": {
     "fr": "Document",
     "en": "Document"
@@ -1878,6 +2002,10 @@
   "collab.noUsers": {
     "fr": "Aucun utilisateur disponible.",
     "en": "No users available."
+  },
+  "collab.inviteSent": {
+    "fr": "Invitation envoyée à {emails}. La notification apparaît chez le destinataire (pas dans votre cloche).",
+    "en": "Invite sent to {emails}. The notification appears for the recipient (not in your bell)."
   },
   "collab.add": {
     "fr": "Ajouter",
@@ -3332,8 +3460,8 @@
     "en": "Document Security"
   },
   "settings.nav.storage": {
-    "fr": "Stockage",
-    "en": "Storage"
+    "fr": "Base de données",
+    "en": "Database"
   },
   "settings.nav.documents": {
     "fr": "Documents",
@@ -3364,8 +3492,8 @@
     "en": "Document protection, encryption and integrity."
   },
   "settings.storageDesc": {
-    "fr": "Configuration du stockage et utilisation de l'espace disque.",
-    "en": "Storage configuration and disk usage."
+    "fr": "Choisissez la base de données à utiliser et sa chaîne de connexion.",
+    "en": "Choose which database to use and its connection string."
   },
   "settings.documentsDesc": {
     "fr": "Règles de gestion et limites applicables aux documents.",
@@ -3608,8 +3736,56 @@
     "en": "Total capacity is defined by the host infrastructure."
   },
   "settings.storageConfig": {
-    "fr": "Configuration du stockage",
-    "en": "Storage Configuration"
+    "fr": "Configuration de la base de données",
+    "en": "Database configuration"
+  },
+  "settings.db.configDesc": {
+    "fr": "Sélectionnez PostgreSQL ou Oracle, ou connectez une autre base via sa chaîne de connexion.",
+    "en": "Select PostgreSQL or Oracle, or connect another database via its connection string."
+  },
+  "settings.db.postgresql": {
+    "fr": "PostgreSQL",
+    "en": "PostgreSQL"
+  },
+  "settings.db.oracle": {
+    "fr": "Oracle",
+    "en": "Oracle"
+  },
+  "settings.db.sqlserver": {
+    "fr": "SQL Server (autre)",
+    "en": "SQL Server (other)"
+  },
+  "settings.db.mysql": {
+    "fr": "MySQL (autre)",
+    "en": "MySQL (other)"
+  },
+  "settings.db.other": {
+    "fr": "Autre base de données",
+    "en": "Other database"
+  },
+  "settings.db.connectionString": {
+    "fr": "Chaîne de connexion",
+    "en": "Connection string"
+  },
+  "settings.db.providerHint": {
+    "fr": "PostgreSQL et Oracle sont les options principales ; SQL Server, MySQL ou « Autre » permettent une connexion externe.",
+    "en": "PostgreSQL and Oracle are the main options; SQL Server, MySQL or Other allow an external connection."
+  },
+  "settings.db.connectionHint": {
+    "fr": "Indiquez la chaîne de connexion complète. Le mot de passe est masqué après enregistrement.",
+    "en": "Enter the full connection string. The password is masked after saving."
+  },
+  "settings.db.otherHint": {
+    "fr": "Fournissez la chaîne adaptée au moteur choisi pour connecter cette base.",
+    "en": "Provide the engine-specific connection string to connect this database."
+  },
+  "settings.db.providerRequired": {
+    "fr": "Veuillez choisir une base de données.",
+    "en": "Please choose a database provider."
+  },
+  "settings.db.connectionRequired": {
+    "fr": "La chaîne de connexion est obligatoire.",
+    "en": "Connection string is required."
   },
   "settings.storageType": {
     "fr": "Type de stockage",
@@ -4026,6 +4202,87 @@
   "adminDash.configDesc": {
     "fr": "Paramètres système",
     "en": "System settings"
+  },
+  "chart.section": {
+    "fr": "Diagrammes",
+    "en": "Charts"
+  },
+  "chart.sectionHint": {
+    "fr": "Répartition du stockage, des documents et de l'activité récente.",
+    "en": "Storage, documents and recent activity breakdown."
+  },
+  "chart.empty": {
+    "fr": "Pas encore de données à afficher.",
+    "en": "No data to display yet."
+  },
+  "chart.storage.title": {
+    "fr": "Stockage",
+    "en": "Storage"
+  },
+  "chart.storage.used": {
+    "fr": "utilisé",
+    "en": "used"
+  },
+  "chart.storage.physical": {
+    "fr": "Physique",
+    "en": "Physical"
+  },
+  "chart.storage.saved": {
+    "fr": "Économisé (dédup)",
+    "en": "Saved (dedup)"
+  },
+  "chart.storage.logical": {
+    "fr": "Logique",
+    "en": "Logical"
+  },
+  "chart.categories.title": {
+    "fr": "Par catégorie",
+    "en": "By category"
+  },
+  "chart.types.title": {
+    "fr": "Par type de fichier",
+    "en": "By file type"
+  },
+  "chart.activity.title": {
+    "fr": "Activité (7 jours)",
+    "en": "Activity (7 days)"
+  },
+  "chart.uploads.title": {
+    "fr": "Ajouts (7 jours)",
+    "en": "Uploads (7 days)"
+  },
+  "chart.visibility.title": {
+    "fr": "Visibilité",
+    "en": "Visibility"
+  },
+  "chart.visibility.docs": {
+    "fr": "docs",
+    "en": "docs"
+  },
+  "chart.volume.title": {
+    "fr": "Volume par catégorie",
+    "en": "Volume by category"
+  },
+  "chart.type.pdf": { "fr": "PDF", "en": "PDF" },
+  "chart.type.images": { "fr": "Images", "en": "Images" },
+  "chart.type.video": { "fr": "Vidéo", "en": "Video" },
+  "chart.type.audio": { "fr": "Audio", "en": "Audio" },
+  "chart.type.sheets": { "fr": "Tableurs", "en": "Spreadsheets" },
+  "chart.type.docs": { "fr": "Documents", "en": "Documents" },
+  "chart.type.archives": { "fr": "Archives", "en": "Archives" },
+  "chart.type.other": { "fr": "Autres", "en": "Other" },
+  "chart.action.Upload": { "fr": "Upload", "en": "Upload" },
+  "chart.action.Download": { "fr": "Téléchargement", "en": "Download" },
+  "chart.action.View": { "fr": "Consultation", "en": "View" },
+  "chart.action.Preview": { "fr": "Aperçu", "en": "Preview" },
+  "chart.action.Update": { "fr": "Mise à jour", "en": "Update" },
+  "chart.action.Share": { "fr": "Partage", "en": "Share" },
+  "chart.action.Archive": { "fr": "Archive", "en": "Archive" },
+  "chart.action.Restore": { "fr": "Restauration", "en": "Restore" },
+  "chart.action.Delete": { "fr": "Suppression", "en": "Delete" },
+  "recentDocs.subtitle": {
+    "fr": "Les derniers fichiers ajoutés ou mis à jour.",
+    "en": "Latest files added or updated."
   },
   "chat.title": {
     "fr": "Assistant SecureDocs",

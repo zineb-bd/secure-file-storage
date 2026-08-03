@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -8,6 +8,44 @@ import { NavIcon } from '@/components/layout/NavIcon'
 import { useProfileAvatar } from '@/hooks/useProfileAvatar'
 import { IconBell, IconChevronDown, IconMoon, IconSun, IconUpload } from '@/components/ui/TopbarIcons'
 import { ChatWidget } from '@/components/chat/ChatWidget'
+import { api } from '@/api/client'
+import { PREF_NOTIF_INAPP_KEY } from '@/constants'
+
+type UserNotification = {
+  id: string
+  type: string
+  message: string
+  documentId?: string | null
+  documentName?: string | null
+  actorId?: string | null
+  actorName?: string | null
+  isRead: boolean
+  createdAt: string
+}
+
+type NotificationList = {
+  items: UserNotification[]
+  unreadCount: number
+}
+
+function readBoolPref(key: string, defaultValue = true) {
+  const v = localStorage.getItem(key)
+  if (v === null) return defaultValue
+  return v === 'true'
+}
+
+function formatNotifDate(iso: string, lang: string) {
+  try {
+    return new Date(iso).toLocaleString(lang === 'en' ? 'en-GB' : 'fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return iso
+  }
+}
 
 const ROUTE_META: Record<string, { titleKey: string; subtitleKey?: string }> = {
   '/': { titleKey: 'page.dashboard.title', subtitleKey: 'page.dashboard.subtitle' },
@@ -20,7 +58,6 @@ const ROUTE_META: Record<string, { titleKey: string; subtitleKey?: string }> = {
   '/trash': { titleKey: 'page.trash.title', subtitleKey: 'page.trash.subtitle' },
   '/profile': { titleKey: 'page.profile.title', subtitleKey: 'page.profile.subtitle' },
   '/admin/users': { titleKey: 'page.adminUsers.title', subtitleKey: 'page.adminUsers.subtitle' },
-  '/admin/roles': { titleKey: 'page.adminRoles.title', subtitleKey: 'page.adminRoles.subtitle' },
   '/admin/audit': { titleKey: 'page.adminAudit.title', subtitleKey: 'page.adminAudit.subtitle' },
   '/admin/config': { titleKey: 'page.adminConfig.title', subtitleKey: 'page.adminConfig.subtitle' },
 }
@@ -28,17 +65,103 @@ const ROUTE_META: Record<string, { titleKey: string; subtitleKey?: string }> = {
 export function AppLayout() {
   const { user, isAdmin, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [notifications, setNotifications] = useState<UserNotification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [notifLoading, setNotifLoading] = useState(false)
+  const [notifError, setNotifError] = useState('')
+  const [notifPrefTick, setNotifPrefTick] = useState(0)
+
+  const inAppNotifsEnabled = readBoolPref(PREF_NOTIF_INAPP_KEY)
+
+  const loadNotifications = useCallback(async () => {
+    if (!user) {
+      setNotifications([])
+      setUnreadCount(0)
+      setNotifError('')
+      return
+    }
+    if (!readBoolPref(PREF_NOTIF_INAPP_KEY)) {
+      setNotifications([])
+      setUnreadCount(0)
+      setNotifError('')
+      return
+    }
+    try {
+      setNotifLoading(true)
+      setNotifError('')
+      const data = await api<NotificationList>('/api/notifications?take=30')
+      const items = Array.isArray(data?.items) ? data.items : []
+      setNotifications(items)
+      setUnreadCount(typeof data?.unreadCount === 'number' ? data.unreadCount : items.filter((n) => !n.isRead).length)
+    } catch (err) {
+      setNotifications([])
+      setUnreadCount(0)
+      setNotifError(err instanceof Error ? err.message : t('notif.loadError'))
+    } finally {
+      setNotifLoading(false)
+    }
+  }, [user, t, notifPrefTick])
+
+  useEffect(() => {
+    void loadNotifications()
+    if (!user || !readBoolPref(PREF_NOTIF_INAPP_KEY)) return
+    const id = window.setInterval(() => void loadNotifications(), 30_000)
+    return () => window.clearInterval(id)
+  }, [loadNotifications, user])
+
+  useEffect(() => {
+    if (notifOpen) void loadNotifications()
+  }, [notifOpen, loadNotifications])
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === PREF_NOTIF_INAPP_KEY) setNotifPrefTick((n) => n + 1)
+    }
+    const onNotifChanged = () => void loadNotifications()
+    window.addEventListener('storage', onStorage)
+    window.addEventListener('sfs:notifications-changed', onNotifChanged)
+    return () => {
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener('sfs:notifications-changed', onNotifChanged)
+    }
+  }, [loadNotifications])
 
   const closeMenus = () => {
     setUserMenuOpen(false)
     setNotifOpen(false)
     setSidebarOpen(false)
+  }
+
+  const markAllRead = async () => {
+    try {
+      await api('/api/notifications/read-all', { method: 'POST' })
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+      setUnreadCount(0)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const openNotification = async (n: UserNotification) => {
+    if (!n.isRead) {
+      try {
+        await api(`/api/notifications/${n.id}/read`, { method: 'POST' })
+        setNotifications((prev) =>
+          prev.map((item) => (item.id === n.id ? { ...item, isRead: true } : item)),
+        )
+        setUnreadCount((c) => Math.max(0, c - 1))
+      } catch {
+        /* ignore */
+      }
+    }
+    closeMenus()
+    navigate('/shared')
   }
 
   const routeMeta = ROUTE_META[location.pathname] ?? ROUTE_META['/']
@@ -58,7 +181,6 @@ export function AppLayout() {
   const adminItems = isAdmin
     ? [
         { to: '/admin/users', label: t('nav.users'), icon: 'users' },
-        { to: '/admin/roles', label: t('nav.roles'), icon: 'roles' },
         { to: '/admin/audit', label: t('nav.audit'), icon: 'audit' },
         { to: '/admin/config', label: t('nav.config'), icon: 'config' },
       ]
@@ -66,6 +188,11 @@ export function AppLayout() {
 
   const roleLabel = isAdmin ? t('role.admin') : t('role.user')
   const avatarUrl = useProfileAvatar(user?.email)
+  const notifTypeLabel = (type: string) => {
+    if (type === 'DocumentShared') return t('notif.type.shared')
+    if (type === 'ShareSent') return t('notif.type.sent')
+    return type
+  }
 
   return (
     <div className="app-layout">
@@ -156,12 +283,6 @@ export function AppLayout() {
               <AppBrand compact logoSize={28} />
             </Link>
           </div>
-          <div className="topbar-center">
-            <div className="global-search">
-              <span className="global-search-icon" aria-hidden="true" />
-              <input type="search" placeholder={t('topbar.search')} disabled />
-            </div>
-          </div>
           <div className="topbar-right">
             <button
               type="button"
@@ -185,11 +306,53 @@ export function AppLayout() {
                 }}
               >
                 <IconBell />
+                {inAppNotifsEnabled && unreadCount > 0 && (
+                  <span className="notif-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                )}
               </button>
               {notifOpen && (
                 <div className="notif-panel" id="notif-panel">
-                  <div className="notif-panel-header">{t('topbar.notifications')}</div>
-                  <div className="notif-empty">{t('empty.notifications')}</div>
+                  <div className="notif-panel-header">
+                    <span>{t('topbar.notifications')}</span>
+                    <div className="notif-panel-actions">
+                      <button type="button" className="notif-mark-all" onClick={() => void loadNotifications()}>
+                        {t('notif.refresh')}
+                      </button>
+                      {unreadCount > 0 && (
+                        <button type="button" className="notif-mark-all" onClick={() => void markAllRead()}>
+                          {t('notif.markAllRead')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {!readBoolPref(PREF_NOTIF_INAPP_KEY) ? (
+                    <div className="notif-empty">{t('notif.disabled')}</div>
+                  ) : notifLoading && notifications.length === 0 ? (
+                    <div className="notif-empty">{t('notif.loading')}</div>
+                  ) : notifError ? (
+                    <div className="notif-empty">
+                      <p>{t('notif.loadError')}</p>
+                      <p className="notif-error-detail">{notifError}</p>
+                      <button type="button" className="btn btn-sm" onClick={() => void loadNotifications()}>
+                        {t('notif.retry')}
+                      </button>
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="notif-empty">{t('empty.notifications')}</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        className={`notif-item${!n.isRead ? ' unread' : ''}`}
+                        onClick={() => void openNotification(n)}
+                      >
+                        <div className="notif-item-type">{notifTypeLabel(n.type)}</div>
+                        <div className="notif-item-message">{n.message}</div>
+                        <div className="notif-item-date">{formatNotifDate(n.createdAt, lang)}</div>
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
             </div>
@@ -237,25 +400,30 @@ export function AppLayout() {
           </div>
         </header>
 
-        <div className="od-command-bar">
-          <div>
-            <div className="od-breadcrumb" id="page-breadcrumb">
-              {breadcrumb}
+        <main className="page-shell">
+          <header className="page-hero">
+            <div className="page-hero-copy">
+              <p className="page-hero-kicker">{t('app.name')}</p>
+              <h1 className="page-hero-title" id="page-breadcrumb">
+                {breadcrumb}
+              </h1>
+              {breadcrumbSub && (
+                <p className="page-hero-sub" id="page-breadcrumb-sub">
+                  {breadcrumbSub}
+                </p>
+              )}
             </div>
-            {breadcrumbSub && (
-              <div className="od-breadcrumb-sub" id="page-breadcrumb-sub">
-                {breadcrumbSub}
-              </div>
-            )}
-          </div>
-        </div>
+            <div className="page-hero-glow" aria-hidden="true" />
+          </header>
 
-        <div className="page-content">
-          <Outlet />
-        </div>
+          <div className="page-canvas">
+            <div className="page-content">
+              <Outlet />
+            </div>
+          </div>
+        </main>
       </div>
       <ChatWidget />
     </div>
   )
 }
-
