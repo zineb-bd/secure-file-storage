@@ -112,7 +112,8 @@ public interface IEncryptionService
 public interface IAntivirusService
 {
     Task<(AntivirusScanResult Result, string? ThreatName)> ScanAsync(Stream fileStream, string fileName, CancellationToken ct = default);
-    Task<IEnumerable<AntivirusAlertDto>> GetAlertsAsync(bool unresolvedOnly = true, CancellationToken ct = default);
+    Task<IEnumerable<AntivirusAlertDto>> GetAlertsAsync(bool unresolvedOnly = true, int take = 50, CancellationToken ct = default);
+    Task<AntivirusStatsDto> GetStatsAsync(CancellationToken ct = default);
 }
 
 public interface IStorageConfigService

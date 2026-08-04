@@ -103,10 +103,6 @@
     "fr": "E-mail ou mot de passe incorrect.",
     "en": "Invalid email or password."
   },
-  "login.note": {
-    "fr": "Authentification JWT — OAuth2 planifié pour une intégration SSO entreprise.",
-    "en": "JWT authentication — OAuth2 planned for enterprise SSO integration."
-  },
   "register.title": {
     "fr": "Créer votre compte",
     "en": "Create Your Account"
@@ -3726,6 +3722,78 @@
   "settings.antivirusAlerts": {
     "fr": "Alertes antivirus récentes",
     "en": "Recent antivirus alerts"
+  },
+  "settings.inactive": {
+    "fr": "Inactif",
+    "en": "Inactive"
+  },
+  "settings.av.performanceTitle": {
+    "fr": "Performance antivirus",
+    "en": "Antivirus performance"
+  },
+  "settings.av.performanceDesc": {
+    "fr": "Temps de scan ClamAV (session courante) et synthèse des documents analysés.",
+    "en": "ClamAV scan times (current session) and scanned documents summary."
+  },
+  "settings.av.engine": {
+    "fr": "Moteur",
+    "en": "Engine"
+  },
+  "settings.av.avgScan": {
+    "fr": "Durée moyenne",
+    "en": "Average duration"
+  },
+  "settings.av.lastScan": {
+    "fr": "Dernier scan",
+    "en": "Last scan"
+  },
+  "settings.av.maxScan": {
+    "fr": "Scan le plus long",
+    "en": "Slowest scan"
+  },
+  "settings.av.sessionScans": {
+    "fr": "Scans (session)",
+    "en": "Scans (session)"
+  },
+  "settings.av.sessionBreakdown": {
+    "fr": "Propres {clean} · Menaces {infected} · Erreurs {error} · Ignorés {skipped}",
+    "en": "Clean {clean} · Threats {infected} · Errors {error} · Skipped {skipped}"
+  },
+  "settings.av.cleanDocs": {
+    "fr": "Documents propres / analysés",
+    "en": "Clean / scanned documents"
+  },
+  "settings.av.topThreats": {
+    "fr": "Menaces les plus fréquentes",
+    "en": "Most frequent threats"
+  },
+  "settings.av.detectionsTitle": {
+    "fr": "Détections antivirus",
+    "en": "Antivirus detections"
+  },
+  "settings.av.detectionsDesc": {
+    "fr": "Fichiers bloqués ou signalés par l’analyse antivirus lors des téléversements.",
+    "en": "Files blocked or flagged by antivirus scans during uploads."
+  },
+  "settings.av.detectionsCount": {
+    "fr": "{open} ouvertes / {total}",
+    "en": "{open} open / {total}"
+  },
+  "settings.av.lastDetection": {
+    "fr": "Dernière détection",
+    "en": "Last detection"
+  },
+  "settings.av.noDetections": {
+    "fr": "Aucune détection enregistrée pour le moment.",
+    "en": "No detections recorded yet."
+  },
+  "settings.av.resolved": {
+    "fr": "Résolue",
+    "en": "Resolved"
+  },
+  "settings.av.open": {
+    "fr": "Ouverte",
+    "en": "Open"
   },
   "settings.storageUsage": {
     "fr": "Utilisation du stockage",

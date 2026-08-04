@@ -149,8 +149,6 @@ export function LoginPage() {
           )}
         </button>
       </form>
-
-      <p className="auth-note">{t('login.note')}</p>
     </AuthLayout>
   )
 }

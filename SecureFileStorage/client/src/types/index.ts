@@ -189,6 +189,7 @@ export interface StorageConfig {
   providerType: string
   databaseProvider: string
   basePath: string
+  connectionString?: string | null
   s3Endpoint?: string | null
   s3Bucket?: string | null
   isActive: boolean
@@ -262,6 +263,33 @@ export interface AntivirusAlert {
   details: string
   detectedAt: string
   isResolved: boolean
+}
+
+export interface AntivirusThreatStat {
+  threatName: string
+  count: number
+  lastDetectedAt: string
+}
+
+export interface AntivirusStats {
+  enabled: boolean
+  engine: string
+  host: string
+  port: number
+  totalScansSession: number
+  cleanCountSession: number
+  infectedCountSession: number
+  skippedCountSession: number
+  errorCountSession: number
+  averageScanMs?: number | null
+  lastScanMs?: number | null
+  maxScanMs?: number | null
+  totalAlerts: number
+  unresolvedAlerts: number
+  cleanDocuments: number
+  documentsScanned: number
+  lastDetectionAt?: string | null
+  topThreats: AntivirusThreatStat[]
 }
 
 export interface DocFilters {

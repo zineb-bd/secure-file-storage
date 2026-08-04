@@ -224,6 +224,31 @@ public record AntivirusAlertDto(
     DateTime DetectedAt,
     bool IsResolved);
 
+public record AntivirusThreatStatDto(
+    string ThreatName,
+    int Count,
+    DateTime LastDetectedAt);
+
+public record AntivirusStatsDto(
+    bool Enabled,
+    string Engine,
+    string Host,
+    int Port,
+    int TotalScansSession,
+    int CleanCountSession,
+    int InfectedCountSession,
+    int SkippedCountSession,
+    int ErrorCountSession,
+    double? AverageScanMs,
+    double? LastScanMs,
+    double? MaxScanMs,
+    int TotalAlerts,
+    int UnresolvedAlerts,
+    int CleanDocuments,
+    int DocumentsScanned,
+    DateTime? LastDetectionAt,
+    IEnumerable<AntivirusThreatStatDto> TopThreats);
+
 public record IntegrityCheckResult(
     Guid DocumentId,
     string FileName,

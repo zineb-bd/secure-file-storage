@@ -196,6 +196,16 @@ public class SecurityController : ControllerBase
 
     [HttpGet("antivirus-alerts")]
     [SwaggerOperation(Summary = "Alertes antivirus", Description = "Liste les fichiers infectés détectés.")]
-    public async Task<ActionResult<IEnumerable<AntivirusAlertDto>>> GetAntivirusAlerts(CancellationToken ct) =>
-        Ok(await _antivirusService.GetAlertsAsync(true, ct));
+    public async Task<ActionResult<IEnumerable<AntivirusAlertDto>>> GetAntivirusAlerts(
+        [FromQuery] bool unresolvedOnly = false,
+        [FromQuery] int take = 50,
+        CancellationToken ct = default) =>
+        Ok(await _antivirusService.GetAlertsAsync(unresolvedOnly, take, ct));
+
+    [HttpGet("antivirus-stats")]
+    [SwaggerOperation(
+        Summary = "Statistiques antivirus",
+        Description = "Performance des scans (session) et synthèse des détections enregistrées.")]
+    public async Task<ActionResult<AntivirusStatsDto>> GetAntivirusStats(CancellationToken ct) =>
+        Ok(await _antivirusService.GetStatsAsync(ct));
 }
