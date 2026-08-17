@@ -308,6 +308,45 @@ export function ArchiveDocumentList({ documents, onChanged }: ArchiveDocumentLis
 
   return (
     <div className="archive-docs-view">
+      <div className="archive-stats-row">
+        <div className="archive-stat-card">
+          <div className="archive-stat-icon archive-stat-icon-amber">
+            <IconFileStack size={20} />
+          </div>
+          <div>
+            <div className="archive-stat-value">{stats.total}</div>
+            <div className="archive-stat-label">{t('archive.statTotal')}</div>
+          </div>
+        </div>
+        <div className="archive-stat-card">
+          <div className="archive-stat-icon archive-stat-icon-blue">
+            <IconClock size={20} />
+          </div>
+          <div>
+            <div className="archive-stat-value">{stats.thisMonth}</div>
+            <div className="archive-stat-label">{t('archive.statMonth')}</div>
+          </div>
+        </div>
+        <div className="archive-stat-card">
+          <div className="archive-stat-icon archive-stat-icon-green">
+            <IconFileStack size={20} />
+          </div>
+          <div>
+            <div className="archive-stat-value">{fmtSize(stats.storage)}</div>
+            <div className="archive-stat-label">{t('archive.statStorage')}</div>
+          </div>
+        </div>
+        <div className="archive-stat-card">
+          <div className="archive-stat-icon archive-stat-icon-indigo">
+            <IconLayers size={20} />
+          </div>
+          <div>
+            <div className="archive-stat-value">{stats.catCount}</div>
+            <div className="archive-stat-label">{t('archive.statCategories')}</div>
+          </div>
+        </div>
+      </div>
+
       <div className="archive-toolbar">
         <div className="archive-search-wrap">
           <IconSearch size={18} className="archive-search-icon" />
@@ -435,45 +474,6 @@ export function ArchiveDocumentList({ documents, onChanged }: ArchiveDocumentLis
           </div>
         </div>
       )}
-
-      <div className="archive-stats-row">
-        <div className="archive-stat-card">
-          <div className="archive-stat-icon archive-stat-icon-amber">
-            <IconFileStack size={20} />
-          </div>
-          <div>
-            <div className="archive-stat-value">{stats.total}</div>
-            <div className="archive-stat-label">{t('archive.statTotal')}</div>
-          </div>
-        </div>
-        <div className="archive-stat-card">
-          <div className="archive-stat-icon archive-stat-icon-blue">
-            <IconClock size={20} />
-          </div>
-          <div>
-            <div className="archive-stat-value">{stats.thisMonth}</div>
-            <div className="archive-stat-label">{t('archive.statMonth')}</div>
-          </div>
-        </div>
-        <div className="archive-stat-card">
-          <div className="archive-stat-icon archive-stat-icon-green">
-            <IconFileStack size={20} />
-          </div>
-          <div>
-            <div className="archive-stat-value">{fmtSize(stats.storage)}</div>
-            <div className="archive-stat-label">{t('archive.statStorage')}</div>
-          </div>
-        </div>
-        <div className="archive-stat-card">
-          <div className="archive-stat-icon archive-stat-icon-indigo">
-            <IconLayers size={20} />
-          </div>
-          <div>
-            <div className="archive-stat-value">{stats.catCount}</div>
-            <div className="archive-stat-label">{t('archive.statCategories')}</div>
-          </div>
-        </div>
-      </div>
 
       {selected.size > 0 && (
         <div className="archive-bulk-bar">

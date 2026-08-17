@@ -102,43 +102,45 @@ export function DocumentsPage() {
           />
         </div>
 
-        <div className="files-toolbar-filters">
-          <select
-            id="doc-filter-category"
-            className="files-select"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            aria-label={t('table.category')}
-          >
-            <option value="">{t('filter.all')}</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+        <div className="files-toolbar-end">
+          <div className="files-toolbar-filters">
+            <select
+              id="doc-filter-category"
+              className="files-select"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              aria-label={t('table.category')}
+            >
+              <option value="">{t('filter.allCategories')}</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
 
-          <select
-            id="doc-filter-status"
-            className="files-select"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            aria-label={t('table.status')}
-          >
-            <option value="">{t('filter.allStatuses')}</option>
-            <option value="Active">{t('status.active')}</option>
-            <option value="Archived">{t('status.archived')}</option>
-          </select>
+            <select
+              id="doc-filter-status"
+              className="files-select"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              aria-label={t('table.status')}
+            >
+              <option value="">{t('filter.allStatuses')}</option>
+              <option value="Active">{t('status.active')}</option>
+              <option value="Archived">{t('status.archived')}</option>
+            </select>
 
-          {hasFilters && (
-            <button type="button" className="btn btn-outline btn-sm files-clear-btn" onClick={clearFilters}>
-              {t('files.clearFilters')}
-            </button>
-          )}
+            {hasFilters && (
+              <button type="button" className="btn btn-outline btn-sm files-clear-btn" onClick={clearFilters}>
+                {t('files.clearFilters')}
+              </button>
+            )}
+          </div>
 
           <button
             type="button"
-            className="btn btn-primary btn-sm"
+            className="btn btn-primary btn-sm files-upload-btn"
             id="btn-open-upload"
             onClick={() => navigate('/documents/upload')}
           >

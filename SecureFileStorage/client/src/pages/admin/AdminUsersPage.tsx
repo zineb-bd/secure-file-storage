@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '@/api/client'
+import { IconLayers, IconUsers } from '@/components/categories/CategoryIcons'
+import { PageHeroSlot } from '@/components/layout/PageHeroSlot'
 import { UsersList } from '@/components/users/UsersList'
 import { UsersSkeleton } from '@/components/users/UsersSkeleton'
 import { useAuth } from '@/context/AuthContext'
@@ -40,26 +42,30 @@ export function AdminUsersPage() {
 
   return (
     <section className="page users-page files-like-page" id="page-admin-users">
-      <div className="profile-segmented admin-users-tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'users'}
-          className={`profile-segment${tab === 'users' ? ' active' : ''}`}
-          onClick={() => setTab('users')}
-        >
-          {t('nav.users')}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'groups'}
-          className={`profile-segment${tab === 'groups' ? ' active' : ''}`}
-          onClick={() => setTab('groups')}
-        >
-          {t('nav.groups')}
-        </button>
-      </div>
+      <PageHeroSlot>
+        <div className="admin-view-switch" role="tablist" aria-label={t('page.adminUsers.title')}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'users'}
+            className={`admin-view-switch-btn${tab === 'users' ? ' is-active' : ''}`}
+            onClick={() => setTab('users')}
+          >
+            <IconUsers size={16} />
+            <span>{t('nav.users')}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'groups'}
+            className={`admin-view-switch-btn${tab === 'groups' ? ' is-active' : ''}`}
+            onClick={() => setTab('groups')}
+          >
+            <IconLayers size={16} />
+            <span>{t('nav.groups')}</span>
+          </button>
+        </div>
+      </PageHeroSlot>
 
       {tab === 'users' ? (
         <>

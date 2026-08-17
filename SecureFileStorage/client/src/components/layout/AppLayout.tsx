@@ -8,6 +8,7 @@ import { NavIcon } from '@/components/layout/NavIcon'
 import { useProfileAvatar } from '@/hooks/useProfileAvatar'
 import { IconBell, IconChevronDown, IconMoon, IconSun, IconUpload } from '@/components/ui/TopbarIcons'
 import { ChatWidget } from '@/components/chat/ChatWidget'
+import { PAGE_HERO_ACTIONS_ID } from '@/components/layout/PageHeroSlot'
 import { api } from '@/api/client'
 import { PREF_NOTIF_INAPP_KEY } from '@/constants'
 
@@ -431,6 +432,7 @@ export function AppLayout() {
                 </p>
               )}
             </div>
+            <div className="page-hero-actions" id={PAGE_HERO_ACTIONS_ID} />
             <div className="page-hero-glow" aria-hidden="true" />
           </header>
 

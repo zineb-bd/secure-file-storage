@@ -53,9 +53,10 @@ function deletedDate(d: DocumentDto) {
 interface TrashDocumentListProps {
   documents: DocumentDto[]
   onChanged: () => void
+  onEmptyTrash?: () => void
 }
 
-export function TrashDocumentList({ documents, onChanged }: TrashDocumentListProps) {
+export function TrashDocumentList({ documents, onChanged, onEmptyTrash }: TrashDocumentListProps) {
   const { t, locale } = useI18n()
   const { isAdmin } = useAuth()
 
@@ -317,6 +318,17 @@ export function TrashDocumentList({ documents, onChanged }: TrashDocumentListPro
               <IconList size={16} />
             </button>
           </div>
+          {onEmptyTrash && documents.length > 0 && (
+            <button
+              type="button"
+              className="btn btn-sm btn-outline trash-btn-icon trash-empty-btn"
+              id="btn-empty-trash"
+              onClick={onEmptyTrash}
+            >
+              <IconTrash size={15} />
+              {t('btn.emptyTrash')}
+            </button>
+          )}
         </div>
       </div>
       {filtersOpen && (
@@ -399,8 +411,8 @@ export function TrashDocumentList({ documents, onChanged }: TrashDocumentListPro
   if (!documents.length) {
     return (
       <div className="trash-docs-view">
-        {renderToolbar()}
         {renderStats()}
+        {renderToolbar()}
         <div className="trash-empty-state">
           <div className="trash-empty-icon"><IconTrash size={56} /></div>
           <h3>{t('trash.emptyTitle')}</h3>
@@ -413,8 +425,8 @@ export function TrashDocumentList({ documents, onChanged }: TrashDocumentListPro
 
   return (
     <div className="trash-docs-view">
-      {renderToolbar()}
       {renderStats()}
+      {renderToolbar()}
 
       {selected.size > 0 && (
         <div className="trash-bulk-bar">

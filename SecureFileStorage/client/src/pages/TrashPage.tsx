@@ -60,20 +60,6 @@ export function TrashPage() {
 
   return (
     <section className="page trash-page files-like-page" id="page-trash">
-      {docs.length > 0 && !loading && (
-        <div className="page-inline-actions">
-          <button
-            type="button"
-            className="btn btn-outline btn-sm trash-btn-icon"
-            id="btn-empty-trash"
-            onClick={() => setEmptyOpen(true)}
-          >
-            <IconTrash size={15} />
-            {t('btn.emptyTrash')}
-          </button>
-        </div>
-      )}
-
       {error && (
         <div className="msg error">
           {error}
@@ -87,7 +73,11 @@ export function TrashPage() {
       {loading ? (
         <TrashSkeleton />
       ) : (
-        <TrashDocumentList documents={docs} onChanged={load} />
+        <TrashDocumentList
+          documents={docs}
+          onChanged={load}
+          onEmptyTrash={() => setEmptyOpen(true)}
+        />
       )}
 
       {emptyOpen && (

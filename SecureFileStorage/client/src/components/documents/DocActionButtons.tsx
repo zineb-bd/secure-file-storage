@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18n } from '@/i18n/I18nContext'
 import type { DocumentDto, DocActionOpts } from '@/types'
 
@@ -166,27 +167,54 @@ interface DocActionButtonsProps extends DocActions {
   opts?: DocActionOpts
 }
 
+const MENU_WIDTH = 200
+
 export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProps) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
   const menuId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const placeMenu = useCallback(() => {
+    const btn = triggerRef.current
+    if (!btn) return
+    const rect = btn.getBoundingClientRect()
+    const height = menuRef.current?.offsetHeight ?? 240
+    const left = Math.max(8, Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8))
+    const below = rect.bottom + 6
+    const top = below + height > window.innerHeight - 8 ? Math.max(8, rect.top - height - 6) : below
+    setMenuPos({ top, left })
+  }, [])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      setMenuPos(null)
+      return
+    }
+    placeMenu()
     const onPointer = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      if (rootRef.current?.contains(target) || menuRef.current?.contains(target)) return
+      setOpen(false)
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false)
     }
+    const onReflow = () => placeMenu()
     document.addEventListener('mousedown', onPointer)
     document.addEventListener('keydown', onKey)
+    window.addEventListener('resize', onReflow)
+    window.addEventListener('scroll', onReflow, true)
     return () => {
       document.removeEventListener('mousedown', onPointer)
       document.removeEventListener('keydown', onKey)
+      window.removeEventListener('resize', onReflow)
+      window.removeEventListener('scroll', onReflow, true)
     }
-  }, [open])
+  }, [open, placeMenu])
 
   const moreItems: MenuItem[] = []
 
@@ -281,7 +309,7 @@ export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProp
       {!opts.noDownload && actions.onDownload && (
         <button
           type="button"
-          className="doc-action-btn doc-action-primary"
+          className="doc-action-btn"
           title={t('action.download')}
           aria-label={t('action.download')}
           onClick={actions.onDownload}
@@ -317,6 +345,7 @@ export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProp
       {moreItems.length > 0 && (
         <div className="doc-actions-more">
           <button
+            ref={triggerRef}
             type="button"
             className={`doc-action-btn${open ? ' is-open' : ''}`}
             title={t('action.more')}
@@ -328,22 +357,34 @@ export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProp
           >
             <MoreIcon />
           </button>
-          {open && (
-            <div className="doc-actions-menu" id={menuId} role="menu">
-              {moreItems.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  role="menuitem"
-                  className={`doc-actions-menu-item${item.danger ? ' is-danger' : ''}`}
-                  onClick={() => run(item.onClick)}
-                >
-                  <span className="doc-actions-menu-icon">{item.icon}</span>
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          )}
+          {open &&
+            createPortal(
+              <div
+                ref={menuRef}
+                className="doc-actions-menu"
+                id={menuId}
+                role="menu"
+                style={{
+                  top: menuPos?.top ?? -9999,
+                  left: menuPos?.left ?? -9999,
+                  visibility: menuPos ? 'visible' : 'hidden',
+                }}
+              >
+                {moreItems.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    role="menuitem"
+                    className={`doc-actions-menu-item${item.danger ? ' is-danger' : ''}`}
+                    onClick={() => run(item.onClick)}
+                  >
+                    <span className="doc-actions-menu-icon">{item.icon}</span>
+                    {item.label}
+                  </button>
+                ))}
+              </div>,
+              document.body
+            )}
         </div>
       )}
     </div>

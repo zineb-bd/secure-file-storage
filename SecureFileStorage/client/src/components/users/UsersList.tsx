@@ -411,14 +411,14 @@ export function UsersList({ users, onChanged }: UsersListProps) {
           </button>
           <button
             type="button"
-            className={`btn btn-sm btn-outline users-filter-toggle${filtersOpen ? ' active' : ''}`}
+            className={`btn btn-outline users-filter-toggle${filtersOpen ? ' active' : ''}`}
             onClick={() => setFiltersOpen((o) => !o)}
           >
             <IconFilter size={16} />
             {t('filter.advanced')}
           </button>
           {hasActiveFilters && (
-            <button type="button" className="btn btn-sm btn-outline" onClick={() => setFilters(EMPTY_FILTERS)}>
+            <button type="button" className="btn btn-outline" onClick={() => setFilters(EMPTY_FILTERS)}>
               {t('cat.clearFilters')}
             </button>
           )}
@@ -661,8 +661,8 @@ export function UsersList({ users, onChanged }: UsersListProps) {
         </div>
       )}
 
-      {renderToolbar()}
       {renderStats()}
+      {renderToolbar()}
       {renderBulkBar()}
 
       {!sorted.length ? (

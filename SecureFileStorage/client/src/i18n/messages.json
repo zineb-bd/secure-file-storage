@@ -435,6 +435,38 @@
     "fr": "Documents partagés avec vous ou accessibles publiquement",
     "en": "Documents shared with you or publicly accessible"
   },
+  "shared.stat.total": {
+    "fr": "Partagés",
+    "en": "Shared"
+  },
+  "shared.stat.owners": {
+    "fr": "Propriétaires",
+    "en": "Owners"
+  },
+  "shared.stat.editable": {
+    "fr": "Modifiables",
+    "en": "Editable"
+  },
+  "shared.stat.size": {
+    "fr": "Volume",
+    "en": "Size"
+  },
+  "shared.listTitle": {
+    "fr": "Documents partagés",
+    "en": "Shared documents"
+  },
+  "shared.count": {
+    "fr": "{count} document(s) partagé(s)",
+    "en": "{count} shared document(s)"
+  },
+  "shared.emptyTitle": {
+    "fr": "Aucun document partagé",
+    "en": "No shared documents"
+  },
+  "shared.emptyDesc": {
+    "fr": "Les fichiers que d’autres utilisateurs partagent avec vous apparaîtront ici.",
+    "en": "Files that other users share with you will appear here."
+  },
   "page.categories.title": {
     "fr": "Catégories",
     "en": "Categories"
@@ -564,12 +596,16 @@
     "en": "To"
   },
   "filter.all": {
-    "fr": "Toutes",
-    "en": "All"
-  },
-  "filter.allStatuses": {
     "fr": "Tous",
     "en": "All"
+  },
+  "filter.allCategories": {
+    "fr": "Toutes les catégories",
+    "en": "All categories"
+  },
+  "filter.allStatuses": {
+    "fr": "Tous les statuts",
+    "en": "All statuses"
   },
   "filter.searchFile": {
     "fr": "Rechercher un fichier…",
@@ -736,16 +772,28 @@
     "en": "Could not reach the server (API waking up or network issue). Try again in a few seconds."
   },
   "preview.unavailable": {
-    "fr": "Aperçu indisponible. Le fichier a peut‑être disparu après un redéploiement (stockage temporaire Render).",
-    "en": "Preview unavailable. The file may have been lost after a redeploy (Render ephemeral storage)."
+    "fr": "Impossible de charger l’aperçu. Téléchargez le fichier pour l’ouvrir.",
+    "en": "Could not load the preview. Download the file to open it."
+  },
+  "preview.unavailableTitle": {
+    "fr": "Aperçu indisponible",
+    "en": "Preview unavailable"
+  },
+  "preview.unsupportedTitle": {
+    "fr": "Aperçu non disponible",
+    "en": "Preview not available"
+  },
+  "preview.officeDesc": {
+    "fr": "Les fichiers Word, Excel et PowerPoint ne s’affichent pas dans le navigateur. Téléchargez-les pour les ouvrir.",
+    "en": "Word, Excel and PowerPoint files cannot be displayed in the browser. Download them to open."
   },
   "preview.sessionExpired": {
     "fr": "Session expirée. Veuillez vous reconnecter.",
     "en": "Session expired. Please sign in again."
   },
   "preview.unsupportedType": {
-    "fr": "Aperçu non disponible pour ce type de fichier.",
-    "en": "Preview is not available for this file type."
+    "fr": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour l’ouvrir.",
+    "en": "Preview is not available for this file type. Download it to open."
   },
   "action.download": {
     "fr": "Télécharger",
@@ -1139,13 +1187,149 @@
     "fr": "Modifier le profil",
     "en": "Edit profile"
   },
+  "profile.heroKicker": {
+    "fr": "Mon espace",
+    "en": "My space"
+  },
+  "profile.openSettings": {
+    "fr": "Paramètres",
+    "en": "Settings"
+  },
+  "profile.tabs": {
+    "fr": "Sections du profil",
+    "en": "Profile sections"
+  },
+  "profile.tab.overview": {
+    "fr": "Aperçu",
+    "en": "Overview"
+  },
+  "profile.tab.security": {
+    "fr": "Sécurité",
+    "en": "Security"
+  },
+  "profile.tab.preferences": {
+    "fr": "Préférences",
+    "en": "Preferences"
+  },
+  "profile.statFavorites": {
+    "fr": "Favoris",
+    "en": "Favorites"
+  },
+  "profile.statSharedWithMe": {
+    "fr": "Partagés avec moi",
+    "en": "Shared with me"
+  },
+  "profile.notifBadge": {
+    "fr": "{count} notif.",
+    "en": "{count} notif."
+  },
+  "profile.personalInfoDesc": {
+    "fr": "Identité utilisée dans SecureDocs et les partages.",
+    "en": "Identity used in SecureDocs and shares."
+  },
+  "profile.roles": {
+    "fr": "Rôles",
+    "en": "Roles"
+  },
+  "profile.storageTitle": {
+    "fr": "Stockage",
+    "en": "Storage"
+  },
+  "profile.storageDesc": {
+    "fr": "Volume réel et économie grâce à la déduplication.",
+    "en": "Actual volume and savings from deduplication."
+  },
+  "profile.storageUsed": {
+    "fr": "Espace utilisé",
+    "en": "Used space"
+  },
+  "profile.storageLogical": {
+    "fr": "Volume logique",
+    "en": "Logical volume"
+  },
+  "profile.storageSaved": {
+    "fr": "Économisé",
+    "en": "Saved"
+  },
+  "profile.shortcuts": {
+    "fr": "Accès rapides",
+    "en": "Quick links"
+  },
+  "profile.shortcutsDesc": {
+    "fr": "Aller directement à vos espaces fichiers.",
+    "en": "Jump straight to your file spaces."
+  },
+  "profile.securityDesc": {
+    "fr": "Mot de passe, session et déconnexion.",
+    "en": "Password, session and sign-out."
+  },
+  "profile.preferencesDesc": {
+    "fr": "Langue, thème, page d’accueil et notifications.",
+    "en": "Language, theme, home page and notifications."
+  },
+  "profile.prefSaved": {
+    "fr": "Préférence enregistrée.",
+    "en": "Preference saved."
+  },
+  "profile.recentDocs": {
+    "fr": "Documents récents",
+    "en": "Recent documents"
+  },
+  "profile.recentDocsDesc": {
+    "fr": "Derniers fichiers de votre espace.",
+    "en": "Latest files in your space."
+  },
+  "profile.recentActivityDesc": {
+    "fr": "Actions récentes sur vos documents.",
+    "en": "Recent actions on your documents."
+  },
+  "profile.seeAll": {
+    "fr": "Voir tout",
+    "en": "See all"
+  },
+  "profile.noRecentDocs": {
+    "fr": "Aucun document récent pour le moment.",
+    "en": "No recent documents yet."
+  },
+  "profile.roleRights": {
+    "fr": "Rôle et droits principaux",
+    "en": "Role and main permissions"
+  },
+  "profile.roleRightsDesc": {
+    "fr": "Droits appliqués à votre compte dans l’espace documentaire.",
+    "en": "Permissions applied to your account in the document workspace."
+  },
+  "profile.right.adminUsers": {
+    "fr": "Administrer les utilisateurs, rôles et groupes.",
+    "en": "Manage users, roles and groups."
+  },
+  "profile.right.adminAccess": {
+    "fr": "Gérer les règles d’accès aux catégories et aux documents.",
+    "en": "Manage category and document access rules."
+  },
+  "profile.right.adminAudit": {
+    "fr": "Consulter les journaux d’audit et la configuration.",
+    "en": "View audit logs and configuration."
+  },
+  "profile.right.userDocuments": {
+    "fr": "Créer, consulter et gérer vos documents.",
+    "en": "Create, view and manage your documents."
+  },
+  "profile.right.userShare": {
+    "fr": "Partager les documents selon les autorisations accordées.",
+    "en": "Share documents according to granted permissions."
+  },
+  "profile.right.userAccess": {
+    "fr": "Accéder aux documents partagés avec vous.",
+    "en": "Access documents shared with you."
+  },
   "profile.memberSince": {
     "fr": "Membre depuis",
     "en": "Member since"
   },
   "profile.statTotal": {
-    "fr": "Documents totaux",
-    "en": "Total documents"
+    "fr": "Documents",
+    "en": "Documents"
   },
   "profile.statPrivate": {
     "fr": "Documents privés",

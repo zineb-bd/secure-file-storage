@@ -97,29 +97,31 @@ export function FavoritesPage() {
           />
         </div>
 
-        <div className="files-toolbar-filters">
-          <select
-            id="fav-filter-category"
-            className="files-select"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            aria-label={t('table.category')}
-          >
-            <option value="">{t('filter.all')}</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+        <div className="files-toolbar-end">
+          <div className="files-toolbar-filters">
+            <select
+              id="fav-filter-category"
+              className="files-select"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              aria-label={t('table.category')}
+            >
+              <option value="">{t('filter.allCategories')}</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
 
-          {hasFilters && (
-            <button type="button" className="btn btn-outline btn-sm" onClick={clearFilters}>
-              {t('files.clearFilters')}
-            </button>
-          )}
+            {hasFilters && (
+              <button type="button" className="btn btn-outline btn-sm" onClick={clearFilters}>
+                {t('files.clearFilters')}
+              </button>
+            )}
+          </div>
 
-          <Link to="/documents" className="btn btn-secondary btn-sm">
+          <Link to="/documents" className="btn btn-secondary btn-sm files-upload-btn">
             {t('nav.documents')}
           </Link>
         </div>
