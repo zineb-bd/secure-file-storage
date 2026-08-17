@@ -2,7 +2,7 @@ export function SettingsSkeleton() {
   return (
     <div className="settings-layout">
       <aside className="settings-nav settings-skeleton-nav">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="settings-skeleton-nav-item" />
         ))}
       </aside>

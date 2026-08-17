@@ -15,14 +15,19 @@ function parseXhrError(xhr: XMLHttpRequest): string {
   }
 }
 
+export type UploadJob = {
+  promise: Promise<DocumentDto>
+  abort: () => void
+}
+
 export function uploadWithProgress(
   path: string,
   formData: FormData,
   method: 'POST' | 'PUT',
   onProgress: (percent: number) => void
-): Promise<DocumentDto> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
+): UploadJob {
+  const xhr = new XMLHttpRequest()
+  const promise = new Promise<DocumentDto>((resolve, reject) => {
     xhr.open(method, apiUrl(path))
     const token = localStorage.getItem(TOKEN_KEY)
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
@@ -69,6 +74,12 @@ export function uploadWithProgress(
     })
 
     xhr.addEventListener('error', () => reject(new Error('Échec du téléversement réseau.')))
+    xhr.addEventListener('abort', () => reject(new Error('Téléversement annulé.')))
     xhr.send(formData)
   })
+
+  return {
+    promise,
+    abort: () => xhr.abort(),
+  }
 }

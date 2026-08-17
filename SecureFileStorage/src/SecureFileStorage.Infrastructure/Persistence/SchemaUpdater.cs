@@ -109,6 +109,36 @@ public static class SchemaUpdater
                 ON "DocumentFavorites" ("DocumentId");
             ALTER TABLE "StorageConfigurations"
                 ADD COLUMN IF NOT EXISTS "ConnectionString" text NULL;
+            ALTER TABLE "StorageConfigurations"
+                ADD COLUMN IF NOT EXISTS "CompressionEnabled" boolean NOT NULL DEFAULT TRUE;
+            ALTER TABLE "StorageConfigurations"
+                ADD COLUMN IF NOT EXISTS "EncryptionAlgorithm" integer NOT NULL DEFAULT 0;
+            ALTER TABLE "StorageConfigurations"
+                ADD COLUMN IF NOT EXISTS "ActiveEncryptionKeyId" uuid NULL;
+            ALTER TABLE "StoredBlobs"
+                ADD COLUMN IF NOT EXISTS "IsCompressed" boolean NOT NULL DEFAULT FALSE;
+            ALTER TABLE "StoredBlobs"
+                ADD COLUMN IF NOT EXISTS "EncryptionAlgorithm" integer NOT NULL DEFAULT 2;
+            ALTER TABLE "StoredBlobs"
+                ADD COLUMN IF NOT EXISTS "StorageConfigurationId" uuid NULL;
+            ALTER TABLE "StoredBlobs"
+                ADD COLUMN IF NOT EXISTS "EncryptionKeyId" uuid NULL;
+            ALTER TABLE "EncryptionKeys"
+                ADD COLUMN IF NOT EXISTS "StorageConfigurationId" uuid NULL;
+            UPDATE "EncryptionKeys"
+            SET "StorageConfigurationId" = (
+                SELECT "Id" FROM "StorageConfigurations"
+                WHERE "IsActive" = TRUE
+                ORDER BY "UpdatedAt" DESC
+                LIMIT 1
+            )
+            WHERE "StorageConfigurationId" IS NULL;
+            CREATE INDEX IF NOT EXISTS "IX_StoredBlobs_StorageConfigurationId"
+                ON "StoredBlobs" ("StorageConfigurationId");
+            CREATE INDEX IF NOT EXISTS "IX_StoredBlobs_EncryptionKeyId"
+                ON "StoredBlobs" ("EncryptionKeyId");
+            CREATE INDEX IF NOT EXISTS "IX_EncryptionKeys_StorageConfigurationId_IsActive"
+                ON "EncryptionKeys" ("StorageConfigurationId", "IsActive");
             CREATE TABLE IF NOT EXISTS "UserNotifications" (
                 "Id" uuid NOT NULL,
                 "UserId" uuid NOT NULL,
@@ -130,6 +160,74 @@ public static class SchemaUpdater
                 ON "UserNotifications" ("UserId", "CreatedAt");
             CREATE INDEX IF NOT EXISTS "IX_UserNotifications_UserId_IsRead"
                 ON "UserNotifications" ("UserId", "IsRead");
+            CREATE TABLE IF NOT EXISTS "UserGroups" (
+                "Id" uuid NOT NULL,
+                "Name" character varying(100) NOT NULL,
+                "Description" character varying(500) NOT NULL DEFAULT '',
+                "CreatedAt" timestamp with time zone NOT NULL DEFAULT NOW(),
+                "UpdatedAt" timestamp with time zone NULL,
+                CONSTRAINT "PK_UserGroups" PRIMARY KEY ("Id")
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_UserGroups_Name"
+                ON "UserGroups" ("Name");
+            CREATE TABLE IF NOT EXISTS "UserGroupMembers" (
+                "UserGroupId" uuid NOT NULL,
+                "UserId" uuid NOT NULL,
+                "JoinedAt" timestamp with time zone NOT NULL DEFAULT NOW(),
+                CONSTRAINT "PK_UserGroupMembers" PRIMARY KEY ("UserGroupId", "UserId"),
+                CONSTRAINT "FK_UserGroupMembers_UserGroups_UserGroupId"
+                    FOREIGN KEY ("UserGroupId") REFERENCES "UserGroups" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_UserGroupMembers_Users_UserId"
+                    FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS "IX_UserGroupMembers_UserId"
+                ON "UserGroupMembers" ("UserId");
+            CREATE TABLE IF NOT EXISTS "CategoryAccessRules" (
+                "Id" uuid NOT NULL,
+                "Category" character varying(100) NOT NULL,
+                "UserGroupId" uuid NOT NULL,
+                "AccessLevel" integer NOT NULL DEFAULT 0,
+                "CreatedAt" timestamp with time zone NOT NULL DEFAULT NOW(),
+                "CreatedById" uuid NOT NULL,
+                CONSTRAINT "PK_CategoryAccessRules" PRIMARY KEY ("Id"),
+                CONSTRAINT "FK_CategoryAccessRules_UserGroups_UserGroupId"
+                    FOREIGN KEY ("UserGroupId") REFERENCES "UserGroups" ("Id") ON DELETE CASCADE
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_CategoryAccessRules_Category_UserGroupId"
+                ON "CategoryAccessRules" ("Category", "UserGroupId");
+            CREATE INDEX IF NOT EXISTS "IX_CategoryAccessRules_Category"
+                ON "CategoryAccessRules" ("Category");
+            CREATE TABLE IF NOT EXISTS "ChatbotUsageMetrics" (
+                "Id" uuid NOT NULL,
+                "Day" date NOT NULL,
+                "Topic" character varying(64) NOT NULL,
+                "Source" character varying(32) NOT NULL,
+                "RequestCount" integer NOT NULL DEFAULT 0,
+                "UpdatedAt" timestamp with time zone NOT NULL DEFAULT NOW(),
+                CONSTRAINT "PK_ChatbotUsageMetrics" PRIMARY KEY ("Id")
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_ChatbotUsageMetrics_Day_Topic_Source"
+                ON "ChatbotUsageMetrics" ("Day", "Topic", "Source");
+            -- Les associations inter-domaines sont toujours réalisées par les champs …Id.
+            -- NOT VALID conserve la compatibilité des données historiques tout en protégeant
+            -- toutes les nouvelles écritures par des clés étrangères.
+            DO $$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_DocumentPermissions_Users_GrantedById') THEN
+                    ALTER TABLE "DocumentPermissions"
+                    ADD CONSTRAINT "FK_DocumentPermissions_Users_GrantedById"
+                    FOREIGN KEY ("GrantedById") REFERENCES "Users" ("Id") ON DELETE SET NULL NOT VALID;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_DocumentShareLinks_Users_CreatedById') THEN
+                    ALTER TABLE "DocumentShareLinks"
+                    ADD CONSTRAINT "FK_DocumentShareLinks_Users_CreatedById"
+                    FOREIGN KEY ("CreatedById") REFERENCES "Users" ("Id") ON DELETE RESTRICT NOT VALID;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_CategoryAccessRules_Users_CreatedById') THEN
+                    ALTER TABLE "CategoryAccessRules"
+                    ADD CONSTRAINT "FK_CategoryAccessRules_Users_CreatedById"
+                    FOREIGN KEY ("CreatedById") REFERENCES "Users" ("Id") ON DELETE RESTRICT NOT VALID;
+                END IF;
+            END $$;
             """, ct);
     }
 }

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SecureDocs — Document partagé</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --brand: #0d9488;
+      --border: #e2e8f0;
+      --danger: #b91c1c;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --card: #111827;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --border: #1f2937;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(13,148,136,.22), transparent 60%),
+        var(--bg);
+    }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 1.25rem; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .brand { font-weight: 750; color: var(--brand); text-decoration: none; font-size: 1.1rem; }
+    .badge {
+      font-size: .75rem; font-weight: 650; padding: .3rem .7rem; border-radius: 999px;
+      background: rgba(13,148,136,.14); color: var(--brand);
+    }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.25rem; box-shadow: 0 10px 30px rgba(15,23,42,.06);
+    }
+    .center { text-align: center; padding: 2.5rem 1rem; }
+    h1 { margin: 0 0 .35rem; font-size: 1.25rem; word-break: break-word; }
+    p { margin: .25rem 0; color: var(--muted); font-size: .9rem; line-height: 1.45; }
+    .err { color: var(--danger); }
+    .actions { display: flex; flex-wrap: wrap; gap: .55rem; margin: 1rem 0; }
+    button, .btn {
+      appearance: none; border: 0; border-radius: 999px; padding: .6rem 1.1rem;
+      font: inherit; font-weight: 650; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
+    }
+    .primary { background: var(--brand); color: #fff; }
+    .ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .preview {
+      min-height: 280px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+      background: rgba(148,163,184,.12); display: flex; align-items: center; justify-content: center;
+    }
+    .preview img, .preview iframe, .preview embed { width: 100%; min-height: 420px; max-height: 70vh; border: 0; background: #fff; object-fit: contain; }
+    .empty { padding: 2rem; color: var(--muted); text-align: center; }
+    .spinner {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 3px solid rgba(13,148,136,.2); border-top-color: var(--brand);
+      animation: spin .8s linear infinite; margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="/">SecureDocs</a>
+      <span class="badge">Lien de partage public</span>
+    </header>
+    <main class="card" id="app">
+      <div class="center"><div class="spinner"></div><p>Ouverture du document…</p></div>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var app = document.getElementById('app');
+      var token = new URLSearchParams(location.search).get('token') || '';
+      if (!token) {
+        app.innerHTML = '<div class="center"><h1>Lien invalide</h1><p class="err">Jeton manquant.</p></div>';
+        return;
+      }
+
+      function canDownload(level) {
+        return /download|write|preview/i.test(level || '');
+      }
+
+      function esc(s) {
+        return String(s || '').replace(/[&<>"']/g, function (c) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+      }
+
+      function fmtDate(iso) {
+        try { return new Date(iso).toLocaleString(); } catch (e) { return iso; }
+      }
+
+      function fmtSize(n) {
+        if (!n && n !== 0) return '';
+        var u = ['o', 'Ko', 'Mo', 'Go'];
+        var i = 0; var v = Number(n);
+        while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+        return (i === 0 ? v : v.toFixed(1)) + ' ' + u[i];
+      }
+
+      fetch('/api/share/info?token=' + encodeURIComponent(token))
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, status: r.status, d: d }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            app.innerHTML = '<div class="center"><h1>Accès impossible</h1><p class="err">' +
+              esc(res.d && res.d.message ? res.d.message : 'Lien invalide, expiré ou révoqué.') +
+              '</p><p>Aucune connexion n’est requise : vérifiez que le lien n’a pas expiré.</p></div>';
+            return;
+          }
+
+          var info = res.d;
+          var dl = canDownload(info.accessLevel);
+          var previewUrl = '/api/share/preview?token=' + encodeURIComponent(token);
+          var downloadUrl = '/api/share/download?token=' + encodeURIComponent(token);
+          var ct = (info.contentType || '').toLowerCase();
+          var isImg = ct.indexOf('image/') === 0;
+          var isPdf = ct === 'application/pdf';
+
+          var previewHtml = '<div class="empty">Aperçu limité pour ce type de fichier.</div>';
+          if (isImg) previewHtml = '<img alt="" src="' + previewUrl + '" />';
+          else if (isPdf) previewHtml = '<iframe title="preview" src="' + previewUrl + '"></iframe>';
+
+          app.innerHTML =
+            '<h1>' + esc(info.fileName) + '</h1>' +
+            '<p>' + esc(fmtSize(info.sizeBytes)) + ' · Partagé par ' + esc(info.ownerName) + '</p>' +
+            '<p>Expire le ' + esc(fmtDate(info.expiresAt)) + ' · Accès : ' + esc(info.accessLevel) + '</p>' +
+            '<div class="actions">' +
+              (dl ? '<a class="btn primary" href="' + downloadUrl + '">Télécharger</a>' : '') +
+              '<a class="btn ghost" href="' + previewUrl + '" target="_blank" rel="noopener">Ouvrir l’aperçu</a>' +
+            '</div>' +
+            '<div class="preview">' + previewHtml + '</div>';
+        })
+        .catch(function () {
+          app.innerHTML = '<div class="center"><h1>Erreur réseau</h1><p class="err">Impossible de joindre le serveur. Réessayez plus tard.</p></div>';
+        });
+    })();
+  </script>
+</body>
+</html>

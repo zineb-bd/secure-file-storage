@@ -49,4 +49,6 @@ public class ChatbotSettings
     public string BaseUrl { get; set; } = "https://api.openai.com/v1";
     public string Model { get; set; } = "gpt-4o-mini";
     public int MaxTokens { get; set; } = 400;
+    /// <summary>Conserve uniquement des compteurs anonymes par jour/thème/source.</summary>
+    public bool TrackAnonymousStatistics { get; set; } = true;
 }

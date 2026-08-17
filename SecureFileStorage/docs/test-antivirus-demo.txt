@@ -1,0 +1,10 @@
+Fichier de test antivirus SecureFileStorage (inoffensif).
+
+Ce fichier ne contient PAS de vrai virus.
+Il contient uniquement la signature de démonstration ci-dessous,
+détectée par le moteur antivirus intégré de l'application.
+
+>>> SFS-DEMO-THREAT-SIGNATURE <<<
+
+Téléversez ce fichier dans l'application : le téléversement doit être
+rejeté avec une alerte antivirus.

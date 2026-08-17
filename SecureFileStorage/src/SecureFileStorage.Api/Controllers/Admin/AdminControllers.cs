@@ -138,7 +138,7 @@ public class StorageController : ControllerBase
     public async Task<ActionResult<StorageConfigDto>> Get(CancellationToken ct)
     {
         var config = await _storageConfigService.GetActiveAsync(ct);
-        return config is null ? NotFound() : Ok(config);
+        return Ok(config);
     }
 
     [HttpPut]
@@ -179,11 +179,16 @@ public class SecurityController : ControllerBase
 {
     private readonly IEncryptionService _encryptionService;
     private readonly IAntivirusService _antivirusService;
+    private readonly IChatbotAnalyticsService _chatbotAnalytics;
 
-    public SecurityController(IEncryptionService encryptionService, IAntivirusService antivirusService)
+    public SecurityController(
+        IEncryptionService encryptionService,
+        IAntivirusService antivirusService,
+        IChatbotAnalyticsService chatbotAnalytics)
     {
         _encryptionService = encryptionService;
         _antivirusService = antivirusService;
+        _chatbotAnalytics = chatbotAnalytics;
     }
 
     [HttpPost("rotate-key")]
@@ -208,4 +213,146 @@ public class SecurityController : ControllerBase
         Description = "Performance des scans (session) et synthèse des détections enregistrées.")]
     public async Task<ActionResult<AntivirusStatsDto>> GetAntivirusStats(CancellationToken ct) =>
         Ok(await _antivirusService.GetStatsAsync(ct));
+
+    [HttpGet("chatbot-stats")]
+    [SwaggerOperation(
+        Summary = "Statistiques anonymes du chatbot",
+        Description = "Retourne uniquement des compteurs agrégés par thème et source, sans message, réponse, utilisateur ou document.")]
+    public async Task<ActionResult<ChatbotUsageStatsDto>> GetChatbotStats(CancellationToken ct) =>
+        Ok(await _chatbotAnalytics.GetAnonymousStatsAsync(ct));
+}
+
+[ApiController]
+[Route("api/admin/groups")]
+[Authorize(Roles = "Admin")]
+[Tags("Administration — Groupes")]
+public class UserGroupsController : ControllerBase
+{
+    private readonly IUserGroupService _groupService;
+
+    public UserGroupsController(IUserGroupService groupService) => _groupService = groupService;
+
+    [HttpGet]
+    [SwaggerOperation(Summary = "Lister les groupes", Description = "Retourne les groupes métier et leurs membres.")]
+    public async Task<ActionResult<IEnumerable<UserGroupDto>>> GetAll(CancellationToken ct) =>
+        Ok(await _groupService.GetAllAsync(ct));
+
+    [HttpGet("{id:guid}")]
+    [SwaggerOperation(Summary = "Détail d'un groupe")]
+    public async Task<ActionResult<UserGroupDto>> GetById(Guid id, CancellationToken ct)
+    {
+        var group = await _groupService.GetByIdAsync(id, ct);
+        return group is null ? NotFound() : Ok(group);
+    }
+
+    [HttpPost]
+    [SwaggerOperation(Summary = "Créer un groupe")]
+    public async Task<ActionResult<UserGroupDto>> Create([FromBody] CreateUserGroupRequest request, CancellationToken ct)
+    {
+        try
+        {
+            var group = await _groupService.CreateAsync(request, ct);
+            return CreatedAtAction(nameof(GetById), new { id = group.Id }, group);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id:guid}")]
+    [SwaggerOperation(Summary = "Modifier un groupe")]
+    public async Task<ActionResult<UserGroupDto>> Update(Guid id, [FromBody] UpdateUserGroupRequest request, CancellationToken ct)
+    {
+        try
+        {
+            var group = await _groupService.UpdateAsync(id, request, ct);
+            return group is null ? NotFound() : Ok(group);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:guid}")]
+    [SwaggerOperation(Summary = "Supprimer un groupe vide")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        try
+        {
+            return await _groupService.DeleteAsync(id, ct) ? NoContent() : NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id:guid}/members")]
+    [SwaggerOperation(Summary = "Ajouter un membre")]
+    public async Task<ActionResult<UserGroupDto>> AddMember(Guid id, [FromBody] AddGroupMemberRequest request, CancellationToken ct)
+    {
+        try
+        {
+            var group = await _groupService.AddMemberAsync(id, request.UserId, ct);
+            return group is null ? NotFound() : Ok(group);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:guid}/members/{userId:guid}")]
+    [SwaggerOperation(Summary = "Retirer un membre")]
+    public async Task<IActionResult> RemoveMember(Guid id, Guid userId, CancellationToken ct) =>
+        await _groupService.RemoveMemberAsync(id, userId, ct) ? NoContent() : NotFound();
+}
+
+[ApiController]
+[Route("api/admin/category-access")]
+[Authorize(Roles = "Admin")]
+[Tags("Administration — Accès par catégorie")]
+public class CategoryAccessController : ControllerBase
+{
+    private readonly ICategoryAccessService _categoryAccess;
+    private readonly ICurrentUserService _currentUser;
+
+    public CategoryAccessController(ICategoryAccessService categoryAccess, ICurrentUserService currentUser)
+    {
+        _categoryAccess = categoryAccess;
+        _currentUser = currentUser;
+    }
+
+    [HttpGet]
+    [SwaggerOperation(Summary = "Lister les règles d'accès catégorie")]
+    public async Task<ActionResult<IEnumerable<CategoryAccessRuleDto>>> GetAll(
+        [FromQuery] string? category, CancellationToken ct)
+    {
+        if (!string.IsNullOrWhiteSpace(category))
+            return Ok(await _categoryAccess.GetByCategoryAsync(category, ct));
+        return Ok(await _categoryAccess.GetAllAsync(ct));
+    }
+
+    [HttpPut]
+    [SwaggerOperation(Summary = "Créer ou mettre à jour une règle catégorie/groupe")]
+    public async Task<ActionResult<CategoryAccessRuleDto>> Upsert(
+        [FromBody] UpsertCategoryAccessRuleRequest request, CancellationToken ct)
+    {
+        if (_currentUser.UserId is null) return Unauthorized();
+        try
+        {
+            return Ok(await _categoryAccess.UpsertAsync(request, _currentUser.UserId.Value, ct));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:guid}")]
+    [SwaggerOperation(Summary = "Supprimer une règle d'accès catégorie")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct) =>
+        await _categoryAccess.DeleteAsync(id, ct) ? NoContent() : NotFound();
 }

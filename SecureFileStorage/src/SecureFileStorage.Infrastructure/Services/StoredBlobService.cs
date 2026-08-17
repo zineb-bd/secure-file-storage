@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 using SecureFileStorage.Application.Interfaces;
 using SecureFileStorage.Domain.Entities;
+using SecureFileStorage.Domain.Enums;
 using SecureFileStorage.Infrastructure.Persistence;
+using SecureFileStorage.Infrastructure.Storage;
 
 namespace SecureFileStorage.Infrastructure.Services;
 
@@ -38,7 +41,37 @@ public class StoredBlobService
             return (existing, true);
         }
 
-        var (encryptedData, encryptedKey) = await _encryptionService.EncryptAsync(plainData, ct);
+        var storageSettings = await _context.StorageConfigurations
+            .AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderByDescending(c => c.UpdatedAt)
+            .Select(c => new { c.Id, c.CompressionEnabled, c.EncryptionAlgorithm, c.ActiveEncryptionKeyId })
+            .FirstOrDefaultAsync(ct);
+        var compressionEnabled = storageSettings?.CompressionEnabled ?? true;
+        var algorithm = storageSettings?.EncryptionAlgorithm ?? EncryptionAlgorithm.AesGcm;
+        var activeKeyId = storageSettings?.ActiveEncryptionKeyId;
+
+        if (storageSettings is not null && activeKeyId is null)
+        {
+            var key = new EncryptionKeyRecord
+            {
+                Id = Guid.NewGuid(),
+                StorageConfigurationId = storageSettings.Id,
+                KeyIdentifier = Guid.NewGuid().ToString("N")[..16],
+                EncryptedMasterKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            var trackedConfiguration = await _context.StorageConfigurations
+                .FirstAsync(c => c.Id == storageSettings.Id, ct);
+            trackedConfiguration.ActiveEncryptionKeyId = key.Id;
+            await _context.EncryptionKeys.AddAsync(key, ct);
+            await _context.SaveChangesAsync(ct);
+            activeKeyId = key.Id;
+        }
+
+        var (payload, compressed) = FileCompression.WrapForStorage(plainData, compressionEnabled);
+        var (encryptedData, encryptedKey) = await _encryptionService.EncryptAsync(payload, algorithm, ct);
         var storagePath = $"blobs/{hash}.enc";
 
         await using var encryptedStream = new MemoryStream(encryptedData);
@@ -50,7 +83,11 @@ public class StoredBlobService
             Sha256Hash = hash,
             StoragePath = storagePath,
             EncryptedKey = encryptedKey,
+            StorageConfigurationId = storageSettings?.Id,
+            EncryptionKeyId = activeKeyId,
             SizeBytes = plainData.Length,
+            IsCompressed = compressed,
+            EncryptionAlgorithm = algorithm,
             ReferenceCount = 1
         };
 
@@ -74,11 +111,23 @@ public class StoredBlobService
             return (blob, blob.ReferenceCount > 1);
         }
 
-        await using var encryptedStream = await _storageService.ReadAsync(source.StoragePath, ct);
+        var plain = await ReadPlainAsync(source, ct);
+        return await AcquireAsync(plain, ct);
+    }
+
+    /// <summary>
+    /// Lit le fichier physique, déchiffre AES-256, puis décompresse si le payload est marqué SFSZ.
+    /// Compatible avec les fichiers stockés avant l’ajout de la compression.
+    /// </summary>
+    public async Task<byte[]> ReadPlainAsync(DocumentVersion version, CancellationToken ct = default)
+    {
+        var (storagePath, encryptedKey) = ResolveStorage(version);
+        await using var encryptedStream = await _storageService.ReadAsync(storagePath, ct);
         using var ms = new MemoryStream();
         await encryptedStream.CopyToAsync(ms, ct);
-        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), source.EncryptedKey, ct);
-        return await AcquireAsync(plain, ct);
+        var algorithm = version.StoredBlob?.EncryptionAlgorithm ?? EncryptionAlgorithm.AesCbcLegacy;
+        var decrypted = await _encryptionService.DecryptAsync(ms.ToArray(), encryptedKey, algorithm, ct);
+        return FileCompression.UnwrapAfterDecrypt(decrypted);
     }
 
     public async Task ReleaseVersionAsync(DocumentVersion version, CancellationToken ct = default)

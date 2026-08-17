@@ -65,7 +65,8 @@ public class DocumentPermission
     public ShareAccessLevel AccessLevel { get; set; } = ShareAccessLevel.Read;
     public DateTime? ExpiresAt { get; set; }
     public DateTime GrantedAt { get; set; } = DateTime.UtcNow;
-    public Guid GrantedById { get; set; }
+    public Guid? GrantedById { get; set; }
+    public User? GrantedBy { get; set; }
 }
 
 public class DocumentShareLink
@@ -77,6 +78,7 @@ public class DocumentShareLink
     public ShareAccessLevel AccessLevel { get; set; } = ShareAccessLevel.Read;
     public DateTime ExpiresAt { get; set; }
     public Guid CreatedById { get; set; }
+    public User CreatedBy { get; set; } = null!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsRevoked { get; set; }
 }

@@ -33,6 +33,7 @@ public static class DbSeeder
                 ProviderType = StorageProviderType.LocalFileSystem,
                 DatabaseProvider = DatabaseProviderType.PostgreSql,
                 BasePath = "./storage",
+                CompressionEnabled = true,
                 IsActive = true
             });
 

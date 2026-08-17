@@ -146,6 +146,8 @@ export function ChatWidget() {
             </div>
           )}
 
+          <p className="chat-privacy-note">{t('chat.privacy')}</p>
+
           <form className="chat-composer" onSubmit={onSubmit}>
             <input
               ref={inputRef}

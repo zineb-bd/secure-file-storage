@@ -120,9 +120,12 @@ public class AuditRepository(ApplicationDbContext context) : IAuditRepository
 
     public async Task<(IEnumerable<AuditLog> Items, int Total)> SearchAsync(AuditSearchRequest request, CancellationToken ct = default)
     {
+        // Traçabilité documentaire : exclure le bruit (recherche, auth) qui n'est pas une opération sur un fichier.
+        var excluded = new[] { AuditAction.Search, AuditAction.Login, AuditAction.Logout };
+
         var query = context.AuditLogs
             .Include(a => a.User)
-            .Where(a => a.ResourceType == "Document")
+            .Where(a => a.ResourceType == "Document" && !excluded.Contains(a.Action))
             .AsQueryable();
 
         if (request.UserId.HasValue)

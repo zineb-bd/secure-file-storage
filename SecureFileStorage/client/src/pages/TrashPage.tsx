@@ -3,7 +3,6 @@ import { api } from '@/api/client'
 import { IconTrash } from '@/components/categories/CategoryIcons'
 import { TrashDocumentList } from '@/components/trash/TrashDocumentList'
 import { TrashSkeleton } from '@/components/trash/TrashSkeleton'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import { useAuth } from '@/context/AuthContext'
 import { useI18n } from '@/i18n/I18nContext'
@@ -60,21 +59,29 @@ export function TrashPage() {
   }
 
   return (
-    <section className="page trash-page" id="page-trash">
-      <PageHeader
-        title={t('page.trash.title')}
-        subtitle={t('page.trash.subtitle')}
-        actions={
-          docs.length > 0 ? (
-            <button type="button" className="btn btn-outline trash-btn-icon" id="btn-empty-trash" onClick={() => setEmptyOpen(true)}>
-              <IconTrash size={16} />
-              {t('btn.emptyTrash')}
-            </button>
-          ) : undefined
-        }
-      />
+    <section className="page trash-page files-like-page" id="page-trash">
+      {docs.length > 0 && !loading && (
+        <div className="page-inline-actions">
+          <button
+            type="button"
+            className="btn btn-outline btn-sm trash-btn-icon"
+            id="btn-empty-trash"
+            onClick={() => setEmptyOpen(true)}
+          >
+            <IconTrash size={15} />
+            {t('btn.emptyTrash')}
+          </button>
+        </div>
+      )}
 
-      {error && <div className="msg error">{error}</div>}
+      {error && (
+        <div className="msg error">
+          {error}
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => void load()}>
+            {t('audit.refresh')}
+          </button>
+        </div>
+      )}
       {toast && <div className="profile-toast profile-toast-success" role="status">{toast}</div>}
 
       {loading ? (

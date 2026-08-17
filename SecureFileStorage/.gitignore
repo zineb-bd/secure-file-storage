@@ -4,11 +4,8 @@ obj/
 out/
 publish/
 
-## Stockage local des fichiers uploadés (pas le code Infrastructure/Storage)
-# Sur Windows, "storage/" ignore aussi "Storage/" → exceptions nécessaires
+## Stockage local
 storage/
-!**/Infrastructure/Storage/
-!**/Infrastructure/Storage/**
 
 ## IDE
 .vs/

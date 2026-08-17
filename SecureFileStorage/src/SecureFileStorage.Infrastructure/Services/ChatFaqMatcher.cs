@@ -69,9 +69,9 @@ public static class ChatFaqMatcher
             "La configuration système (Admin → Configuration) permet d'ajuster le stockage et les options de la plateforme.",
             "System configuration (Admin → Config) lets you adjust storage and platform options."),
         new("security",
-            ["sécurité", "securite", "security", "chiffrement", "encrypt", "intégrité", "integrite", "jwt"],
-            "SecureDocs chiffre les fichiers avant stockage, contrôle l'accès par rôles/permissions et peut vérifier l'intégrité. Les sessions sont protégées par JWT.",
-            "SecureDocs encrypts files before storage, enforces role-based access, and can verify integrity. Sessions are protected with JWT.")
+            ["sécurité", "securite", "security", "chiffrement", "encrypt", "déchiffrement", "dechiffrement", "decrypt", "compression", "gzip", "intégrité", "integrite", "jwt"],
+            "SecureDocs compresse (GZip) puis chiffre (AES-256) avant stockage. À la lecture, le serveur déchiffre et décompresse. L'accès est contrôlé par rôles ; l'intégrité se vérifie par hash SHA-256.",
+            "SecureDocs GZip-compresses then AES-256 encrypts before storage. On read, the server decrypts and decompresses. Access is role-based; integrity uses SHA-256."),
     ];
 
     public static (string Reply, string Intent)? TryMatch(string message, string? locale)

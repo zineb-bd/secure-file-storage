@@ -6,17 +6,16 @@ import {
   useState,
   type ChangeEvent,
   type DragEvent,
+  type KeyboardEvent,
 } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '@/api/client'
 import { CATEGORIES } from '@/constants'
-import { useAuth } from '@/context/AuthContext'
 import { FileIcon } from '@/components/documents/FileIcon'
 import {
   IconAlert,
   IconArrowLeft,
   IconCheckCircle,
-  IconFileSecure,
   IconGlobe,
   IconLock,
   IconShieldCheck,
@@ -26,17 +25,21 @@ import {
 } from '@/components/upload/UploadIcons'
 import { useI18n } from '@/i18n/I18nContext'
 import { loadCustomCategories } from '@/utils/categoryStorage'
-import { uploadWithProgress } from '@/utils/uploadApi'
+import { uploadWithProgress, type UploadJob } from '@/utils/uploadApi'
 import {
   buildUploadFormData,
   buildVersionFormData,
+  detectLocalThreatSignature,
   fileExtension,
+  guessLanguageFromName,
   isThreatUploadError,
+  keywordsFromFileName,
   mapScanResultToUi,
   normalizeSharedRows,
-  SECURITY_FEATURES,
+  sha256Hex,
+  UPLOAD_ACCESS_LEVELS,
+  UPLOAD_DRAFT_KEY,
   UPLOAD_MAX_MB,
-  UPLOAD_PIPELINE_STEPS,
   UPLOAD_SUPPORTED_FORMATS_LABEL,
   validateUploadFile,
   type ScanUiStatus,
@@ -45,46 +48,58 @@ import {
   type UploadVisibility,
 } from '@/utils/uploadHelpers'
 import { fmtSize } from '@/utils/format'
-import type { DocumentDto, DocumentImportSource, UserDirectoryEntry } from '@/types'
+import type { DocumentDto, UserDirectoryEntry } from '@/types'
 
-type ImportSourceId = 'device' | 'url' | 'googledrive' | 'onedrive' | 'dropbox'
+type ToastKind = 'success' | 'error' | 'info' | 'threat'
+type ToastState = { kind: ToastKind; message: string } | null
+type PreviewKind = 'image' | 'pdf' | 'office' | 'text' | 'other'
 
-const VIS_OPTIONS: UploadVisibility[] = ['Private', 'Shared', 'Public']
-
-const CLOUD_SOURCES: ImportSourceId[] = ['googledrive', 'onedrive', 'dropbox']
-
-function statusBadgeClass(status: UploadFileStatus) {
-  return `upload-status-badge upload-status-${status}`
+function previewKindOf(file: File): PreviewKind {
+  const ext = fileExtension(file.name)
+  if (file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+    return 'image'
+  }
+  if (file.type === 'application/pdf' || ext === 'pdf') return 'pdf'
+  if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) return 'office'
+  if (file.type.startsWith('text/') || ['txt', 'csv'].includes(ext)) return 'text'
+  return 'other'
 }
 
 export function UploadPage() {
-  const { t } = useI18n()
-  const { user } = useAuth()
+  const { t, locale } = useI18n()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const documentId = searchParams.get('documentId')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [dragOver, setDragOver] = useState(false)
-  const [importSource, setImportSource] = useState<ImportSourceId>('device')
-  const [importSources, setImportSources] = useState<DocumentImportSource[]>([])
-  const [importUrl, setImportUrl] = useState('')
-  const [urlFileName, setUrlFileName] = useState('')
+  const uploadJobRef = useRef<UploadJob | null>(null)
+  const preScanTimerRef = useRef<number | null>(null)
 
+  const [dragOver, setDragOver] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [fileQueue, setFileQueue] = useState<File[]>([])
   const [fileStatus, setFileStatus] = useState<UploadFileStatus>('ready')
   const [scanStatus, setScanStatus] = useState<ScanUiStatus>('idle')
   const [progress, setProgress] = useState(0)
-  const [pipelineStep, setPipelineStep] = useState(0)
+  const [preScanProgress, setPreScanProgress] = useState(0)
 
+  const [docName, setDocName] = useState('')
   const [category, setCategory] = useState('General')
   const [description, setDescription] = useState('')
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
   const [visibility, setVisibility] = useState<UploadVisibility>('Private')
   const [publicLevel, setPublicLevel] = useState('Download')
   const [sharedRows, setSharedRows] = useState<SharedRow[]>([])
   const [changeComment, setChangeComment] = useState('')
   const [versionConfirmed, setVersionConfirmed] = useState(false)
+
+  const [hash, setHash] = useState('')
+  const [hashAt, setHashAt] = useState<Date | null>(null)
+  const [hashPending, setHashPending] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [textPreview, setTextPreview] = useState('')
+  const [scanAt, setScanAt] = useState<Date | null>(null)
 
   const [directory, setDirectory] = useState<UserDirectoryEntry[]>([])
   const [existingDoc, setExistingDoc] = useState<DocumentDto | null>(null)
@@ -94,21 +109,37 @@ export function UploadPage() {
   const [uploadDone, setUploadDone] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [resultDoc, setResultDoc] = useState<DocumentDto | null>(null)
+  const [toast, setToast] = useState<ToastState>(null)
 
   const isVersionMode = !!documentId && !!existingDoc
+  const dateFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'fr-FR', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+    [locale]
+  )
 
   const categories = useMemo(() => {
     const custom = loadCustomCategories().map((c) => c.name)
     return [...new Set([...CATEGORIES, ...custom])]
   }, [])
 
+  const showToast = useCallback((kind: ToastKind, message: string) => {
+    setToast({ kind, message })
+  }, [])
+
+  useEffect(() => {
+    if (!toast) return
+    const id = window.setTimeout(() => setToast(null), 4200)
+    return () => window.clearTimeout(id)
+  }, [toast])
+
   useEffect(() => {
     void api<UserDirectoryEntry[]>('/api/users/directory')
       .then(setDirectory)
       .catch(() => setDirectory([]))
-    void api<DocumentImportSource[]>('/api/documents/import/sources')
-      .then(setImportSources)
-      .catch(() => setImportSources([]))
   }, [])
 
   useEffect(() => {
@@ -130,6 +161,106 @@ export function UploadPage() {
     }
   }, [visibility, sharedRows.length])
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(UPLOAD_DRAFT_KEY)
+      if (!raw || documentId) return
+      const draft = JSON.parse(raw) as {
+        docName?: string
+        category?: string
+        description?: string
+        tags?: string[]
+        visibility?: UploadVisibility
+        publicLevel?: string
+        sharedRows?: SharedRow[]
+      }
+      if (draft.docName) setDocName(draft.docName)
+      if (draft.category) setCategory(draft.category)
+      if (draft.description) setDescription(draft.description)
+      if (draft.tags) setTags(draft.tags)
+      if (draft.visibility) setVisibility(draft.visibility)
+      if (draft.publicLevel) setPublicLevel(draft.publicLevel)
+      if (draft.sharedRows?.length) setSharedRows(draft.sharedRows)
+    } catch {
+      /* ignore corrupt draft */
+    }
+  }, [documentId])
+
+  useEffect(() => {
+    return () => {
+      if (preScanTimerRef.current) window.clearInterval(preScanTimerRef.current)
+      uploadJobRef.current?.abort()
+    }
+  }, [])
+
+  const clearPreview = useCallback(() => {
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+    setTextPreview('')
+  }, [])
+
+  const runLocalAnalysis = useCallback(
+    async (target: File) => {
+      if (preScanTimerRef.current) {
+        window.clearInterval(preScanTimerRef.current)
+        preScanTimerRef.current = null
+      }
+
+      setScanStatus('scanning')
+      setPreScanProgress(8)
+      setScanAt(new Date())
+      setHash('')
+      setHashAt(null)
+      setHashPending(true)
+      clearPreview()
+
+      const kind = previewKindOf(target)
+      if (kind === 'image' || kind === 'pdf') {
+        setPreviewUrl(URL.createObjectURL(target))
+      } else if (kind === 'text' && target.size < 400_000) {
+        try {
+          const text = await target.text()
+          setTextPreview(text.slice(0, 4000))
+        } catch {
+          setTextPreview('')
+        }
+      }
+
+      preScanTimerRef.current = window.setInterval(() => {
+        setPreScanProgress((p) => Math.min(92, p + 7 + Math.floor(Math.random() * 8)))
+      }, 180)
+
+      try {
+        const threat = await detectLocalThreatSignature(target)
+        const digest = await sha256Hex(target)
+        setHash(digest)
+        setHashAt(new Date())
+        setHashPending(false)
+        setPreScanProgress(100)
+        setScanAt(new Date())
+        if (threat) {
+          setScanStatus('threat')
+          showToast('threat', t('upload.studio.toastThreat'))
+        } else {
+          setScanStatus('idle')
+          showToast('info', t('upload.studio.toastScanDone'))
+        }
+      } catch {
+        setHashPending(false)
+        setPreScanProgress(100)
+        setScanStatus('error')
+      } finally {
+        if (preScanTimerRef.current) {
+          window.clearInterval(preScanTimerRef.current)
+          preScanTimerRef.current = null
+        }
+      }
+    },
+    [clearPreview, showToast, t]
+  )
+
   const pickFiles = useCallback(
     (list: FileList | File[] | null) => {
       if (!list || !list.length) return
@@ -145,29 +276,31 @@ export function UploadPage() {
           setUploadError(t('upload.errorTooLarge', { max: String(UPLOAD_MAX_MB) }))
           continue
         }
-        if (err === 'invalidType') {
+        if (err === 'invalidType' || err === 'invalidMime') {
           setUploadError(t('upload.errorInvalidType'))
           continue
         }
         accepted.push(next)
       }
       if (!accepted.length) return
+
       setUploadError('')
-      setImportSource('device')
+      const primary = accepted[0]
       if (isVersionMode || accepted.length === 1) {
-        setFile(accepted[0])
+        setFile(primary)
         setFileQueue([])
       } else {
-        setFile(accepted[0])
+        setFile(primary)
         setFileQueue(accepted.slice(1))
       }
+      setDocName(primary.name.replace(/\.[^.]+$/, ''))
       setFileStatus('ready')
-      setScanStatus('idle')
       setProgress(0)
       setUploadDone(false)
       setResultDoc(null)
+      void runLocalAnalysis(primary)
     },
-    [t, isVersionMode]
+    [t, isVersionMode, runLocalAnalysis]
   )
 
   const onFileInput = (e: ChangeEvent<HTMLInputElement>) => {
@@ -178,17 +311,25 @@ export function UploadPage() {
   const onDrop = (e: DragEvent) => {
     e.preventDefault()
     setDragOver(false)
-    if (importSource !== 'device' && importSource !== 'url') setImportSource('device')
     pickFiles(e.dataTransfer.files)
   }
 
   const removeFile = () => {
     if (uploading) return
     if (fileQueue.length) {
-      setFile(fileQueue[0])
+      const next = fileQueue[0]
+      setFile(next)
       setFileQueue((q) => q.slice(1))
+      setDocName(next.name.replace(/\.[^.]+$/, ''))
+      void runLocalAnalysis(next)
     } else {
       setFile(null)
+      setDocName('')
+      setScanStatus('idle')
+      setPreScanProgress(0)
+      setHash('')
+      setHashAt(null)
+      clearPreview()
     }
     setFileStatus('ready')
     setProgress(0)
@@ -196,134 +337,101 @@ export function UploadPage() {
     setUploadDone(false)
   }
 
-  const visHint =
-    visibility === 'Private'
-      ? t('upload.vis.private')
-      : visibility === 'Shared'
-        ? t('upload.vis.shared')
-        : t('upload.vis.public')
+  const addTag = () => {
+    const value = tagInput.trim()
+    if (!value) return
+    if (!tags.includes(value)) setTags([...tags, value])
+    setTagInput('')
+  }
 
-  const accessSummary = useMemo(() => {
-    if (isVersionMode) return t('upload.summaryVersion')
-    if (visibility === 'Private') return t('vis.private')
-    if (visibility === 'Public') {
-      const level = t(`access.${publicLevel.toLowerCase()}` as 'access.read')
-      return `${t('vis.public')} — ${level}`
-    }
-    const count = sharedRows.filter((r) => r.email.trim()).length
-    return count ? `${t('vis.shared')} (${count})` : t('vis.shared')
-  }, [isVersionMode, visibility, publicLevel, sharedRows, t])
-
-  const runPipelineAnimation = useCallback(() => {
-    setPipelineStep(0)
-    setScanStatus('scanning')
-    const interval = window.setInterval(() => {
-      setPipelineStep((s) => {
-        // Stay on antivirus step until the backend responds — do not fake "Safe".
-        const scanIdx = UPLOAD_PIPELINE_STEPS.indexOf('scan')
-        if (s >= scanIdx) {
-          window.clearInterval(interval)
-          return scanIdx
-        }
-        return s + 1
-      })
-    }, 400)
-    return () => window.clearInterval(interval)
-  }, [])
-
-  const completePipelineAfterScan = (status: ScanUiStatus) => {
-    setScanStatus(status)
-    if (status === 'safe' || status === 'skipped' || status === 'error') {
-      const scanIdx = UPLOAD_PIPELINE_STEPS.indexOf('scan')
-      let step = scanIdx
-      const finish = window.setInterval(() => {
-        step += 1
-        setPipelineStep(step)
-        if (step >= UPLOAD_PIPELINE_STEPS.length - 1) window.clearInterval(finish)
-      }, 280)
+  const onTagKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      addTag()
     }
   }
 
+  const resetForm = () => {
+    if (uploading) return
+    uploadJobRef.current?.abort()
+    setFile(null)
+    setFileQueue([])
+    setFileStatus('ready')
+    setScanStatus('idle')
+    setProgress(0)
+    setPreScanProgress(0)
+    setDocName('')
+    setCategory('General')
+    setDescription('')
+    setTags([])
+    setTagInput('')
+    setVisibility('Private')
+    setPublicLevel('Download')
+    setSharedRows([])
+    setChangeComment('')
+    setVersionConfirmed(false)
+    setHash('')
+    setHashAt(null)
+    setScanAt(null)
+    setUploadDone(false)
+    setUploadError('')
+    setResultDoc(null)
+    clearPreview()
+    localStorage.removeItem(UPLOAD_DRAFT_KEY)
+  }
+
+  const saveDraft = () => {
+    const payload = {
+      docName,
+      category,
+      description,
+      tags,
+      visibility,
+      publicLevel,
+      sharedRows,
+    }
+    localStorage.setItem(UPLOAD_DRAFT_KEY, JSON.stringify(payload))
+    showToast('success', t('upload.studio.toastDraft'))
+  }
+
+  const cancelUpload = () => {
+    uploadJobRef.current?.abort()
+    uploadJobRef.current = null
+    setUploading(false)
+    setFileStatus('ready')
+    setScanStatus('idle')
+    setProgress(0)
+    setUploadError(t('upload.studio.cancelUpload'))
+  }
+
   const uploadSingleFile = async (target: File) => {
+    const onProgress = (percent: number) => setProgress(percent)
     if (isVersionMode && documentId) {
       const form = buildVersionFormData(target, changeComment)
-      return uploadWithProgress(`/api/documents/${documentId}`, form, 'PUT', setProgress)
+      const job = uploadWithProgress(`/api/documents/${documentId}`, form, 'PUT', onProgress)
+      uploadJobRef.current = job
+      return job.promise
     }
+    const descParts = [description.trim()]
+    if (tags.length) descParts.push(`Tags: ${tags.join(', ')}`)
+    if (docName.trim() && docName.trim() !== target.name.replace(/\.[^.]+$/, '')) {
+      descParts.push(`Titre: ${docName.trim()}`)
+    }
+
     const form = buildUploadFormData({
       file: target,
       category,
-      description,
+      description: descParts.filter(Boolean).join('\n'),
       visibility,
       publicLevel,
       sharedRows,
     })
-    return uploadWithProgress('/api/documents', form, 'POST', setProgress)
-  }
-
-  const handleImportFromUrl = async () => {
-    if (!importUrl.trim()) {
-      setUploadError(t('upload.urlRequired'))
-      return
-    }
-    if (!isVersionMode && visibility === 'Shared' && normalizeSharedRows(sharedRows).length === 0) {
-      setUploadError(t('upload.sharedUsersRequired'))
-      return
-    }
-
-    setUploading(true)
-    setUploadError('')
-    setFileStatus('uploading')
-    setProgress(15)
-    setScanStatus('scanning')
-    const stopPipeline = runPipelineAnimation()
-
-    try {
-      const sharedUsers =
-        visibility === 'Shared'
-          ? normalizeSharedRows(sharedRows).map((r) => ({
-              userEmail: r.email,
-              accessLevel: r.level,
-            }))
-          : undefined
-      const result = await api<DocumentDto>('/api/documents/import/url', {
-        method: 'POST',
-        body: JSON.stringify({
-          url: importUrl.trim(),
-          fileName: urlFileName.trim() || undefined,
-          category,
-          description,
-          visibility,
-          publicAccessLevel: visibility === 'Public' ? publicLevel : undefined,
-          sharedUsers,
-        }),
-      })
-      stopPipeline()
-      const uiScan = mapScanResultToUi(result.lastScanResult)
-      completePipelineAfterScan(uiScan)
-      setProgress(100)
-      setFileStatus('uploaded')
-      setResultDoc(result)
-      setUploadDone(true)
-    } catch (err) {
-      stopPipeline()
-      const msg = err instanceof Error ? err.message : t('upload.errorGeneric')
-      setFileStatus('failed')
-      setScanStatus(isThreatUploadError(msg) ? 'threat' : 'error')
-      setUploadError(msg)
-    } finally {
-      setUploading(false)
-    }
+    const job = uploadWithProgress('/api/documents', form, 'POST', onProgress)
+    uploadJobRef.current = job
+    return job.promise
   }
 
   const handleSubmit = async () => {
-    if (importSource === 'url') {
-      await handleImportFromUrl()
-      return
-    }
-    if (CLOUD_SOURCES.includes(importSource)) {
-      setUploadError(t('upload.cloudSoon'))
-      return
-    }
     if (!file) {
       setUploadError(t('upload.selectFile'))
       return
@@ -336,13 +444,15 @@ export function UploadPage() {
       setUploadError(t('upload.sharedUsersRequired'))
       return
     }
+    if (scanStatus === 'threat' || scanStatus === 'scanning') return
 
     setUploading(true)
     setUploadError('')
     setFileStatus('uploading')
     setProgress(0)
     setScanStatus('scanning')
-    const stopPipeline = runPipelineAnimation()
+    setPreScanProgress(0)
+    setScanAt(new Date())
 
     try {
       const queue = [file, ...fileQueue]
@@ -355,41 +465,50 @@ export function UploadPage() {
         setScanStatus('scanning')
         last = await uploadSingleFile(queue[i])
       }
-      stopPipeline()
       const uiScan = mapScanResultToUi(last?.lastScanResult)
-      completePipelineAfterScan(uiScan)
+      setScanStatus(uiScan)
+      setScanAt(new Date())
       setProgress(100)
       setFileStatus('uploaded')
       setResultDoc(last)
       setUploadDone(true)
       setFileQueue([])
+      localStorage.removeItem(UPLOAD_DRAFT_KEY)
+      if (uiScan === 'threat') {
+        showToast('threat', t('upload.studio.toastThreat'))
+      } else {
+        showToast('success', t('upload.studio.toastSuccess'))
+      }
     } catch (err) {
-      stopPipeline()
       const msg = err instanceof Error ? err.message : t('upload.errorGeneric')
+      const threat = isThreatUploadError(msg)
       setFileStatus('failed')
-      setScanStatus(isThreatUploadError(msg) ? 'threat' : 'error')
+      setScanStatus(threat ? 'threat' : 'error')
       setUploadError(msg)
+      showToast(threat ? 'threat' : 'error', threat ? t('upload.studio.toastThreat') : t('upload.studio.toastError'))
     } finally {
+      uploadJobRef.current = null
       setUploading(false)
     }
   }
 
-  const statusLabel = (status: UploadFileStatus) => {
-    switch (status) {
-      case 'ready':
-        return t('upload.statusReady')
-      case 'uploading':
-        return t('upload.statusUploading')
-      case 'uploaded':
-        return t('upload.statusUploaded')
-      case 'failed':
-        return t('upload.statusFailed')
-    }
-  }
+  const keywords = useMemo(() => (file ? keywordsFromFileName(file.name) : []), [file])
+  const previewKind = file ? previewKindOf(file) : 'other'
+  const uploadBlocked =
+    uploading || !file || scanStatus === 'scanning' || scanStatus === 'threat' || (isVersionMode && !versionConfirmed)
+
+  const securityTone =
+    scanStatus === 'safe'
+      ? 'safe'
+      : scanStatus === 'threat'
+        ? 'threat'
+        : scanStatus === 'scanning'
+          ? 'scanning'
+          : ''
 
   if (loadingDoc) {
     return (
-      <section className="page upload-page">
+      <section className="page upload-page upload-studio">
         <div className="loading">
           <div className="spinner" />
         </div>
@@ -399,13 +518,11 @@ export function UploadPage() {
 
   if (documentId && !existingDoc) {
     return (
-      <section className="page upload-page">
-        <div className="upload-header-row">
-          <Link to="/documents" className="btn btn-secondary upload-back-btn">
-            <IconArrowLeft />
-            {t('upload.backToDocuments')}
-          </Link>
-        </div>
+      <section className="page upload-page upload-studio">
+        <Link to="/documents" className="btn btn-secondary upload-back-btn">
+          <IconArrowLeft />
+          {t('upload.backToDocuments')}
+        </Link>
         <div className="upload-error-banner">
           <IconAlert />
           {t('upload.documentNotFound')}
@@ -415,248 +532,142 @@ export function UploadPage() {
   }
 
   return (
-    <section className="page upload-page" id="page-upload">
-      <div className="upload-header-row">
-        <Link to="/documents" className="btn btn-secondary upload-back-btn">
-          <IconArrowLeft />
-          {t('upload.backToDocuments')}
-        </Link>
-      </div>
-
-      <header className="upload-page-header">
+    <section className="page upload-page upload-studio" id="page-upload">
+      <header className="upload-studio-header">
         <div>
-          <h1 className="page-title">{isVersionMode ? t('upload.versionTitle') : t('upload.title')}</h1>
+          <Link to="/documents" className="btn btn-secondary upload-back-btn">
+            <IconArrowLeft />
+            {t('upload.backToDocuments')}
+          </Link>
+          <h1 className="page-title" style={{ marginTop: '0.75rem' }}>
+            {isVersionMode ? t('upload.versionTitle') : t('upload.title')}
+          </h1>
           <p className="page-subtitle">
             {isVersionMode ? t('upload.versionSubtitle') : t('upload.subtitle')}
           </p>
         </div>
-        <div className="upload-header-badge">
-          <IconShieldCheck size={18} />
-          <span>{t('upload.secureBadge')}</span>
-        </div>
+        <span className="upload-header-badge">
+          <IconShieldCheck size={16} />
+          {t('upload.secureBadge')}
+        </span>
       </header>
 
-      <div className="upload-layout">
-        <div className="upload-main">
-          {!isVersionMode && (
-            <div className="upload-source-tabs" role="tablist" aria-label={t('upload.sources')}>
-              <button
-                type="button"
-                role="tab"
-                className={`upload-source-tab${importSource === 'device' ? ' active' : ''}`}
-                aria-selected={importSource === 'device'}
-                onClick={() => setImportSource('device')}
-                disabled={uploading}
-              >
-                {t('upload.source.device')}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                className={`upload-source-tab${importSource === 'url' ? ' active' : ''}`}
-                aria-selected={importSource === 'url'}
-                onClick={() => setImportSource('url')}
-                disabled={uploading}
-              >
-                {t('upload.source.url')}
-              </button>
-              {(['googledrive', 'onedrive', 'dropbox'] as const).map((id) => {
-                const meta = importSources.find((s) => s.id === id)
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    className={`upload-source-tab${importSource === id ? ' active' : ''}`}
-                    aria-selected={importSource === id}
-                    disabled
-                    title={meta?.unavailableReason || t('upload.cloudSoon')}
-                  >
-                    {t(`upload.source.${id}`)}
-                    <span className="upload-source-soon">{t('upload.soon')}</span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-
-          {importSource === 'url' && !isVersionMode ? (
-            <div className="upload-card upload-url-card">
-              <div className="upload-card-header">
-                <h3>{t('upload.source.url')}</h3>
-              </div>
-              <p className="form-hint">{t('upload.urlHint')}</p>
-              <div className="form-group">
-                <label htmlFor="import-url">{t('upload.urlLabel')}</label>
-                <input
-                  id="import-url"
-                  type="url"
-                  value={importUrl}
-                  onChange={(e) => setImportUrl(e.target.value)}
-                  placeholder="https://example.com/document.pdf"
-                  disabled={uploading}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="import-url-name">{t('upload.urlFileName')}</label>
-                <input
-                  id="import-url-name"
-                  type="text"
-                  value={urlFileName}
-                  onChange={(e) => setUrlFileName(e.target.value)}
-                  placeholder="document.pdf"
-                  disabled={uploading}
-                />
-              </div>
-              <p className="form-hint">{t('upload.urlSecurityHint')}</p>
-            </div>
-          ) : (
-          /* Drop zone */
-          <div
-            className={`upload-dropzone${dragOver ? ' drag-over' : ''}${file ? ' has-file' : ''}`}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setDragOver(true)
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={onDrop}
-            onClick={() => !uploading && fileInputRef.current?.click()}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+      <div className="upload-studio-grid">
+        <div className="upload-studio-main">
+          <div className="upload-card-modern">
+            <div
+              className={`upload-dropzone-modern${dragOver ? ' drag-over' : ''}${file ? ' has-file' : ''}`}
+              onDragOver={(e) => {
                 e.preventDefault()
-                fileInputRef.current?.click()
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label={t('upload.dropAria')}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="upload-file-input"
-              multiple={!isVersionMode}
-              accept={UPLOAD_SUPPORTED_FORMATS_LABEL.split(', ')
-                .map((x) => {
-                  const ext = x.trim().toLowerCase()
-                  if (ext === 'jpg') return '.jpg,.jpeg'
-                  return `.${ext}`
-                })
-                .join(',')}
-              onChange={onFileInput}
-              disabled={uploading}
-            />
-            <div className="upload-dropzone-inner">
-              <div className="upload-dropzone-icon">
-                {file ? <IconFileSecure size={44} /> : <IconUploadCloud size={40} />}
-              </div>
-              <h2 className="upload-dropzone-title">
-                {file ? t('upload.replaceFile') : t('upload.emptyTitle')}
-              </h2>
-              <p className="upload-dropzone-text">
-                {file ? file.name : t('upload.emptyHint')}
-              </p>
-              {!file && (
-                <button
-                  type="button"
-                  className="btn btn-primary upload-choose-btn"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    fileInputRef.current?.click()
-                  }}
-                  disabled={uploading}
-                >
-                  {t('upload.chooseFiles')}
-                </button>
+                setDragOver(true)
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={onDrop}
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  fileInputRef.current?.click()
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={t('upload.dropAria')}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="upload-file-input"
+                multiple={!isVersionMode}
+                accept={UPLOAD_SUPPORTED_FORMATS_LABEL.split(', ')
+                  .map((x) => {
+                    const ext = x.trim().toLowerCase()
+                    if (ext === 'jpg') return '.jpg,.jpeg'
+                    return `.${ext}`
+                  })
+                  .join(',')}
+                onChange={onFileInput}
+                disabled={uploading}
+              />
+              {!file ? (
+                <>
+                  <div className="upload-dropzone-icon">
+                    <IconUploadCloud size={44} />
+                  </div>
+                  <h2 className="upload-dropzone-title">{t('upload.emptyTitle')}</h2>
+                  <p className="upload-dropzone-text">{t('upload.emptyHint')}</p>
+                  <button
+                    type="button"
+                    className="btn btn-primary upload-choose-btn"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      fileInputRef.current?.click()
+                    }}
+                    disabled={uploading}
+                  >
+                    {t('upload.chooseFiles')}
+                  </button>
+                  <p className="upload-constraints-simple">
+                    {UPLOAD_SUPPORTED_FORMATS_LABEL} · {t('upload.maxSize', { max: String(UPLOAD_MAX_MB) })}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="upload-file-chip-list">
+                    <div className="upload-file-chip" onClick={(e) => e.stopPropagation()}>
+                      <FileIcon contentType={file.type} fileName={file.name} />
+                      <span>
+                        {file.name} · {fileExtension(file.name).toUpperCase() || '—'} · {fmtSize(file.size)}
+                      </span>
+                      {!uploading && fileStatus !== 'uploaded' && (
+                        <button type="button" aria-label={t('upload.removeFile')} onClick={removeFile}>
+                          <IconX />
+                        </button>
+                      )}
+                    </div>
+                    {fileQueue.map((queued) => (
+                      <div key={`${queued.name}-${queued.size}-${queued.lastModified}`} className="upload-file-chip">
+                        <FileIcon contentType={queued.type} fileName={queued.name} />
+                        <span>
+                          {queued.name} · {fmtSize(queued.size)}
+                        </span>
+                        <span className="upload-status-badge upload-status-ready">{t('upload.statusQueued')}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {(fileStatus === 'uploading' || fileStatus === 'uploaded') && (
+                    <div className="upload-progress-modern" onClick={(e) => e.stopPropagation()}>
+                      <span className="upload-progress-label">
+                        {fileStatus === 'uploaded' ? t('upload.successTitle') : t('upload.progressLabel')}
+                      </span>
+                      <div
+                        className="upload-progress-bar"
+                        role="progressbar"
+                        aria-valuenow={progress}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <div className="upload-progress-fill" style={{ width: `${progress}%` }} />
+                      </div>
+                      <span className="upload-progress-pct">{progress}%</span>
+                      {uploading && (
+                        <button type="button" className="btn btn-sm" onClick={cancelUpload}>
+                          {t('upload.studio.cancelUpload')}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
-              <div className="upload-constraints">
-                <p>
-                  {t('upload.supportedFormats')}: {UPLOAD_SUPPORTED_FORMATS_LABEL}
-                </p>
-                <p>{t('upload.maxSize', { max: String(UPLOAD_MAX_MB) })}</p>
-              </div>
             </div>
           </div>
-          )}
 
-          {/* Selected file */}
-          {file && importSource === 'device' && (
-            <div className="upload-card">
-              <div className="upload-card-header">
-                <h3>{t('upload.selectedFiles')}</h3>
-              </div>
-              <div className="upload-file-row">
-                <FileIcon contentType={file.type} fileName={file.name} />
-                <div className="upload-file-meta">
-                  <span className="upload-file-name">{file.name}</span>
-                  <span className="upload-file-sub">
-                    {fileExtension(file.name).toUpperCase() || '—'} · {fmtSize(file.size)}
-                  </span>
-                </div>
-                <span className={statusBadgeClass(fileStatus)}>{statusLabel(fileStatus)}</span>
-                {!uploading && fileStatus !== 'uploaded' && (
-                  <button
-                    type="button"
-                    className="upload-file-remove"
-                    aria-label={t('upload.removeFile')}
-                    onClick={removeFile}
-                  >
-                    <IconX />
-                  </button>
-                )}
-              </div>
-              {fileQueue.map((queued) => (
-                <div key={`${queued.name}-${queued.size}`} className="upload-file-row">
-                  <FileIcon contentType={queued.type} fileName={queued.name} />
-                  <div className="upload-file-meta">
-                    <span className="upload-file-name">{queued.name}</span>
-                    <span className="upload-file-sub">
-                      {fileExtension(queued.name).toUpperCase() || '—'} · {fmtSize(queued.size)}
-                    </span>
-                  </div>
-                  <span className="upload-status-badge upload-status-ready">{t('upload.statusQueued')}</span>
-                </div>
-              ))}
-              {(fileStatus === 'uploading' || fileStatus === 'uploaded') && (
-                <div className="upload-progress-block">
-                  <div className="upload-progress-label">
-                    {fileStatus === 'uploaded' ? t('upload.successTitle') : t('upload.progressLabel')}
-                  </div>
-                  <div className="upload-progress-bar" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-                    <div className="upload-progress-fill" style={{ width: `${progress}%` }} />
-                  </div>
-                  <span className="upload-progress-pct">{progress}%</span>
-                </div>
-              )}
-              {fileStatus === 'failed' && uploadError && (
-                <div className="upload-inline-error">
-                  <IconAlert />
-                  {uploadError}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Version mode */}
           {isVersionMode && existingDoc && (
-            <div className="upload-card upload-version-card">
-              <div className="upload-card-header">
-                <h3>{t('upload.versionSection')}</h3>
-              </div>
-              <div className="upload-version-grid">
-                <div>
-                  <span className="upload-meta-label">{t('upload.existingDocument')}</span>
-                  <p className="upload-meta-value">{existingDoc.fileName}</p>
-                </div>
-                <div>
-                  <span className="upload-meta-label">{t('upload.currentVersion')}</span>
-                  <p className="upload-meta-value">v{existingDoc.currentVersion}</p>
-                </div>
-                <div>
-                  <span className="upload-meta-label">{t('upload.newVersion')}</span>
-                  <p className="upload-meta-value">v{existingDoc.currentVersion + 1}</p>
-                </div>
-              </div>
+            <div className="upload-card-modern">
+              <h3>
+                <IconLock size={18} />
+                {existingDoc.fileName} · v{existingDoc.currentVersion} → v{existingDoc.currentVersion + 1}
+              </h3>
               <div className="form-group">
                 <label htmlFor="upload-change-comment">{t('upload.changeComment')}</label>
                 <textarea
@@ -680,42 +691,21 @@ export function UploadPage() {
             </div>
           )}
 
-          {/* Document information — new upload only */}
           {!isVersionMode && (
-            <div className="upload-card">
-              <div className="upload-card-header">
-                <h3>{t('upload.docInfo')}</h3>
-              </div>
-              <div className="upload-form-grid">
+            <div className="upload-card-modern">
+              <h3>
+                <IconUsers size={18} />
+                {t('upload.studio.infoTitle')}
+              </h3>
+              <div className="upload-form-grid upload-form-simple">
                 <div className="form-group">
-                  <label htmlFor="upload-doc-name">{t('upload.docName')}</label>
+                  <label htmlFor="upload-doc-name">{t('upload.studio.docName')}</label>
                   <input
                     id="upload-doc-name"
                     type="text"
-                    value={file?.name.replace(/\.[^.]+$/, '') || ''}
-                    readOnly
-                    className="upload-readonly"
+                    value={docName}
+                    onChange={(e) => setDocName(e.target.value)}
                     placeholder={t('upload.docNamePlaceholder')}
-                  />
-                  <p className="form-hint">{t('upload.docNameHint')}</p>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="upload-owner">{t('upload.owner')}</label>
-                  <input
-                    id="upload-owner"
-                    type="text"
-                    value={user?.fullName || '—'}
-                    readOnly
-                    className="upload-readonly"
-                  />
-                </div>
-                <div className="form-group upload-form-full">
-                  <label htmlFor="upload-desc">{t('upload.description')}</label>
-                  <textarea
-                    id="upload-desc"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
                     disabled={uploading}
                   />
                 </div>
@@ -734,50 +724,73 @@ export function UploadPage() {
                     ))}
                   </select>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Access & visibility */}
-          {!isVersionMode && (
-            <div className="upload-card">
-              <div className="upload-card-header">
-                <h3>{t('upload.accessVisibility')}</h3>
-              </div>
-              <div className="upload-vis-cards">
-                {VIS_OPTIONS.map((v) => {
-                  const Icon = v === 'Private' ? IconLock : v === 'Shared' ? IconUsers : IconGlobe
-                  return (
-                    <label
-                      key={v}
-                      className={`upload-vis-card${visibility === v ? ' selected' : ''}`}
-                    >
-                      <input
-                        type="radio"
-                        name="visibility"
-                        value={v}
-                        checked={visibility === v}
-                        onChange={() => setVisibility(v)}
-                        disabled={uploading}
-                      />
-                      <Icon size={22} />
-                      <span className="upload-vis-card-title">{t(`vis.${v.toLowerCase()}` as 'vis.private')}</span>
-                      <span className="upload-vis-card-desc">
-                        {v === 'Private'
-                          ? t('upload.visCard.private')
-                          : v === 'Shared'
-                            ? t('upload.visCard.shared')
-                            : t('upload.visCard.public')}
+                <div className="form-group upload-form-full">
+                  <label htmlFor="upload-desc">{t('upload.description')}</label>
+                  <textarea
+                    id="upload-desc"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    disabled={uploading}
+                  />
+                </div>
+                <div className="form-group upload-form-full">
+                  <label htmlFor="upload-tags">{t('upload.studio.tags')}</label>
+                  <div className="upload-tag-input">
+                    {tags.map((tag) => (
+                      <span key={tag} className="upload-tag-chip">
+                        {tag}
+                        <button
+                          type="button"
+                          aria-label={t('upload.removeFile')}
+                          onClick={() => setTags(tags.filter((x) => x !== tag))}
+                          disabled={uploading}
+                        >
+                          <IconX size={12} />
+                        </button>
                       </span>
-                    </label>
-                  )
-                })}
+                    ))}
+                    <input
+                      id="upload-tags"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={onTagKey}
+                      onBlur={addTag}
+                      placeholder={t('upload.studio.tagsPlaceholder')}
+                      disabled={uploading}
+                    />
+                  </div>
+                </div>
+                <div className="form-group upload-form-full">
+                  <label>{t('upload.accessVisibility')}</label>
+                  <div className="upload-vis-pills" role="group">
+                    {(
+                      [
+                        { value: 'Private' as const, icon: <IconLock size={16} />, label: t('vis.private') },
+                        { value: 'Shared' as const, icon: <IconUsers size={16} />, label: t('vis.shared') },
+                        { value: 'Public' as const, icon: <IconGlobe size={16} />, label: t('vis.public') },
+                      ] as const
+                    ).map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={visibility === opt.value ? 'selected' : ''}
+                        aria-pressed={visibility === opt.value}
+                        onClick={() => setVisibility(opt.value)}
+                        disabled={uploading}
+                      >
+                        {opt.icon}
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <p className="form-hint upload-vis-hint">{visHint}</p>
 
               {visibility === 'Shared' && (
                 <div className="upload-shared-block">
-                  <p className="upload-shared-title">{t('upload.sharedUsers')}</p>
+                  <p className="upload-shared-title">{t('upload.studio.collaborators')}</p>
+                  <p className="settings-hint">{t('access.levelHint')}</p>
                   {sharedRows.map((row, i) => (
                     <div key={i} className="upload-shared-row">
                       <input
@@ -794,6 +807,7 @@ export function UploadPage() {
                       />
                       <select
                         value={row.level}
+                        aria-label={t('upload.accessLevel')}
                         onChange={(e) => {
                           const next = [...sharedRows]
                           next[i] = { ...next[i], level: e.target.value }
@@ -801,10 +815,11 @@ export function UploadPage() {
                         }}
                         disabled={uploading}
                       >
-                        <option value="Read">{t('access.read')}</option>
-                        <option value="Preview">{t('access.preview')}</option>
-                        <option value="Download">{t('access.download')}</option>
-                        <option value="Write">{t('access.write')}</option>
+                        {UPLOAD_ACCESS_LEVELS.map((level) => (
+                          <option key={level.value} value={level.value}>
+                            {t(level.labelKey)}
+                          </option>
+                        ))}
                       </select>
                       <button
                         type="button"
@@ -843,295 +858,317 @@ export function UploadPage() {
                     onChange={(e) => setPublicLevel(e.target.value)}
                     disabled={uploading}
                   >
-                    <option value="Read">{t('access.read')}</option>
-                    <option value="Preview">{t('access.preview')}</option>
-                    <option value="Download">{t('access.download')}</option>
+                    {UPLOAD_ACCESS_LEVELS.map((level) => (
+                      <option key={level.value} value={level.value}>
+                        {t(level.labelKey)}
+                      </option>
+                    ))}
                   </select>
+                  <p className="settings-hint">{t('access.levelHint')}</p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Metadata — auto fields */}
-          {!isVersionMode && (
-            <div className="upload-card">
-              <div className="upload-card-header">
-                <h3>{t('upload.metadata')}</h3>
-                <span className="upload-card-badge">{t('upload.autoFields')}</span>
-              </div>
-              <div className="upload-meta-grid">
-                <div>
-                  <span className="upload-meta-label">{t('upload.metaType')}</span>
-                  <p className="upload-meta-value">{file?.type || '—'}</p>
+          <div className={`upload-card-modern upload-security-card ${securityTone}`}>
+            <h3>
+              <IconShieldCheck size={18} />
+              {t('upload.studio.securityTitle')}
+            </h3>
+            {!file && <p className="settings-hint">{t('upload.studio.waitingFile')}</p>}
+            {file && scanStatus === 'scanning' && (
+              <>
+                <span className="upload-badge-scanning">{t('upload.scan.scanning')}</span>
+                <div className="upload-progress-modern">
+                  <span>{t('upload.studio.scanProgress')}</span>
+                  <div className="upload-progress-bar" role="progressbar" aria-valuenow={uploading ? progress : preScanProgress}>
+                    <div
+                      className="upload-progress-fill"
+                      style={{ width: `${uploading ? progress : preScanProgress}%` }}
+                    />
+                  </div>
+                  <span className="pct">{uploading ? progress : preScanProgress}%</span>
                 </div>
-                <div>
-                  <span className="upload-meta-label">{t('filter.category')}</span>
-                  <p className="upload-meta-value">{category}</p>
-                </div>
-                <div>
-                  <span className="upload-meta-label">{t('upload.metaCreated')}</span>
-                  <p className="upload-meta-value">{t('upload.metaCreatedAuto')}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Security */}
-          <div className="upload-card upload-security-card">
-            <div className="upload-card-header">
-              <h3>{t('upload.security')}</h3>
-            </div>
-            <ul className="upload-security-list">
-              {SECURITY_FEATURES.map((key) => (
-                <li key={key}>
-                  <IconShieldCheck size={18} />
-                  {t(`upload.security.${key}`)}
-                </li>
-              ))}
-            </ul>
-
-            {(uploading || scanStatus !== 'idle') && (
-              <div className={`upload-scan-panel upload-scan-${scanStatus}`}>
-                {scanStatus === 'scanning' && (
-                  <>
-                    <div className="upload-scan-spinner" aria-hidden />
-                    <div>
-                      <strong>{t('upload.scan.title')}</strong>
-                      <p>{t('upload.scan.scanning')}</p>
-                    </div>
-                  </>
-                )}
-                {scanStatus === 'safe' && (
-                  <>
-                    <IconCheckCircle size={28} />
-                    <div>
-                      <strong>{t('upload.scan.safeTitle')}</strong>
-                      <p>{t('upload.scan.safeBody')}</p>
-                    </div>
-                  </>
-                )}
-                {scanStatus === 'threat' && (
-                  <>
-                    <IconAlert size={28} />
-                    <div>
-                      <strong>{t('upload.scan.threatTitle')}</strong>
-                      <p>{t('upload.scan.threatBody')}</p>
-                    </div>
-                  </>
-                )}
-                {scanStatus === 'skipped' && (
-                  <>
-                    <IconAlert size={28} />
-                    <div>
-                      <strong>{t('upload.scan.skippedTitle')}</strong>
-                      <p>{t('upload.scan.skippedBody')}</p>
-                    </div>
-                  </>
-                )}
-                {scanStatus === 'error' && fileStatus !== 'failed' && (
-                  <>
-                    <IconAlert size={28} />
-                    <div>
-                      <strong>{t('upload.scan.errorTitle')}</strong>
-                      <p>{t('upload.scan.errorBody')}</p>
-                    </div>
-                  </>
-                )}
-                {scanStatus === 'error' && fileStatus === 'failed' && !isThreatUploadError(uploadError) && (
-                  <>
-                    <IconAlert size={28} />
-                    <div>
-                      <strong>{t('upload.scan.errorTitle')}</strong>
-                      <p>{uploadError || t('upload.scan.errorBody')}</p>
-                    </div>
-                  </>
-                )}
-              </div>
+                <dl className="upload-meta-grid">
+                  <div>
+                    <dt>{t('upload.studio.scanEngine')}</dt>
+                    <dd>{uploading ? t('upload.studio.engineName') : t('upload.studio.preScan')}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('upload.studio.scanTime')}</dt>
+                    <dd>{scanAt ? dateFmt.format(scanAt) : '—'}</dd>
+                  </div>
+                </dl>
+              </>
             )}
-
-            {(uploading || uploadDone || scanStatus === 'threat') && (
-              <div className="upload-pipeline">
-                <p className="upload-pipeline-title">{t('upload.pipelineTitle')}</p>
-                <ul>
-                  {UPLOAD_PIPELINE_STEPS.map((step, i) => {
-                    const scanIdx = UPLOAD_PIPELINE_STEPS.indexOf('scan')
-                    const done =
-                      scanStatus === 'threat'
-                        ? i <= scanIdx
-                        : i <= pipelineStep && (scanStatus !== 'scanning' || i < scanIdx || (i === scanIdx && uploading))
-                    const active = uploading && i === pipelineStep && step === 'scan' && scanStatus === 'scanning'
-                    return (
-                      <li
-                        key={step}
-                        className={`${done ? 'done' : ''}${active ? ' active' : ''}${
-                          step === 'scan' && scanStatus === 'threat' ? ' threat' : ''
-                        }`}
-                      >
-                        {done && scanStatus !== 'threat' ? (
-                          <IconCheckCircle size={16} />
-                        ) : step === 'scan' && scanStatus === 'threat' ? (
-                          <IconAlert size={16} />
-                        ) : (
-                          <span className="upload-pipeline-dot" />
-                        )}
-                        {t(`upload.pipeline.${step}`)}
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
+            {file && scanStatus === 'idle' && preScanProgress === 100 && (
+              <>
+                <span className="upload-badge-scanning">{t('upload.studio.preScanDone')}</span>
+                <p>{t('upload.studio.localCheckOk')}</p>
+                <dl className="upload-meta-grid">
+                  <div>
+                    <dt>{t('upload.studio.scanEngine')}</dt>
+                    <dd>{t('upload.studio.preScan')}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('upload.studio.scanTime')}</dt>
+                    <dd>{scanAt ? dateFmt.format(scanAt) : '—'}</dd>
+                  </div>
+                </dl>
+              </>
+            )}
+            {file && scanStatus === 'safe' && (
+              <>
+                <span className="upload-badge-safe">
+                  <IconCheckCircle size={14} />
+                  {t('upload.scan.safeTitle')}
+                </span>
+                <p>
+                  <strong>{t('upload.scan.safeBody')}</strong>
+                </p>
+                <dl className="upload-meta-grid">
+                  <div>
+                    <dt>{t('upload.studio.scanEngine')}</dt>
+                    <dd>{t('upload.studio.engineName')}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('upload.studio.scanTime')}</dt>
+                    <dd>{scanAt ? dateFmt.format(scanAt) : '—'}</dd>
+                  </div>
+                </dl>
+              </>
+            )}
+            {file && scanStatus === 'threat' && (
+              <>
+                <span className="upload-badge-threat">
+                  <IconAlert size={14} />
+                  {t('upload.scan.threatTitle')}
+                </span>
+                <p>{t('upload.scan.threatBody')}</p>
+                <dl className="upload-meta-grid">
+                  <div>
+                    <dt>{t('upload.studio.riskHigh')}</dt>
+                    <dd>{t('upload.studio.riskHigh')}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('upload.studio.scanEngine')}</dt>
+                    <dd>{t('upload.studio.engineName')}</dd>
+                  </div>
+                </dl>
+                <p className="settings-hint">{t('upload.studio.threatRec')}</p>
+              </>
+            )}
+            {file && (scanStatus === 'skipped' || scanStatus === 'error') && (
+              <>
+                <span className="upload-badge-scanning">
+                  {scanStatus === 'skipped' ? t('upload.scan.skippedTitle') : t('upload.scan.errorTitle')}
+                </span>
+                <p>{scanStatus === 'skipped' ? t('upload.scan.skippedBody') : t('upload.scan.errorBody')}</p>
+              </>
             )}
           </div>
         </div>
 
-        {/* Summary sidebar */}
-        <aside className="upload-summary-panel">
-          <div className="upload-summary-card">
-            <h3>{t('upload.summary')}</h3>
-            {!file && importSource !== 'url' ? (
-              <p className="upload-summary-empty">{t('upload.summaryEmpty')}</p>
-            ) : importSource === 'url' && !file ? (
-              <dl className="upload-summary-dl">
-                <div>
-                  <dt>{t('upload.source.url')}</dt>
-                  <dd>{importUrl.trim() || '—'}</dd>
+        <aside className="upload-studio-side">
+          <div className="upload-card-modern upload-preview-card">
+            <h3>{t('upload.studio.previewTitle')}</h3>
+            <div className="upload-preview-pane">
+              {!file && (
+                <div className="upload-preview-empty">
+                  <IconUploadCloud size={36} />
+                  <span>{t('upload.studio.waitingFile')}</span>
                 </div>
-                {!isVersionMode && (
-                  <>
-                    <div>
-                      <dt>{t('filter.category')}</dt>
-                      <dd>{category}</dd>
-                    </div>
-                    <div>
-                      <dt>{t('upload.summaryVisibility')}</dt>
-                      <dd>{accessSummary}</dd>
-                    </div>
-                  </>
-                )}
-                <div>
-                  <dt>{t('upload.summarySecurity')}</dt>
-                  <dd className="upload-summary-secure">
-                    <IconShieldCheck size={16} />
-                    {scanStatus === 'safe'
-                      ? t('upload.scan.safeTitle')
-                      : scanStatus === 'skipped'
-                        ? t('upload.scan.skippedTitle')
-                        : scanStatus === 'error'
-                          ? t('upload.scan.errorTitle')
-                          : scanStatus === 'threat'
-                            ? t('upload.scan.threatTitle')
-                            : t('upload.summarySecurityOk')}
-                  </dd>
+              )}
+              {file && previewKind === 'image' && previewUrl && <img src={previewUrl} alt={file.name} />}
+              {file && previewKind === 'pdf' && previewUrl && (
+                <iframe title={file.name} src={previewUrl} />
+              )}
+              {file && previewKind === 'text' && textPreview && (
+                <pre className="upload-hash-mono" style={{ maxHeight: 320, overflow: 'auto', width: '100%' }}>
+                  {textPreview}
+                </pre>
+              )}
+              {file && (previewKind === 'office' || previewKind === 'other' || (previewKind === 'text' && !textPreview)) && (
+                <div className="upload-preview-empty">
+                  <FileIcon contentType={file.type} fileName={file.name} />
+                  <span>
+                    {previewKind === 'office'
+                      ? `${fileExtension(file.name).toUpperCase()} · ${t('upload.studio.previewUnavailable')}`
+                      : t('upload.studio.previewUnavailable')}
+                  </span>
                 </div>
-              </dl>
-            ) : (
-              <dl className="upload-summary-dl">
-                <div>
-                  <dt>{t('upload.summaryFile')}</dt>
-                  <dd>{file?.name}</dd>
-                </div>
-                <div>
-                  <dt>{t('upload.summaryType')}</dt>
-                  <dd>{file?.type || fileExtension(file?.name || '').toUpperCase()}</dd>
-                </div>
-                <div>
-                  <dt>{t('upload.summarySize')}</dt>
-                  <dd>{file ? fmtSize(file.size) : '—'}</dd>
-                </div>
-                {fileQueue.length > 0 && (
-                  <div>
-                    <dt>{t('upload.queueCount')}</dt>
-                    <dd>{fileQueue.length + 1}</dd>
-                  </div>
-                )}
-                {!isVersionMode && (
-                  <>
-                    <div>
-                      <dt>{t('filter.category')}</dt>
-                      <dd>{category}</dd>
-                    </div>
-                    <div>
-                      <dt>{t('upload.summaryVisibility')}</dt>
-                      <dd>{accessSummary}</dd>
-                    </div>
-                  </>
-                )}
-                {isVersionMode && existingDoc && (
-                  <div>
-                    <dt>{t('upload.existingDocument')}</dt>
-                    <dd>{existingDoc.fileName}</dd>
-                  </div>
-                )}
-                <div>
-                  <dt>{t('upload.summarySecurity')}</dt>
-                  <dd className="upload-summary-secure">
-                    <IconShieldCheck size={16} />
-                    {scanStatus === 'safe'
-                      ? t('upload.scan.safeTitle')
-                      : scanStatus === 'skipped'
-                        ? t('upload.scan.skippedTitle')
-                        : scanStatus === 'error'
-                          ? t('upload.scan.errorTitle')
-                          : scanStatus === 'threat'
-                            ? t('upload.scan.threatTitle')
-                            : t('upload.summarySecurityOk')}
-                  </dd>
-                </div>
-              </dl>
-            )}
-
-            {uploadDone && resultDoc && (
-              <div className="upload-success-banner">
-                <IconCheckCircle />
-                <div>
-                  <strong>{t('upload.successTitle')}</strong>
-                  <p>{resultDoc.fileName}</p>
-                </div>
-              </div>
-            )}
-
-            {uploadError && !uploadDone && fileStatus !== 'uploading' && (
-              <div className="upload-error-banner compact">
-                <IconAlert />
-                {uploadError}
-              </div>
-            )}
-
-            <div className="upload-summary-actions">
-              <button
-                type="button"
-                className="btn"
-                onClick={() => navigate('/documents')}
-                disabled={uploading}
-              >
-                {t('btn.cancel')}
-              </button>
-              {uploadDone ? (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => navigate('/documents')}
-                >
-                  {t('upload.backToDocuments')}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-primary upload-submit-btn"
-                  onClick={() => void handleSubmit()}
-                  disabled={
-                    uploading ||
-                    (importSource === 'url' ? !importUrl.trim() : !file) ||
-                    CLOUD_SOURCES.includes(importSource)
-                  }
-                >
-                  {uploading ? t('upload.uploading') : t('upload.submitSecure')}
-                </button>
               )}
             </div>
           </div>
+
+          <div className="upload-card-modern upload-integrity-card">
+            <h3>
+              <IconLock size={18} />
+              {t('upload.studio.integrityTitle')}
+            </h3>
+            <p className="settings-hint">
+              {hashPending
+                ? t('upload.studio.integrityPending')
+                : hash
+                  ? t('upload.studio.integrityOk')
+                  : t('upload.studio.waitingFile')}
+            </p>
+            <p className="upload-hash-mono">{hash || '—'}</p>
+            <dl className="upload-meta-grid">
+              <div>
+                <dt>{t('upload.studio.hashLabel')}</dt>
+                <dd>SHA-256</dd>
+              </div>
+              <div>
+                <dt>{t('upload.studio.verifiedAt')}</dt>
+                <dd>{hashAt ? dateFmt.format(hashAt) : '—'}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="upload-card-modern upload-ai-card">
+            <h3>{t('upload.studio.aiTitle')}</h3>
+            {!file ? (
+              <p className="settings-hint">{t('upload.studio.waitingFile')}</p>
+            ) : hashPending ? (
+              <p className="settings-hint">{t('upload.studio.aiPending')}</p>
+            ) : (
+              <>
+                <p>
+                  <strong>{t('upload.studio.aiSummary')}</strong>
+                  <br />
+                  {t('upload.studio.aiSummaryText')}
+                </p>
+                <dl className="upload-meta-grid">
+                  <div>
+                    <dt>{t('upload.studio.aiLanguage')}</dt>
+                    <dd>{guessLanguageFromName(file.name)}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('upload.studio.aiPages')}</dt>
+                    <dd>{previewKind === 'pdf' ? '—' : '1'}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('upload.studio.aiWords')}</dt>
+                    <dd>{textPreview ? textPreview.split(/\s+/).filter(Boolean).length : '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('upload.studio.aiCategory')}</dt>
+                    <dd>{category}</dd>
+                  </div>
+                </dl>
+                {!!keywords.length && (
+                  <div className="upload-tag-input">
+                    <span className="settings-hint">{t('upload.studio.aiKeywords')}</span>
+                    {keywords.map((k) => (
+                      <span key={k} className="upload-tag-chip">
+                        {k}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="upload-card-modern">
+            <h3>{t('upload.studio.metaTitle')}</h3>
+            {!file ? (
+              <p className="settings-hint">{t('upload.studio.waitingFile')}</p>
+            ) : (
+              <dl className="upload-meta-grid">
+                <div>
+                  <dt>{t('upload.studio.metaSize')}</dt>
+                  <dd>{fmtSize(file.size)}</dd>
+                </div>
+                <div>
+                  <dt>{t('upload.studio.metaExt')}</dt>
+                  <dd>.{fileExtension(file.name) || '—'}</dd>
+                </div>
+                <div>
+                  <dt>{t('upload.studio.metaMime')}</dt>
+                  <dd>{file.type || 'application/octet-stream'}</dd>
+                </div>
+                <div>
+                  <dt>{t('upload.studio.metaModified')}</dt>
+                  <dd>{dateFmt.format(new Date(file.lastModified))}</dd>
+                </div>
+                <div>
+                  <dt>{t('upload.studio.metaCreated')}</dt>
+                  <dd>{dateFmt.format(new Date(file.lastModified))}</dd>
+                </div>
+                <div>
+                  <dt>{t('upload.studio.metaAuthor')}</dt>
+                  <dd>{t('upload.studio.metaAuthorUnknown')}</dd>
+                </div>
+              </dl>
+            )}
+          </div>
         </aside>
       </div>
+
+      {uploadDone && resultDoc && (
+        <div className="upload-success-banner">
+          <IconCheckCircle />
+          <div>
+            <strong>{t('upload.successTitle')}</strong>
+            <p>{resultDoc.fileName}</p>
+          </div>
+        </div>
+      )}
+
+      {uploadError && !uploadDone && (
+        <div className="upload-error-banner">
+          <IconAlert />
+          {uploadError}
+        </div>
+      )}
+
+      <div className="upload-actions-bar">
+        <button
+          type="button"
+          className="btn"
+          disabled={!file || uploading || hashPending}
+          onClick={() => file && void runLocalAnalysis(file)}
+        >
+          {t('upload.studio.analyze')}
+        </button>
+        <button type="button" className="btn" disabled={uploading} onClick={resetForm}>
+          {t('upload.studio.reset')}
+        </button>
+        {!isVersionMode && (
+          <button type="button" className="btn" disabled={uploading} onClick={saveDraft}>
+            {t('upload.studio.draft')}
+          </button>
+        )}
+        <button type="button" className="btn" disabled={uploading} onClick={() => navigate('/documents')}>
+          {t('upload.studio.cancel')}
+        </button>
+        {uploadDone ? (
+          <button type="button" className="btn btn-primary" onClick={() => navigate('/documents')}>
+            {t('upload.backToDocuments')}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => void handleSubmit()}
+            disabled={uploadBlocked}
+          >
+            {uploading ? t('upload.uploading') : t('upload.studio.upload')}
+          </button>
+        )}
+      </div>
+
+      {toast && (
+        <div className={`upload-toast ${toast.kind}`} role="status">
+          {toast.kind === 'success' || toast.kind === 'info' ? <IconCheckCircle /> : <IconAlert />}
+          <span>{toast.message}</span>
+          <button type="button" className="btn btn-sm btn-icon-only" onClick={() => setToast(null)} aria-label="Close">
+            <IconX />
+          </button>
+        </div>
+      )}
     </section>
   )
 }

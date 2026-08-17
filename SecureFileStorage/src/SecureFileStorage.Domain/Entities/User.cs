@@ -12,6 +12,7 @@ public class User
     public DateTime? UpdatedAt { get; set; }
 
     public ICollection<UserRole> UserRoles { get; set; } = [];
+    public ICollection<UserGroupMember> GroupMemberships { get; set; } = [];
     public ICollection<Document> OwnedDocuments { get; set; } = [];
     public ICollection<DocumentPermission> DocumentPermissions { get; set; } = [];
     public ICollection<DocumentFavorite> Favorites { get; set; } = [];

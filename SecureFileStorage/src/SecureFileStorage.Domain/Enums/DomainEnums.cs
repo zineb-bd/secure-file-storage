@@ -17,7 +17,21 @@ public enum StorageProviderType
 public enum DatabaseProviderType
 {
     PostgreSql = 0,
-    SqlServer = 1
+    SqlServer = 1,
+    Oracle = 2,
+    MySql = 3,
+    Other = 4
+}
+
+/// <summary>
+/// Algorithmes disponibles pour les nouveaux fichiers.
+/// AesCbcLegacy reste pris en charge uniquement pour lire les fichiers historiques.
+/// </summary>
+public enum EncryptionAlgorithm
+{
+    AesGcm = 0,
+    ChaCha20Poly1305 = 1,
+    AesCbcLegacy = 2
 }
 
 public enum AuditAction

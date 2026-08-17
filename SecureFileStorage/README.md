@@ -6,8 +6,8 @@ Microservice **ASP.NET Core 8** qui centralise le stockage, la consultation et l
 
 | Fonctionnalité | Description |
 |---|---|
-| Téléversement sécurisé | Chiffrement AES-256 au repos, scan antivirus, hash SHA-256 |
-| Lecture / téléchargement | Contrôle d'accès RBAC par document |
+| Téléversement sécurisé | Compression GZip, chiffrement AES-256 au repos, scan antivirus, hash SHA-256 |
+| Lecture / téléchargement | Déchiffrement + décompression côté serveur, contrôle d'accès RBAC |
 | Métadonnées | Nom, type, taille, propriétaire, catégorie, dates |
 | Versioning | Conservation de toutes les versions |
 | Prévisualisation | PDF, images, documents Office |
@@ -28,6 +28,26 @@ SecureFileStorage/
 ├── docker-compose.yml
 └── Dockerfile
 ```
+
+## Mode de stockage des fichiers
+
+**Stockage physique** : le contenu n’est **pas** enregistré en BLOB / BYTEA dans PostgreSQL.
+
+| Couche | Contenu |
+|---|---|
+| Disque (`./storage/blobs/{SHA-256}.enc`) | Fichier binaire chiffré AES-256 |
+| Base PostgreSQL | Métadonnées (nom, hash, chemin, clé, droits, versions) |
+
+Le fournisseur actif est le **système de fichiers local**. S3 et NAS sont prévus dans la configuration, toujours comme stockage d’objets fichiers, jamais comme colonne BLOB SQL. L’entité `StoredBlob` est une **référence** au fichier physique (chemin + empreinte), pas un type binaire SQL.
+
+### Compression et déchiffrement
+
+| Étape | Traitement |
+|---|---|
+| **Écriture** | Validation → antivirus → **compression GZip** (si gain réel) → **chiffrement AES-256** → fichier `.enc` |
+| **Lecture** | Fichier `.enc` → **déchiffrement AES-256** (clé par fichier, enveloppée par la clé maître) → **décompression** → document original |
+
+La compression a lieu **avant** le chiffrement (un flux chiffré ne se compresse pas). Les fichiers déjà stockés sans compression restent lisibles.
 
 ## Prérequis
 
@@ -131,7 +151,7 @@ Invoke-RestMethod -Method POST -Uri "http://localhost:5001/api/documents" `
 - **RBAC** : Rôles Admin et User + permissions par document
 - **AES-256** : Chiffrement au repos avec clé par fichier
 - **SHA-256** : Empreinte d'intégrité vérifiable
-- **ClamAV** : Scan antivirus avant stockage (activable via config)
+- **Antivirus au téléversement** : scan avant stockage (signatures intégrées + ClamAV optionnel) ; fichier rejeté si menace ou échec du scan, avec alerte et journal d’audit
 - **Audit** : Traçabilité des opérations sur les documents uniquement
 
 ## Configuration

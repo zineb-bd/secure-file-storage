@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef, useState } from 'react'
 import { useI18n } from '@/i18n/I18nContext'
 import type { DocumentDto, DocActionOpts } from '@/types'
 
@@ -36,6 +37,8 @@ function ShareIcon() {
       <circle cx="18" cy="5" r="3" />
       <circle cx="6" cy="12" r="3" />
       <circle cx="18" cy="19" r="3" />
+      <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+      <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
     </svg>
   )
 }
@@ -99,6 +102,7 @@ function TrashIcon() {
     <svg {...iconProps}>
       <path d="M3 6h18" />
       <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
   )
 }
@@ -109,6 +113,16 @@ function PermDeleteIcon() {
       <circle cx="12" cy="12" r="10" />
       <path d="m15 9-6 6" />
       <path d="m9 9 6 6" />
+    </svg>
+  )
+}
+
+function MoreIcon() {
+  return (
+    <svg {...iconProps}>
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
     </svg>
   )
 }
@@ -125,43 +139,12 @@ function FavoriteIcon({ filled }: { filled?: boolean }) {
   )
 }
 
-const ICONS: Record<string, () => React.ReactElement> = {
-  preview: PreviewIcon,
-  download: DownloadIcon,
-  share: ShareIcon,
-  metadata: MetadataIcon,
-  versions: VersionsIcon,
-  archive: ArchiveIcon,
-  restore: RestoreIcon,
-  checkout: CheckoutIcon,
-  checkin: CheckinIcon,
-  trash: TrashIcon,
-  'perm-delete': PermDeleteIcon,
-}
-
-function IconBtn({
-  action,
-  title,
-  variant,
-  onClick,
-}: {
-  action: string
-  title: string
-  variant: string
+type MenuItem = {
+  key: string
+  label: string
+  icon: React.ReactElement
   onClick: () => void
-}) {
-  const Icon = ICONS[action]
-  return (
-    <button
-      type="button"
-      className={`btn btn-sm btn-icon-only btn-action-${variant}`}
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-    >
-      {Icon ? <Icon /> : null}
-    </button>
-  )
+  danger?: boolean
 }
 
 export interface DocActions {
@@ -185,13 +168,96 @@ interface DocActionButtonsProps extends DocActions {
 
 export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProps) {
   const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const menuId = useId()
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onPointer = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const moreItems: MenuItem[] = []
+
+  if (actions.onVersions) {
+    moreItems.push({
+      key: 'versions',
+      label: t('action.versions'),
+      icon: <VersionsIcon />,
+      onClick: actions.onVersions,
+    })
+  }
+  if (opts.showRestore && actions.onRestore) {
+    moreItems.push({
+      key: 'restore',
+      label: t('action.restore'),
+      icon: <RestoreIcon />,
+      onClick: actions.onRestore,
+    })
+  } else if (!opts.noArchive && actions.onArchive) {
+    moreItems.push({
+      key: 'archive',
+      label: t('action.archive'),
+      icon: <ArchiveIcon />,
+      onClick: actions.onArchive,
+    })
+  }
+  if (opts.isLockedByCurrentUser && actions.onCheckin) {
+    moreItems.push({
+      key: 'checkin',
+      label: t('action.checkin'),
+      icon: <CheckinIcon />,
+      onClick: actions.onCheckin,
+    })
+  } else if (!opts.isLocked && opts.canModify !== false && actions.onCheckout) {
+    moreItems.push({
+      key: 'checkout',
+      label: t('action.checkout'),
+      icon: <CheckoutIcon />,
+      onClick: actions.onCheckout,
+    })
+  }
+  if (!opts.noTrash && actions.onTrash) {
+    moreItems.push({
+      key: 'trash',
+      label: t('action.trash'),
+      icon: <TrashIcon />,
+      onClick: actions.onTrash,
+      danger: true,
+    })
+  }
+  if (opts.showPermDelete && actions.onPermDelete) {
+    moreItems.push({
+      key: 'perm-delete',
+      label: t('action.permDelete'),
+      icon: <PermDeleteIcon />,
+      onClick: actions.onPermDelete,
+      danger: true,
+    })
+  }
+
+  const run = (fn?: () => void) => {
+    setOpen(false)
+    fn?.()
+  }
 
   return (
-    <div className="btn-group btn-group-icons">
+    <div className="doc-actions" ref={rootRef}>
       {opts.showFavorite !== false && actions.onFavorite && (
         <button
           type="button"
-          className={`btn btn-sm btn-icon-only btn-action-ghost fav-btn${opts.isFavorite ? ' active' : ''}`}
+          className={`doc-action-btn fav-btn${opts.isFavorite ? ' active' : ''}`}
           title={opts.isFavorite ? t('action.unfavorite') : t('action.favorite')}
           aria-label={opts.isFavorite ? t('action.unfavorite') : t('action.favorite')}
           onClick={actions.onFavorite}
@@ -199,43 +265,86 @@ export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProp
           <FavoriteIcon filled={opts.isFavorite} />
         </button>
       )}
+
       {!opts.noPreview && actions.onPreview && (
-        <IconBtn action="preview" title={t('action.preview')} variant="ghost" onClick={actions.onPreview} />
+        <button
+          type="button"
+          className="doc-action-btn"
+          title={t('action.preview')}
+          aria-label={t('action.preview')}
+          onClick={actions.onPreview}
+        >
+          <PreviewIcon />
+        </button>
       )}
+
       {!opts.noDownload && actions.onDownload && (
-        <IconBtn action="download" title={t('action.download')} variant="primary" onClick={actions.onDownload} />
+        <button
+          type="button"
+          className="doc-action-btn doc-action-primary"
+          title={t('action.download')}
+          aria-label={t('action.download')}
+          onClick={actions.onDownload}
+        >
+          <DownloadIcon />
+        </button>
       )}
+
       {!opts.noShare && actions.onShare && (
-        <IconBtn action="share" title={t('action.collaborate')} variant="ghost" onClick={actions.onShare} />
+        <button
+          type="button"
+          className="doc-action-btn"
+          title={t('action.collaborate')}
+          aria-label={t('action.collaborate')}
+          onClick={actions.onShare}
+        >
+          <ShareIcon />
+        </button>
       )}
+
       {actions.onMetadata && (
-        <IconBtn action="metadata" title={t('action.details')} variant="ghost" onClick={actions.onMetadata} />
+        <button
+          type="button"
+          className="doc-action-btn"
+          title={t('action.details')}
+          aria-label={t('action.details')}
+          onClick={actions.onMetadata}
+        >
+          <MetadataIcon />
+        </button>
       )}
-      {actions.onVersions && (
-        <IconBtn action="versions" title={t('action.versions')} variant="ghost" onClick={actions.onVersions} />
-      )}
-      {opts.showRestore && actions.onRestore ? (
-        <IconBtn action="restore" title={t('action.restore')} variant="success" onClick={actions.onRestore} />
-      ) : (
-        !opts.noArchive &&
-        actions.onArchive && (
-          <IconBtn action="archive" title={t('action.archive')} variant="ghost" onClick={actions.onArchive} />
-        )
-      )}
-      {!opts.noTrash && actions.onTrash && (
-        <IconBtn action="trash" title={t('action.trash')} variant="danger" onClick={actions.onTrash} />
-      )}
-      {opts.showPermDelete && actions.onPermDelete && (
-        <IconBtn action="perm-delete" title={t('action.permDelete')} variant="danger" onClick={actions.onPermDelete} />
-      )}
-      {opts.isLockedByCurrentUser && actions.onCheckin ? (
-        <IconBtn action="checkin" title={t('action.checkin')} variant="success" onClick={actions.onCheckin} />
-      ) : (
-        !opts.isLocked &&
-        opts.canModify !== false &&
-        actions.onCheckout && (
-          <IconBtn action="checkout" title={t('action.checkout')} variant="ghost" onClick={actions.onCheckout} />
-        )
+
+      {moreItems.length > 0 && (
+        <div className="doc-actions-more">
+          <button
+            type="button"
+            className={`doc-action-btn${open ? ' is-open' : ''}`}
+            title={t('action.more')}
+            aria-label={t('action.more')}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            aria-controls={menuId}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <MoreIcon />
+          </button>
+          {open && (
+            <div className="doc-actions-menu" id={menuId} role="menu">
+              {moreItems.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="menuitem"
+                  className={`doc-actions-menu-item${item.danger ? ' is-danger' : ''}`}
+                  onClick={() => run(item.onClick)}
+                >
+                  <span className="doc-actions-menu-icon">{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   )

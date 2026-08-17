@@ -232,8 +232,8 @@
     "en": "Home"
   },
   "nav.documents": {
-    "fr": "Mes fichiers",
-    "en": "My files"
+    "fr": "Mes documents",
+    "en": "My documents"
   },
   "nav.favorites": {
     "fr": "Favoris",
@@ -262,6 +262,10 @@
   "nav.users": {
     "fr": "Utilisateurs",
     "en": "Users"
+  },
+  "nav.groups": {
+    "fr": "Groupes",
+    "en": "Groups"
   },
   "nav.roles": {
     "fr": "Rôles",
@@ -360,8 +364,8 @@
     "en": "Your secure document workspace"
   },
   "page.documents.title": {
-    "fr": "Mes fichiers",
-    "en": "My files"
+    "fr": "Mes documents",
+    "en": "My documents"
   },
   "page.documents.subtitle": {
     "fr": "Recherchez, filtrez et organisez tous vos documents.",
@@ -470,6 +474,14 @@
   "page.adminUsers.subtitle": {
     "fr": "Gérez les utilisateurs et leurs droits d'accès",
     "en": "Manage users and their access permissions"
+  },
+  "page.adminGroups.title": {
+    "fr": "Groupes d'utilisateurs",
+    "en": "User groups"
+  },
+  "page.adminGroups.subtitle": {
+    "fr": "Groupes métier pour les droits d'accès par catégorie",
+    "en": "Business groups for category-based access rights"
   },
   "page.adminRoles.title": {
     "fr": "Rôles & permissions",
@@ -588,8 +600,8 @@
     "en": "Private"
   },
   "vis.shared": {
-    "fr": "Partagé",
-    "en": "Shared"
+    "fr": "Collaborer",
+    "en": "Collaborate"
   },
   "vis.public": {
     "fr": "Public",
@@ -610,6 +622,10 @@
   "btn.cancel": {
     "fr": "Annuler",
     "en": "Cancel"
+  },
+  "btn.done": {
+    "fr": "Terminé",
+    "en": "Done"
   },
   "btn.edit": {
     "fr": "Modifier",
@@ -707,6 +723,30 @@
     "fr": "Aperçu",
     "en": "Preview"
   },
+  "preview.loading": {
+    "fr": "Chargement de l’aperçu…",
+    "en": "Loading preview…"
+  },
+  "preview.retry": {
+    "fr": "Réessayer",
+    "en": "Retry"
+  },
+  "preview.networkError": {
+    "fr": "Impossible de joindre le serveur (API en veille ou réseau). Réessayez dans quelques secondes.",
+    "en": "Could not reach the server (API waking up or network issue). Try again in a few seconds."
+  },
+  "preview.unavailable": {
+    "fr": "Aperçu indisponible. Le fichier a peut‑être disparu après un redéploiement (stockage temporaire Render).",
+    "en": "Preview unavailable. The file may have been lost after a redeploy (Render ephemeral storage)."
+  },
+  "preview.sessionExpired": {
+    "fr": "Session expirée. Veuillez vous reconnecter.",
+    "en": "Session expired. Please sign in again."
+  },
+  "preview.unsupportedType": {
+    "fr": "Aperçu non disponible pour ce type de fichier.",
+    "en": "Preview is not available for this file type."
+  },
   "action.download": {
     "fr": "Télécharger",
     "en": "Download"
@@ -730,6 +770,194 @@
   "action.details": {
     "fr": "Détails",
     "en": "Details"
+  },
+  "details.document": {
+    "fr": "Document",
+    "en": "Document"
+  },
+  "details.tab.info": {
+    "fr": "Infos",
+    "en": "Info"
+  },
+  "details.loading": {
+    "fr": "Chargement des détails…",
+    "en": "Loading details…"
+  },
+  "details.tab.security": {
+    "fr": "Sécurité",
+    "en": "Security"
+  },
+  "details.tab.access": {
+    "fr": "Accès",
+    "en": "Access"
+  },
+  "details.overview": {
+    "fr": "Vue d'ensemble",
+    "en": "Overview"
+  },
+  "details.edit": {
+    "fr": "Informations modifiables",
+    "en": "Editable information"
+  },
+  "details.readOnly": {
+    "fr": "Lecture seule",
+    "en": "Read only"
+  },
+  "details.docId": {
+    "fr": "Identifiant document",
+    "en": "Document ID"
+  },
+  "details.age": {
+    "fr": "Ancienneté",
+    "en": "Age"
+  },
+  "details.days": {
+    "fr": "j",
+    "en": "d"
+  },
+  "details.updatedShort": {
+    "fr": "Déjà modifié",
+    "en": "Already updated"
+  },
+  "details.neverUpdated": {
+    "fr": "Jamais modifié",
+    "en": "Never updated"
+  },
+  "details.versionsCount": {
+    "fr": "versions",
+    "en": "versions"
+  },
+  "details.singleVersion": {
+    "fr": "Version unique",
+    "en": "Single version"
+  },
+  "details.noDescription": {
+    "fr": "Aucune description pour ce document.",
+    "en": "No description for this document."
+  },
+  "details.recentVersions": {
+    "fr": "Historique des versions",
+    "en": "Version history"
+  },
+  "details.ownerId": {
+    "fr": "Identifiant propriétaire",
+    "en": "Owner ID"
+  },
+  "details.updated": {
+    "fr": "Modifié",
+    "en": "Updated"
+  },
+  "details.protection": {
+    "fr": "Protection",
+    "en": "Protection"
+  },
+  "details.antivirus": {
+    "fr": "Antivirus",
+    "en": "Antivirus"
+  },
+  "details.lockStatus": {
+    "fr": "Verrouillage",
+    "en": "Lock"
+  },
+  "details.locked": {
+    "fr": "Verrouillé",
+    "en": "Locked"
+  },
+  "details.unlocked": {
+    "fr": "Non verrouillé",
+    "en": "Unlocked"
+  },
+  "details.visibility": {
+    "fr": "Visibilité",
+    "en": "Visibility"
+  },
+  "details.publicAccess": {
+    "fr": "Accès public",
+    "en": "Public access"
+  },
+  "details.myAccess": {
+    "fr": "Mon accès",
+    "en": "My access"
+  },
+  "details.categoryAccessHint": {
+    "fr": "Les droits effectifs peuvent aussi dépendre des règles de la catégorie et des groupes.",
+    "en": "Effective rights may also depend on category rules and groups."
+  },
+  "details.accessUnavailable": {
+    "fr": "Liste des collaborateurs indisponible.",
+    "en": "Collaborators list unavailable."
+  },
+  "details.type": {
+    "fr": "Type MIME",
+    "en": "MIME type"
+  },
+  "details.version": {
+    "fr": "Version",
+    "en": "Version"
+  },
+  "details.encryptionStatus": {
+    "fr": "Chiffrement",
+    "en": "Encryption"
+  },
+  "details.compressionStatus": {
+    "fr": "Compression",
+    "en": "Compression"
+  },
+  "details.encrypted": {
+    "fr": "Chiffré AES-256",
+    "en": "AES-256 encrypted"
+  },
+  "details.notEncrypted": {
+    "fr": "Non chiffré",
+    "en": "Not encrypted"
+  },
+  "details.compressed": {
+    "fr": "Compressé (GZip)",
+    "en": "Compressed (GZip)"
+  },
+  "details.notCompressed": {
+    "fr": "Non compressé",
+    "en": "Not compressed"
+  },
+  "details.decryptIntegrityTitle": {
+    "fr": "Déchiffrement et intégrité",
+    "en": "Decryption and integrity"
+  },
+  "details.decryptAndVerify": {
+    "fr": "Déchiffrer et vérifier",
+    "en": "Decrypt and verify"
+  },
+  "details.descPlaceholder": {
+    "fr": "Ajouter une description…",
+    "en": "Add a description…"
+  },
+  "details.verifyIntegrity": {
+    "fr": "Vérifier l'intégrité",
+    "en": "Verify integrity"
+  },
+  "details.checking": {
+    "fr": "Vérification…",
+    "en": "Checking…"
+  },
+  "details.integrityOk": {
+    "fr": "Intégrité confirmée",
+    "en": "Integrity confirmed"
+  },
+  "details.integrityFail": {
+    "fr": "Échec de vérification",
+    "en": "Verification failed"
+  },
+  "details.integrityHint": {
+    "fr": "Compare le hash SHA-256 stocké avec le contenu actuel du fichier.",
+    "en": "Compares the stored SHA-256 hash with the current file content."
+  },
+  "details.saved": {
+    "fr": "Modifications enregistrées",
+    "en": "Changes saved"
+  },
+  "details.saving": {
+    "fr": "Enregistrement…",
+    "en": "Saving…"
   },
   "action.versions": {
     "fr": "Versions",
@@ -832,8 +1060,8 @@
     "en": "Antivirus Alert"
   },
   "access.read": {
-    "fr": "Lecture",
-    "en": "Read"
+    "fr": "Lecture seule",
+    "en": "Read only"
   },
   "access.view": {
     "fr": "Consultation",
@@ -848,12 +1076,16 @@
     "en": "Download"
   },
   "access.write": {
-    "fr": "Modification",
-    "en": "Write"
+    "fr": "Accès total ",
+    "en": "Full access "
   },
   "access.edit": {
-    "fr": "Édition",
-    "en": "Edit"
+    "fr": "Accès total",
+    "en": "Full access "
+  },
+  "access.levelHint": {
+    "fr": "Choisissez le niveau : lecture, prévisualisation, téléchargement ou accès total.",
+    "en": "Choose the level: read, preview, download, or full access."
   },
   "role.user": {
     "fr": "Utilisateur",
@@ -1360,8 +1592,8 @@
     "en": "Only the owner and authorized users can access."
   },
   "upload.visCard.shared": {
-    "fr": "Partagez avec des utilisateurs spécifiques et leurs permissions.",
-    "en": "Share with specific users and their permissions."
+    "fr": "Invitez des collaborateurs et définissez leurs droits (lecture, modification…).",
+    "en": "Invite collaborators and set their rights (read, edit…)."
   },
   "upload.visCard.public": {
     "fr": "Accessible à tous les utilisateurs authentifiés selon le niveau choisi.",
@@ -1372,8 +1604,8 @@
     "en": "Authorized users"
   },
   "upload.sharedUsersRequired": {
-    "fr": "Ajoutez au moins un utilisateur valide pour un document partagé.",
-    "en": "Add at least one valid user for a shared document."
+    "fr": "Ajoutez au moins un utilisateur valide pour collaborer sur ce document.",
+    "en": "Add at least one valid user to collaborate on this document."
   },
   "upload.addUser": {
     "fr": "Utilisateur",
@@ -1382,6 +1614,10 @@
   "upload.publicLevel": {
     "fr": "Niveau d'accès public",
     "en": "Public access level"
+  },
+  "upload.accessLevel": {
+    "fr": "Niveau d'accès",
+    "en": "Access level"
   },
   "upload.metadata": {
     "fr": "Métadonnées",
@@ -1415,6 +1651,14 @@
     "fr": "Chiffrement AES-256",
     "en": "AES-256 Encryption"
   },
+  "upload.security.compression": {
+    "fr": "Compression GZip",
+    "en": "GZip compression"
+  },
+  "upload.security.decryption": {
+    "fr": "Déchiffrement à la lecture",
+    "en": "Decryption on read"
+  },
   "upload.security.integrity": {
     "fr": "Contrôle d'intégrité SHA-256",
     "en": "SHA-256 Integrity Check"
@@ -1443,6 +1687,10 @@
     "fr": "Analyse antivirus",
     "en": "Antivirus scan"
   },
+  "upload.pipeline.compress": {
+    "fr": "Compression GZip",
+    "en": "GZip compression"
+  },
   "upload.pipeline.hash": {
     "fr": "Calcul du hash SHA-256",
     "en": "SHA-256 hash computation"
@@ -1468,28 +1716,28 @@
     "en": "Scanning document for threats..."
   },
   "upload.scan.safeTitle": {
-    "fr": "✓ Fichier sûr",
-    "en": "✓ File Safe"
+    "fr": "Sécurisé",
+    "en": "Secure"
   },
   "upload.scan.safeBody": {
-    "fr": "Votre document a été analysé et est sûr à stocker.",
-    "en": "Your document has been scanned and is safe to store."
+    "fr": "Analyse antivirus effectuée au téléversement : aucune menace détectée.",
+    "en": "Antivirus scan completed at upload: no threat detected."
   },
   "upload.scan.threatTitle": {
-    "fr": "⚠ Menace de sécurité détectée",
-    "en": "⚠ Security Threat Detected"
+    "fr": "Menace détectée",
+    "en": "Threat detected"
   },
   "upload.scan.threatBody": {
     "fr": "Le document n'a pas pu être téléversé car une menace de sécurité a été détectée.",
     "en": "The document could not be uploaded because a security threat was detected."
   },
   "upload.scan.skippedTitle": {
-    "fr": "Analyse antivirus non exécutée",
-    "en": "Antivirus scan skipped"
+    "fr": "Analyse antivirus partielle",
+    "en": "Partial antivirus scan"
   },
   "upload.scan.skippedBody": {
-    "fr": "Le service antivirus est désactivé. Le fichier n'est pas marqué comme « sûr ».",
-    "en": "The antivirus service is disabled. The file is not marked as Safe."
+    "fr": "Le scan serveur avancé n'a pas été confirmé. Les signatures locales ont tout de même été vérifiées au téléversement.",
+    "en": "The advanced server scan was not confirmed. Local signatures were still checked at upload."
   },
   "upload.scan.errorTitle": {
     "fr": "Analyse antivirus impossible",
@@ -1498,6 +1746,234 @@
   "upload.scan.errorBody": {
     "fr": "Le scan n'a pas pu être confirmé. Le statut « sûr » n'est pas affiché.",
     "en": "The scan could not be confirmed. Safe status is not shown."
+  },
+  "upload.studio.securityTitle": {
+    "fr": "Analyse de sécurité",
+    "en": "Security analysis"
+  },
+  "upload.studio.integrityTitle": {
+    "fr": "Intégrité du document",
+    "en": "Document integrity"
+  },
+  "upload.studio.previewTitle": {
+    "fr": "Aperçu",
+    "en": "Preview"
+  },
+  "upload.studio.aiTitle": {
+    "fr": "Analyse IA",
+    "en": "AI analysis"
+  },
+  "upload.studio.metaTitle": {
+    "fr": "Métadonnées",
+    "en": "Metadata"
+  },
+  "upload.studio.infoTitle": {
+    "fr": "Informations du document",
+    "en": "Document information"
+  },
+  "upload.studio.docName": {
+    "fr": "Nom du document",
+    "en": "Document name"
+  },
+  "upload.studio.tags": {
+    "fr": "Tags",
+    "en": "Tags"
+  },
+  "upload.studio.tagsPlaceholder": {
+    "fr": "Ajouter un tag et appuyer sur Entrée…",
+    "en": "Add a tag and press Enter…"
+  },
+  "upload.studio.confidentiality": {
+    "fr": "Confidentialité",
+    "en": "Confidentiality"
+  },
+  "upload.studio.expiration": {
+    "fr": "Expiration",
+    "en": "Expiration"
+  },
+  "upload.studio.collaborators": {
+    "fr": "Collaborateurs",
+    "en": "Collaborators"
+  },
+  "upload.studio.analyze": {
+    "fr": "Analyser",
+    "en": "Analyze"
+  },
+  "upload.studio.reset": {
+    "fr": "Réinitialiser",
+    "en": "Reset"
+  },
+  "upload.studio.draft": {
+    "fr": "Brouillon",
+    "en": "Draft"
+  },
+  "upload.studio.upload": {
+    "fr": "Téléverser",
+    "en": "Upload"
+  },
+  "upload.studio.cancel": {
+    "fr": "Annuler",
+    "en": "Cancel"
+  },
+  "upload.studio.scanEngine": {
+    "fr": "Moteur de scan",
+    "en": "Scan engine"
+  },
+  "upload.studio.scanTime": {
+    "fr": "Durée du scan",
+    "en": "Scan time"
+  },
+  "upload.studio.scanProgress": {
+    "fr": "Progression du scan",
+    "en": "Scan progress"
+  },
+  "upload.studio.riskHigh": {
+    "fr": "Risque élevé",
+    "en": "High risk"
+  },
+  "upload.studio.integrityOk": {
+    "fr": "Intégrité vérifiée",
+    "en": "Integrity verified"
+  },
+  "upload.studio.integrityPending": {
+    "fr": "Vérification d'intégrité en attente",
+    "en": "Integrity check pending"
+  },
+  "upload.studio.hashLabel": {
+    "fr": "Empreinte SHA-256",
+    "en": "SHA-256 hash"
+  },
+  "upload.studio.aiPending": {
+    "fr": "Analyse IA en cours…",
+    "en": "AI analysis in progress…"
+  },
+  "upload.studio.aiLanguage": {
+    "fr": "Langue",
+    "en": "Language"
+  },
+  "upload.studio.aiPages": {
+    "fr": "Pages",
+    "en": "Pages"
+  },
+  "upload.studio.aiWords": {
+    "fr": "Mots",
+    "en": "Words"
+  },
+  "upload.studio.aiKeywords": {
+    "fr": "Mots-clés",
+    "en": "Keywords"
+  },
+  "upload.studio.aiCategory": {
+    "fr": "Catégorie suggérée",
+    "en": "Suggested category"
+  },
+  "upload.studio.previewUnavailable": {
+    "fr": "Aperçu indisponible pour ce type de fichier",
+    "en": "Preview unavailable for this file type"
+  },
+  "upload.studio.draftSaved": {
+    "fr": "Brouillon enregistré",
+    "en": "Draft saved"
+  },
+  "upload.studio.toastSuccess": {
+    "fr": "Document téléversé avec succès",
+    "en": "Document uploaded successfully"
+  },
+  "upload.studio.toastThreat": {
+    "fr": "Menace détectée — téléversement bloqué",
+    "en": "Threat detected — upload blocked"
+  },
+  "upload.studio.toastScanDone": {
+    "fr": "Scan terminé",
+    "en": "Scan completed"
+  },
+  "upload.studio.conf.internal": {
+    "fr": "Interne",
+    "en": "Internal"
+  },
+  "upload.studio.conf.confidential": {
+    "fr": "Confidentiel",
+    "en": "Confidential"
+  },
+  "upload.studio.conf.secret": {
+    "fr": "Secret",
+    "en": "Secret"
+  },
+  "upload.studio.localCheckOk": {
+    "fr": "Contrôles locaux OK — l'antivirus serveur s'exécute au téléversement",
+    "en": "Local checks OK — server AV runs on upload"
+  },
+  "upload.studio.preScan": {
+    "fr": "Pré-analyse locale",
+    "en": "Local pre-scan"
+  },
+  "upload.studio.preScanDone": {
+    "fr": "Pré-analyse terminée",
+    "en": "Pre-scan completed"
+  },
+  "upload.studio.engineName": {
+    "fr": "Antivirus serveur (ClamAV / moteur intégré)",
+    "en": "Server antivirus (ClamAV / built-in engine)"
+  },
+  "upload.studio.threatRec": {
+    "fr": "Ne téléversez pas ce fichier. Supprimez-le et contactez votre administrateur si besoin.",
+    "en": "Do not upload this file. Remove it and contact your administrator if needed."
+  },
+  "upload.studio.cancelUpload": {
+    "fr": "Annuler le téléversement",
+    "en": "Cancel upload"
+  },
+  "upload.studio.aiSummary": {
+    "fr": "Résumé",
+    "en": "Summary"
+  },
+  "upload.studio.aiSummaryText": {
+    "fr": "Aperçu heuristique basé sur le nom et le type du fichier. Une analyse IA complète peut être disponible après téléversement.",
+    "en": "Heuristic preview based on file name and type. Full AI analysis may be available after upload."
+  },
+  "upload.studio.metaSize": {
+    "fr": "Taille",
+    "en": "Size"
+  },
+  "upload.studio.metaExt": {
+    "fr": "Extension",
+    "en": "Extension"
+  },
+  "upload.studio.metaMime": {
+    "fr": "Type MIME",
+    "en": "MIME type"
+  },
+  "upload.studio.metaModified": {
+    "fr": "Date de modification",
+    "en": "Modified"
+  },
+  "upload.studio.metaCreated": {
+    "fr": "Date de création",
+    "en": "Created"
+  },
+  "upload.studio.metaAuthor": {
+    "fr": "Auteur",
+    "en": "Author"
+  },
+  "upload.studio.metaAuthorUnknown": {
+    "fr": "Non disponible",
+    "en": "Unavailable"
+  },
+  "upload.studio.verifiedAt": {
+    "fr": "Vérifié le",
+    "en": "Verified at"
+  },
+  "upload.studio.waitingFile": {
+    "fr": "Sélectionnez un document pour lancer l'analyse.",
+    "en": "Select a document to start analysis."
+  },
+  "upload.studio.toastError": {
+    "fr": "Échec du téléversement",
+    "en": "Upload failed"
+  },
+  "upload.studio.toastDraft": {
+    "fr": "Document enregistré comme brouillon",
+    "en": "Document saved as draft"
   },
   "maturity.title": {
     "fr": "Score de maturité documentaire",
@@ -1783,6 +2259,214 @@
     "fr": "Aucun document dans cette catégorie.",
     "en": "No documents in this category."
   },
+  "cat.accessTitle": {
+    "fr": "Accès de la catégorie",
+    "en": "Category access"
+  },
+  "cat.accessDesc": {
+    "fr": "Droits accordés aux groupes pour « {category} ». Si des règles existent, seuls les membres des groupes listés y accèdent (niveau le plus restrictif en cas de conflit).",
+    "en": "Rights granted to groups for “{category}”. When rules exist, only listed group members can access (most restrictive level on conflict)."
+  },
+  "cat.accessEmpty": {
+    "fr": "Aucune règle : l'accès suit uniquement le partage documentaire / la visibilité.",
+    "en": "No rules: access follows document sharing / visibility only."
+  },
+  "cat.accessSelectGroup": {
+    "fr": "Sélectionner un groupe…",
+    "en": "Select a group…"
+  },
+  "cat.accessAdd": {
+    "fr": "Ajouter / mettre à jour",
+    "en": "Add / update"
+  },
+  "cat.accessSaved": {
+    "fr": "Règle d'accès enregistrée.",
+    "en": "Access rule saved."
+  },
+  "cat.accessDeleted": {
+    "fr": "Règle d'accès supprimée.",
+    "en": "Access rule deleted."
+  },
+  "cat.accessLoadError": {
+    "fr": "Impossible de charger les règles d'accès.",
+    "en": "Unable to load access rules."
+  },
+  "cat.accessSaveError": {
+    "fr": "Échec de l'enregistrement de la règle.",
+    "en": "Failed to save the rule."
+  },
+  "groups.title": {
+    "fr": "Groupes métier",
+    "en": "Business groups"
+  },
+  "groups.subtitle": {
+    "fr": "Indépendants des rôles Admin/User. Utilisés pour les droits par catégorie.",
+    "en": "Independent from Admin/User roles. Used for category access rights."
+  },
+  "groups.statTotal": {
+    "fr": "Groupes",
+    "en": "Groups"
+  },
+  "groups.statMembers": {
+    "fr": "Membres au total",
+    "en": "Total members"
+  },
+  "groups.statActive": {
+    "fr": "Avec membres",
+    "en": "With members"
+  },
+  "groups.statEmpty": {
+    "fr": "Groupes vides",
+    "en": "Empty groups"
+  },
+  "groups.searchPlaceholder": {
+    "fr": "Rechercher un groupe…",
+    "en": "Search a group…"
+  },
+  "groups.noResults": {
+    "fr": "Aucun résultat",
+    "en": "No results"
+  },
+  "groups.noResultsHint": {
+    "fr": "Essayez un autre nom ou une autre description.",
+    "en": "Try another name or description."
+  },
+  "groups.emptyHint": {
+    "fr": "Créez un premier groupe métier (RH, Finance…) puis attribuez des droits par catégorie.",
+    "en": "Create a first business group (HR, Finance…) then assign category rights."
+  },
+  "groups.manageTitle": {
+    "fr": "Gérer « {name} »",
+    "en": "Manage “{name}”"
+  },
+  "groups.permissionsTitle": {
+    "fr": "Permissions du groupe",
+    "en": "Group permissions"
+  },
+  "groups.permissionsDesc": {
+    "fr": "Ces droits s'appliquent aux documents de chaque catégorie concernée.",
+    "en": "These rights apply to documents in each selected category."
+  },
+  "groups.permissionsEmpty": {
+    "fr": "Aucune permission de catégorie n'est encore attribuée à ce groupe.",
+    "en": "No category permission has been assigned to this group yet."
+  },
+  "groups.grantPermission": {
+    "fr": "Accorder le droit",
+    "en": "Grant permission"
+  },
+  "groups.permissionSaved": {
+    "fr": "Permission du groupe enregistrée.",
+    "en": "Group permission saved."
+  },
+  "groups.permissionRemoved": {
+    "fr": "Permission du groupe retirée.",
+    "en": "Group permission removed."
+  },
+  "groups.permissionSaveError": {
+    "fr": "Impossible d'enregistrer la permission du groupe.",
+    "en": "Unable to save the group permission."
+  },
+  "groups.membersTitle": {
+    "fr": "Membres du groupe",
+    "en": "Group members"
+  },
+  "groups.membersDesc": {
+    "fr": "Les membres reçoivent les permissions accordées à ce groupe.",
+    "en": "Members receive the permissions granted to this group."
+  },
+  "groups.create": {
+    "fr": "Nouveau groupe",
+    "en": "New group"
+  },
+  "groups.empty": {
+    "fr": "Aucun groupe pour le moment.",
+    "en": "No groups yet."
+  },
+  "groups.colName": {
+    "fr": "Nom",
+    "en": "Name"
+  },
+  "groups.colMembers": {
+    "fr": "Membres",
+    "en": "Members"
+  },
+  "groups.colDescription": {
+    "fr": "Description",
+    "en": "Description"
+  },
+  "groups.manage": {
+    "fr": "Gérer",
+    "en": "Manage"
+  },
+  "groups.deleteBlocked": {
+    "fr": "Retirez d'abord tous les membres.",
+    "en": "Remove all members first."
+  },
+  "groups.deleteTitle": {
+    "fr": "Supprimer le groupe",
+    "en": "Delete group"
+  },
+  "groups.deleteConfirm": {
+    "fr": "Supprimer le groupe « {name} » ?",
+    "en": "Delete group “{name}”?"
+  },
+  "groups.created": {
+    "fr": "Groupe créé.",
+    "en": "Group created."
+  },
+  "groups.deleted": {
+    "fr": "Groupe supprimé.",
+    "en": "Group deleted."
+  },
+  "groups.memberAdded": {
+    "fr": "Membre ajouté.",
+    "en": "Member added."
+  },
+  "groups.memberRemoved": {
+    "fr": "Membre retiré.",
+    "en": "Member removed."
+  },
+  "groups.addMember": {
+    "fr": "Ajouter",
+    "en": "Add"
+  },
+  "groups.removeMember": {
+    "fr": "Retirer",
+    "en": "Remove"
+  },
+  "groups.selectUser": {
+    "fr": "Sélectionner un utilisateur…",
+    "en": "Select a user…"
+  },
+  "groups.noMembers": {
+    "fr": "Aucun membre dans ce groupe.",
+    "en": "No members in this group."
+  },
+  "groups.noDescription": {
+    "fr": "Pas de description.",
+    "en": "No description."
+  },
+  "groups.nameRequired": {
+    "fr": "Le nom du groupe est obligatoire.",
+    "en": "Group name is required."
+  },
+  "groups.loadError": {
+    "fr": "Impossible de charger les groupes.",
+    "en": "Unable to load groups."
+  },
+  "groups.loading": {
+    "fr": "Chargement des groupes…",
+    "en": "Loading groups…"
+  },
+  "groups.saveError": {
+    "fr": "Échec de l'opération sur le groupe.",
+    "en": "Group operation failed."
+  },
+  "groups.hint": {
+    "fr": "Attribuez ensuite des droits catégorie (Read, Preview, Download, Write) depuis la page Catégories.",
+    "en": "Then assign category rights (Read, Preview, Download, Write) from the Categories page."
+  },
   "cat.fieldName": {
     "fr": "Nom de la catégorie",
     "en": "Category name"
@@ -1956,8 +2640,8 @@
     "en": "No favorites"
   },
   "fav.emptyDesc": {
-    "fr": "Marquez des documents d’une étoile depuis Mes fichiers pour les retrouver ici.",
-    "en": "Star documents from My files to find them here."
+    "fr": "Marquez des documents d’une étoile depuis Mes documents pour les retrouver ici.",
+    "en": "Star documents from My documents to find them here."
   },
   "cat.listTitle": {
     "fr": "Toutes les catégories",
@@ -1970,6 +2654,10 @@
   "collab.document": {
     "fr": "Document",
     "en": "Document"
+  },
+  "collab.categoryPolicyHint": {
+    "fr": "Catégorie « {category} » : les règles groupe/catégorie (si définies) s'appliquent aussi et le niveau le plus restrictif l'emporte.",
+    "en": "Category “{category}”: group/category rules (if any) also apply and the most restrictive level wins."
   },
   "collab.tab.collaborators": {
     "fr": "Collaborateurs",
@@ -2026,6 +2714,94 @@
   "collab.none": {
     "fr": "Aucun collaborateur pour l'instant.",
     "en": "No collaborators yet."
+  },
+  "collab.inviteByEmail": {
+    "fr": "Inviter par e-mail",
+    "en": "Invite by email"
+  },
+  "collab.emailPlaceholder": {
+    "fr": "collegue@entreprise.com",
+    "en": "colleague@company.com"
+  },
+  "collab.copy": {
+    "fr": "Copier",
+    "en": "Copy"
+  },
+  "collab.copied": {
+    "fr": "Copié",
+    "en": "Copied"
+  },
+  "collab.noLinks": {
+    "fr": "Aucun lien de partage actif.",
+    "en": "No active share links."
+  },
+  "collab.linkAnyone": {
+    "fr": "Toute personne disposant du lien pourra accéder au document, sans compte, jusqu'à la date d'expiration que vous définissez.",
+    "en": "Anyone with the link can access the document without an account until the expiration you set."
+  },
+  "collab.linkAccess": {
+    "fr": "Niveau d'accès du lien",
+    "en": "Link access level"
+  },
+  "collab.linkExpires": {
+    "fr": "Expiration du lien",
+    "en": "Link expiration"
+  },
+  "collab.linkExpiresRequired": {
+    "fr": "Choisissez une date d'expiration.",
+    "en": "Choose an expiration date."
+  },
+  "collab.linkExpiresFuture": {
+    "fr": "L'expiration doit être dans le futur.",
+    "en": "Expiration must be in the future."
+  },
+  "collab.linkCreated": {
+    "fr": "Lien public créé. Toute personne peut l'ouvrir sans compte (hors de votre PC).",
+    "en": "Public link created. Anyone can open it without an account (outside your PC)."
+  },
+  "shareLink.badge": {
+    "fr": "Lien de partage",
+    "en": "Share link"
+  },
+  "shareLink.missingToken": {
+    "fr": "Lien incomplet : jeton manquant.",
+    "en": "Incomplete link: missing token."
+  },
+  "shareLink.invalid": {
+    "fr": "Lien invalide, expiré ou révoqué.",
+    "en": "Invalid, expired, or revoked link."
+  },
+  "shareLink.errorTitle": {
+    "fr": "Accès impossible",
+    "en": "Access unavailable"
+  },
+  "shareLink.goLogin": {
+    "fr": "Aller à la connexion",
+    "en": "Go to login"
+  },
+  "shareLink.sharedBy": {
+    "fr": "Partagé par",
+    "en": "Shared by"
+  },
+  "shareLink.expires": {
+    "fr": "Expire le",
+    "en": "Expires"
+  },
+  "shareLink.download": {
+    "fr": "Télécharger",
+    "en": "Download"
+  },
+  "shareLink.downloadDenied": {
+    "fr": "Téléchargement non autorisé pour ce lien.",
+    "en": "Download not allowed for this link."
+  },
+  "shareLink.previewHint": {
+    "fr": "Aperçu limité pour ce type de fichier. Utilisez le téléchargement si disponible.",
+    "en": "Limited preview for this file type. Use download if available."
+  },
+  "shareLink.redirecting": {
+    "fr": "Ouverture du document partagé…",
+    "en": "Opening shared document…"
   },
   "collab.expired": {
     "fr": "Expiré",
@@ -3464,8 +4240,8 @@
     "en": "Document Security"
   },
   "settings.nav.storage": {
-    "fr": "Base de données",
-    "en": "Database"
+    "fr": "Stockage",
+    "en": "Storage"
   },
   "settings.nav.documents": {
     "fr": "Documents",
@@ -3487,17 +4263,205 @@
     "fr": "Paramètres généraux de la plateforme et préférences d'affichage.",
     "en": "General platform settings and display preferences."
   },
+  "settings.appearance": {
+    "fr": "Apparence",
+    "en": "Appearance"
+  },
+  "settings.appearanceDesc": {
+    "fr": "Langue, thème et page d'accueil après connexion.",
+    "en": "Language, theme and home page after sign-in."
+  },
+  "settings.theme": {
+    "fr": "Thème",
+    "en": "Theme"
+  },
+  "settings.theme.light": {
+    "fr": "Clair",
+    "en": "Light"
+  },
+  "settings.theme.dark": {
+    "fr": "Sombre",
+    "en": "Dark"
+  },
+  "settings.themeHint": {
+    "fr": "Appliqué immédiatement à toute l'interface.",
+    "en": "Applied immediately across the whole interface."
+  },
+  "settings.homePage": {
+    "fr": "Page d'accueil",
+    "en": "Home page"
+  },
+  "settings.homePageHint": {
+    "fr": "Page ouverte après connexion ou en cliquant sur le logo.",
+    "en": "Page opened after sign-in or when clicking the logo."
+  },
+  "settings.home.dashboard": {
+    "fr": "Tableau de bord",
+    "en": "Dashboard"
+  },
+  "settings.home.documents": {
+    "fr": "Documents",
+    "en": "Documents"
+  },
+  "settings.home.favorites": {
+    "fr": "Favoris",
+    "en": "Favorites"
+  },
+  "settings.home.shared": {
+    "fr": "Partagés",
+    "en": "Shared"
+  },
+  "settings.home.categories": {
+    "fr": "Catégories",
+    "en": "Categories"
+  },
+  "settings.tableDensity": {
+    "fr": "Densité des listes",
+    "en": "List density"
+  },
+  "settings.compactTable": {
+    "fr": "Mode compact",
+    "en": "Compact mode"
+  },
+  "settings.compactTableHint": {
+    "fr": "Réduit l'espacement des tableaux de documents.",
+    "en": "Reduces spacing in document tables."
+  },
+  "settings.notificationsDesc": {
+    "fr": "Contrôlez les alertes affichées dans l'application et par e-mail.",
+    "en": "Control alerts shown in the app and by email."
+  },
+  "settings.documentPolicy": {
+    "fr": "Politique documentaire",
+    "en": "Document policy"
+  },
+  "settings.documentPolicyDesc": {
+    "fr": "Limites et formats acceptés lors du téléversement (règles serveur).",
+    "en": "Upload limits and accepted formats (server rules)."
+  },
+  "settings.maxFileSize": {
+    "fr": "Taille max. par fichier",
+    "en": "Max file size"
+  },
+  "settings.maxFileSizeHint": {
+    "fr": "Tout fichier plus volumineux est rejeté à l'upload.",
+    "en": "Larger files are rejected on upload."
+  },
+  "settings.defaultCategories": {
+    "fr": "Catégories par défaut",
+    "en": "Default categories"
+  },
+  "settings.allowedExtensions": {
+    "fr": "Extensions autorisées",
+    "en": "Allowed extensions"
+  },
+  "settings.allowedExtensionsHint": {
+    "fr": "Aligné sur la validation serveur (FileValidator).",
+    "en": "Aligned with server-side validation (FileValidator)."
+  },
+  "settings.platformInfo": {
+    "fr": "Informations plateforme",
+    "en": "Platform information"
+  },
+  "settings.platform": {
+    "fr": "Plateforme",
+    "en": "Platform"
+  },
+  "settings.locale": {
+    "fr": "Locale",
+    "en": "Locale"
+  },
+  "settings.storageProvider": {
+    "fr": "Fournisseur de stockage",
+    "en": "Storage provider"
+  },
+  "settings.documentsTotal": {
+    "fr": "Documents",
+    "en": "Documents"
+  },
   "settings.securityDesc": {
-    "fr": "Authentification, sessions et gestion des clés de chiffrement.",
-    "en": "Authentication, sessions and encryption key management."
+    "fr": "Authentification, sessions et clés de chiffrement.",
+    "en": "Authentication, sessions and encryption keys."
   },
   "settings.documentSecurityDesc": {
     "fr": "Protection, chiffrement et intégrité des documents.",
     "en": "Document protection, encryption and integrity."
   },
   "settings.storageDesc": {
-    "fr": "Choisissez la base de données à utiliser et sa chaîne de connexion.",
-    "en": "Choose which database to use and its connection string."
+    "fr": "Configurer le stockage des fichiers, la compression et la base de données.",
+    "en": "Configure file storage, compression and database."
+  },
+  "settings.compressionToggleHint": {
+    "fr": "Active la compression GZip avant chiffrement pour les nouveaux fichiers.",
+    "en": "Enable GZip compression before encryption for new files."
+  },
+  "settings.encryptionAlgorithm": {
+    "fr": "Algorithme de chiffrement",
+    "en": "Encryption algorithm"
+  },
+  "settings.encryptionAlgorithmHint": {
+    "fr": "Appliqué aux nouveaux fichiers. Les fichiers existants gardent leur algorithme afin de rester lisibles.",
+    "en": "Applied to new files. Existing files keep their algorithm to remain readable."
+  },
+  "settings.storageKeyAssociation": {
+    "fr": "Clé maître active associée à cette configuration de stockage. La rotation ne concerne que ce stockage.",
+    "en": "Active master key associated with this storage configuration. Rotation affects this storage only."
+  },
+  "settings.encryptionAlgorithm.aesGcm": {
+    "fr": "AES-256-GCM (recommandé)",
+    "en": "AES-256-GCM (recommended)"
+  },
+  "settings.encryptionAlgorithm.chacha20": {
+    "fr": "ChaCha20-Poly1305",
+    "en": "ChaCha20-Poly1305"
+  },
+  "settings.storageMode.title": {
+    "fr": "Mode de stockage des fichiers",
+    "en": "File storage mode"
+  },
+  "settings.storageMode.physical": {
+    "fr": "Physique — fichier binaire chiffré sur disque (.enc)",
+    "en": "Physical — encrypted binary file on disk (.enc)"
+  },
+  "settings.storageMode.notBlob": {
+    "fr": "Pas de BLOB / BYTEA en base de données",
+    "en": "Not stored as a SQL BLOB / BYTEA"
+  },
+  "settings.storageMode.hint": {
+    "fr": "PostgreSQL ne conserve que les métadonnées (nom, hash, chemin, clé). Le contenu est un fichier physique : {chemin}/blobs/{empreinte}.enc",
+    "en": "PostgreSQL stores metadata only (name, hash, path, key). Content is a physical file: {path}/blobs/{hash}.enc"
+  },
+  "settings.storagePipeline.title": {
+    "fr": "Pipeline écriture / lecture",
+    "en": "Write / read pipeline"
+  },
+  "settings.storagePipeline.desc": {
+    "fr": "Ordre des traitements côté serveur pour chaque fichier stocké.",
+    "en": "Server-side processing order for every stored file."
+  },
+  "settings.storagePipeline.writeLabel": {
+    "fr": "Écriture",
+    "en": "Write"
+  },
+  "settings.storagePipeline.readLabel": {
+    "fr": "Lecture",
+    "en": "Read"
+  },
+  "settings.storagePipeline.write": {
+    "fr": "validation → antivirus → compression GZip → chiffrement AES-256 → fichier .enc",
+    "en": "validation → antivirus → GZip compression → AES-256 encryption → .enc file"
+  },
+  "settings.storagePipeline.read": {
+    "fr": "fichier .enc → déchiffrement AES-256 → décompression GZip → document original",
+    "en": ".enc file → AES-256 decryption → GZip decompression → original document"
+  },
+  "settings.compressDecrypt.title": {
+    "fr": "Compression et déchiffrement",
+    "en": "Compression and decryption"
+  },
+  "settings.compressDecrypt.desc": {
+    "fr": "Les fichiers sont compressés puis chiffrés au dépôt ; à la lecture, le serveur déchiffre puis décompresse automatiquement.",
+    "en": "Files are compressed then encrypted on upload; on read, the server decrypts then decompresses automatically."
   },
   "settings.documentsDesc": {
     "fr": "Règles de gestion et limites applicables aux documents.",
@@ -3684,8 +4648,16 @@
     "en": "Encryption at Rest"
   },
   "settings.encryptionAtRestDesc": {
-    "fr": "Les fichiers sont chiffrés avant stockage.",
-    "en": "Files are encrypted before storage."
+    "fr": "Les fichiers sont chiffrés AES-256 avant stockage.",
+    "en": "Files are AES-256 encrypted before storage."
+  },
+  "settings.compression": {
+    "fr": "Compression GZip",
+    "en": "GZip compression"
+  },
+  "settings.compressionDesc": {
+    "fr": "Compression avant chiffrement des nouveaux fichiers.",
+    "en": "Compression before encryption for new files."
   },
   "settings.aes256": {
     "fr": "Chiffrement AES-256",
@@ -3812,8 +4784,8 @@
     "en": "Total capacity is defined by the host infrastructure."
   },
   "settings.storageConfig": {
-    "fr": "Configuration de la base de données",
-    "en": "Database configuration"
+    "fr": "Configuration du stockage",
+    "en": "Storage configuration"
   },
   "settings.db.configDesc": {
     "fr": "Sélectionnez PostgreSQL ou Oracle, ou connectez une autre base via sa chaîne de connexion.",
@@ -4232,16 +5204,16 @@
     "en": "{doc} was deleted"
   },
   "home.access.Read": {
-    "fr": "Consultation",
-    "en": "View"
+    "fr": "Lecture seule",
+    "en": "Read only"
   },
   "home.access.Download": {
     "fr": "Téléchargement",
     "en": "Download"
   },
   "home.access.Write": {
-    "fr": "Modification",
-    "en": "Edit"
+    "fr": "Accès total ",
+    "en": "Full access "
   },
   "home.access.Preview": {
     "fr": "Prévisualisation",
@@ -4259,33 +5231,13 @@
     "fr": "Utilisateurs",
     "en": "Users"
   },
-  "adminDash.quickLinks": {
-    "fr": "Accès administration",
-    "en": "Administration"
-  },
-  "adminDash.usersDesc": {
-    "fr": "Gérer les comptes utilisateurs",
-    "en": "Manage user accounts"
-  },
-  "adminDash.rolesDesc": {
-    "fr": "Rôles et permissions",
-    "en": "Roles and permissions"
-  },
-  "adminDash.auditDesc": {
-    "fr": "Traçabilité documentaire",
-    "en": "Document audit trail"
-  },
-  "adminDash.configDesc": {
-    "fr": "Paramètres système",
-    "en": "System settings"
-  },
   "chart.section": {
     "fr": "Diagrammes",
     "en": "Charts"
   },
   "chart.sectionHint": {
-    "fr": "Répartition du stockage, des documents et de l'activité récente.",
-    "en": "Storage, documents and recent activity breakdown."
+    "fr": "Répartition des documents et de l'activité récente.",
+    "en": "Document distribution and recent activity."
   },
   "chart.empty": {
     "fr": "Pas encore de données à afficher.",
@@ -4312,20 +5264,20 @@
     "en": "Logical"
   },
   "chart.categories.title": {
-    "fr": "Par catégorie",
-    "en": "By category"
+    "fr": " catégorie",
+    "en": " category"
   },
   "chart.types.title": {
-    "fr": "Par type de fichier",
-    "en": "By file type"
+    "fr": " type de fichier",
+    "en": " file type"
   },
   "chart.activity.title": {
-    "fr": "Activité (7 jours)",
-    "en": "Activity (7 days)"
+    "fr": "Activité ",
+    "en": "Activity "
   },
   "chart.uploads.title": {
-    "fr": "Ajouts (7 jours)",
-    "en": "Uploads (7 days)"
+    "fr": "Ajouts ",
+    "en": "Uploads "
   },
   "chart.visibility.title": {
     "fr": "Visibilité",
@@ -4338,6 +5290,10 @@
   "chart.volume.title": {
     "fr": "Volume par catégorie",
     "en": "Volume by category"
+  },
+  "chart.volume.total": {
+    "fr": "total",
+    "en": "total"
   },
   "chart.type.pdf": { "fr": "PDF", "en": "PDF" },
   "chart.type.images": { "fr": "Images", "en": "Images" },
@@ -4387,6 +5343,10 @@
   "chat.typing": {
     "fr": "L'assistant réfléchit…",
     "en": "Assistant is thinking…"
+  },
+  "chat.privacy": {
+    "fr": "Les conversations ne sont pas conservées. Seuls des compteurs anonymes par thème sont utilisés pour les statistiques.",
+    "en": "Conversations are not retained. Only anonymous topic counters are used for statistics."
   },
   "chat.error": {
     "fr": "Impossible d'obtenir une réponse pour le moment. Réessayez ou choisissez une suggestion ci-dessous.",
@@ -4509,7 +5469,7 @@
     "en": "System configuration (Admin → Config) lets you adjust storage settings and related platform options."
   },
   "chat.faq.security": {
-    "fr": "SecureDocs chiffre les fichiers avant stockage, contrôle l'accès par rôles et permissions, et peut vérifier l'intégrité (hash). Les sessions sont protégées par JWT.",
-    "en": "SecureDocs encrypts files before storage, enforces role-based access, and can verify integrity (hash). Sessions are protected with JWT."
+    "fr": "SecureDocs compresse (GZip) puis chiffre (AES-256) avant stockage. À la lecture, le serveur déchiffre et décompresse. L'accès est contrôlé par rôles ; l'intégrité se vérifie par hash SHA-256. Les sessions sont protégées par JWT.",
+    "en": "SecureDocs GZip-compresses then AES-256 encrypts before storage. On read, the server decrypts and decompresses. Access is role-based; integrity uses SHA-256. Sessions are protected with JWT."
   }
 }

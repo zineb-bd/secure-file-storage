@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -10,6 +10,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureFileStorage.Application", "src\SecureFileStorage.Application\SecureFileStorage.Application.csproj", "{C3D4E5F6-A7B8-9012-CDEF-123456789012}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureFileStorage.Infrastructure", "src\SecureFileStorage.Infrastructure\SecureFileStorage.Infrastructure.csproj", "{D4E5F6A7-B8C9-0123-DEF0-234567890123}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B3580CE2-7AF2-48B4-9DA7-E62CE2A686CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureFileStorage.Tests", "tests\SecureFileStorage.Tests\SecureFileStorage.Tests.csproj", "{AF517F0F-5AD7-4839-8E2E-4D61F0C2CA29}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,5 +37,12 @@ Global
 		{D4E5F6A7-B8C9-0123-DEF0-234567890123}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4E5F6A7-B8C9-0123-DEF0-234567890123}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4E5F6A7-B8C9-0123-DEF0-234567890123}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF517F0F-5AD7-4839-8E2E-4D61F0C2CA29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF517F0F-5AD7-4839-8E2E-4D61F0C2CA29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF517F0F-5AD7-4839-8E2E-4D61F0C2CA29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF517F0F-5AD7-4839-8E2E-4D61F0C2CA29}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AF517F0F-5AD7-4839-8E2E-4D61F0C2CA29} = {B3580CE2-7AF2-48B4-9DA7-E62CE2A686CA}
 	EndGlobalSection
 EndGlobal

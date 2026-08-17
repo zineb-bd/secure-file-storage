@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from '@/api/client'
 import { ArchiveDocumentList } from '@/components/archive/ArchiveDocumentList'
 import { ArchiveSkeleton } from '@/components/archive/ArchiveSkeleton'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/context/AuthContext'
 import { useI18n } from '@/i18n/I18nContext'
 import { buildQuery } from '@/utils/format'
@@ -40,10 +39,15 @@ export function ArchivedPage() {
   }, [load, isAuthenticated])
 
   return (
-    <section className="page archive-page" id="page-archived">
-      <PageHeader title={t('page.archived.title')} subtitle={t('page.archived.subtitle')} />
-
-      {error && <div className="msg error">{error}</div>}
+    <section className="page archive-page files-like-page" id="page-archived">
+      {error && (
+        <div className="msg error">
+          {error}
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => void load()}>
+            {t('audit.refresh')}
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <ArchiveSkeleton />

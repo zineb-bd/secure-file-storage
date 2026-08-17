@@ -17,6 +17,7 @@ import { useI18n } from '@/i18n/I18nContext'
 import { buildQuery, fmtDate, fmtSize } from '@/utils/format'
 import {
   periodToRange,
+  statusKind,
   type AuditPeriod,
   type AuditStatusFilter,
 } from '@/utils/auditHelpers'
@@ -24,34 +25,40 @@ import {
   actionIconKind,
   computeDocumentStats,
   displayActionLabel,
-  DOCUMENT_AUDIT_ACTIONS,
   integrityFromLogs,
   isDocumentActivity,
   matchesActionFilter,
   matchesCategoryFilter,
-  matchesDocumentFilter,
   matchesDocumentSearch,
   matchesStatusFilter,
   parseCategory,
   parseDocumentName,
   parseVersion,
+  serverActionForFilter,
   timelineLabel,
   type DocumentMeta,
 } from '@/utils/documentAuditHelpers'
-import { statusKind } from '@/utils/auditHelpers'
 import type { AdminUser, AuditLog, DocumentDetail, DocumentVersion, PagedResult } from '@/types'
 
-const PAGE_SIZES = [10, 25, 50, 100] as const
+/** Charge un pool unique — liste scrollable, sans pagination UI. */
+const FETCH_SIZE = 2000
 
-interface ServerFilters {
+interface AppliedFilters {
   userId: string
-  action: string
+  /** Filtre UI (peut être Edit / VersionCreated / Trash / PermDelete). */
+  actionFilter: string
   resourceId: string
   from: string
   to: string
 }
 
-const EMPTY_SERVER: ServerFilters = { userId: '', action: '', resourceId: '', from: '', to: '' }
+const EMPTY_FILTERS: AppliedFilters = {
+  userId: '',
+  actionFilter: '',
+  resourceId: '',
+  from: '',
+  to: '',
+}
 
 const FILTER_ACTIONS = [
   { value: 'Upload', labelKey: 'docAudit.filter.upload' },
@@ -99,22 +106,17 @@ interface DocumentAuditListProps {
 export function DocumentAuditList({ users }: DocumentAuditListProps) {
   const { t, locale } = useI18n()
 
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState<number>(25)
-  const [serverFilters, setServerFilters] = useState<ServerFilters>(EMPTY_SERVER)
-  const [draftFilters, setDraftFilters] = useState<ServerFilters>(EMPTY_SERVER)
+  const [applied, setApplied] = useState<AppliedFilters>(EMPTY_FILTERS)
+  const [draft, setDraft] = useState<AppliedFilters>(EMPTY_FILTERS)
   const [period, setPeriod] = useState<AuditPeriod>('')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<AuditStatusFilter>('')
   const [categoryFilter, setCategoryFilter] = useState('')
-  const [clientActionFilter, setClientActionFilter] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   const [items, setItems] = useState<AuditLog[]>([])
-  const [totalCount, setTotalCount] = useState(0)
-  const [statsItems, setStatsItems] = useState<AuditLog[]>([])
   const [docMeta, setDocMeta] = useState<Record<string, DocumentMeta>>({})
   const docMetaRef = useRef<Record<string, DocumentMeta>>({})
   const [loading, setLoading] = useState(true)
@@ -133,16 +135,18 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
     window.setTimeout(() => setToast(''), 4200)
   }, [])
 
-  const serverQuery = useMemo(
-    () => ({
-      userId: serverFilters.userId || undefined,
-      action: serverFilters.action || undefined,
-      resourceId: serverFilters.resourceId || undefined,
-      from: serverFilters.from || undefined,
-      to: serverFilters.to || undefined,
-    }),
-    [serverFilters]
-  )
+  const serverQuery = useMemo(() => {
+    const action = applied.actionFilter
+      ? serverActionForFilter(applied.actionFilter)
+      : undefined
+    return {
+      userId: applied.userId || undefined,
+      action: action || undefined,
+      resourceId: applied.resourceId || undefined,
+      from: applied.from || undefined,
+      to: applied.to || undefined,
+    }
+  }, [applied])
 
   useEffect(() => {
     docMetaRef.current = docMeta
@@ -183,58 +187,55 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
     }
   }, [])
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const q = buildQuery({ ...serverQuery, page, pageSize })
-      const statsQ = buildQuery({ ...serverQuery, page: 1, pageSize: 500 })
-
-      const [data, statsData] = await Promise.all([
-        api<PagedResult<AuditLog>>(`/api/admin/audit${q}`),
-        api<PagedResult<AuditLog>>(`/api/admin/audit${statsQ}`),
-      ])
-
-      const pageItems = (data.items || []).filter(isDocumentActivity)
-      const allStats = (statsData.items || []).filter(isDocumentActivity)
-
-      setItems(pageItems)
-      setTotalCount(data.totalCount ?? 0)
-      setStatsItems(allStats)
-      void loadDocMeta([...pageItems, ...allStats])
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : t('msg.loadProfileError')
-      setError(msg)
-    } finally {
-      setLoading(false)
-    }
-  }, [page, pageSize, serverQuery, t, loadDocMeta])
-
   useEffect(() => {
-    void load()
-  }, [load])
+    let cancelled = false
+
+    const run = async () => {
+      setLoading(true)
+      setError('')
+      try {
+        const q = buildQuery({ ...serverQuery, page: 1, pageSize: FETCH_SIZE })
+        const data = await api<PagedResult<AuditLog>>(`/api/admin/audit${q}`)
+        if (cancelled) return
+        const list = (data.items || []).filter(isDocumentActivity)
+        setItems(list)
+        void loadDocMeta(list)
+      } catch (e) {
+        if (cancelled) return
+        const msg = e instanceof Error ? e.message : t('msg.loadProfileError')
+        setError(msg)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [serverQuery, t, loadDocMeta])
 
   const loadDocumentPanel = useCallback(async (docId: string) => {
     setDocPanelLoading(true)
     try {
-      const [detail, versions, audit] = await Promise.all([
+      const [docDetail, versions, audit] = await Promise.all([
         api<DocumentDetail>(`/api/documents/${docId}/detail`).catch(() => null),
         api<DocumentVersion[]>(`/api/documents/${docId}/versions`).catch(() => []),
         api<PagedResult<AuditLog>>(`/api/admin/audit?resourceId=${docId}&page=1&pageSize=100`),
       ])
-      setSelectedDocDetail(detail)
+      setSelectedDocDetail(docDetail)
       setSelectedDocVersions(versions || [])
       setSelectedDocHistory((audit.items || []).filter(isDocumentActivity))
-      if (detail) {
+      if (docDetail) {
         setDocMeta((prev) => ({
           ...prev,
           [docId]: {
-            id: detail.id,
-            fileName: detail.fileName,
-            category: detail.category,
-            contentType: detail.contentType,
-            currentVersion: detail.currentVersion,
-            sha256Hash: detail.sha256Hash,
+            id: docDetail.id,
+            fileName: docDetail.fileName,
+            category: docDetail.category,
+            contentType: docDetail.contentType,
+            currentVersion: docDetail.currentVersion,
+            sha256Hash: docDetail.sha256Hash,
           },
         }))
       }
@@ -253,9 +254,25 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
     void loadDocumentPanel(selectedDocId)
   }, [selectedDocId, loadDocumentPanel])
 
+  const displayed = useMemo(
+    () =>
+      items.filter((log) => {
+        const meta = log.resourceId ? docMeta[log.resourceId] : null
+        return (
+          matchesDocumentSearch(log, search, meta) &&
+          matchesStatusFilter(log, statusFilter) &&
+          matchesCategoryFilter(log, categoryFilter, meta) &&
+          matchesActionFilter(log, applied.actionFilter)
+        )
+      }),
+    [items, search, statusFilter, categoryFilter, applied.actionFilter, docMeta]
+  )
+
+  const stats = useMemo(() => computeDocumentStats(displayed), [displayed])
+
   const documentOptions = useMemo(() => {
     const map = new Map<string, string>()
-    for (const log of statsItems) {
+    for (const log of items) {
       if (!log.resourceId) continue
       if (!map.has(log.resourceId)) {
         map.set(log.resourceId, parseDocumentName(log, docMeta[log.resourceId]))
@@ -264,64 +281,57 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
     return [...map.entries()]
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name))
-  }, [statsItems, docMeta])
+  }, [items, docMeta])
 
   const categoryOptions = useMemo(() => {
     const set = new Set<string>()
-    for (const log of statsItems) {
+    for (const log of items) {
       const cat = parseCategory(log, log.resourceId ? docMeta[log.resourceId] : null)
       if (cat && cat !== '—') set.add(cat)
     }
     return [...set].sort()
-  }, [statsItems, docMeta])
+  }, [items, docMeta])
 
-  const displayed = useMemo(() => {
-    return items.filter((log) => {
-      const meta = log.resourceId ? docMeta[log.resourceId] : null
-      return (
-        matchesDocumentSearch(log, search, meta) &&
-        matchesStatusFilter(log, statusFilter) &&
-        matchesCategoryFilter(log, categoryFilter, meta) &&
-        matchesDocumentFilter(log, serverFilters.resourceId) &&
-        matchesActionFilter(log, clientActionFilter)
-      )
-    })
-  }, [items, search, statusFilter, categoryFilter, serverFilters.resourceId, clientActionFilter, docMeta])
+  const hasAppliedFilters = Object.values(applied).some((v) => v !== '')
+  const hasAnyFilters =
+    hasAppliedFilters || search.trim() !== '' || statusFilter !== '' || categoryFilter !== ''
 
-  const stats = useMemo(() => {
-    const computed = computeDocumentStats(statsItems)
-    return { ...computed, total: totalCount }
-  }, [statsItems, totalCount])
-
-  const hasClientFilters =
-    search.trim() !== '' ||
-    statusFilter !== '' ||
-    categoryFilter !== '' ||
-    clientActionFilter !== ''
-  const hasServerFilters = Object.values(serverFilters).some((v) => v !== '')
-
-  const applyPeriod = (p: AuditPeriod) => {
-    setPeriod(p)
-    if (p === '' || p === 'custom') return
-    const range = periodToRange(p)
-    setDraftFilters((f) => ({ ...f, from: range.from, to: range.to }))
-    setServerFilters((f) => ({ ...f, from: range.from, to: range.to }))
-    setPage(1)
-  }
-
-  const applyFilters = () => {
-    let from = draftFilters.from
-    let to = draftFilters.to
-    if (period === 'custom') {
+  const resolvePeriodDates = (p: AuditPeriod, draftState: AppliedFilters) => {
+    if (p === '' || p === 'custom') {
+      if (p === '') return { from: '', to: '' }
+      let from = draftState.from
+      let to = draftState.to
       if (customFrom) from = new Date(customFrom).toISOString()
       if (customTo) {
         const d = new Date(customTo)
         d.setHours(23, 59, 59, 999)
         to = d.toISOString()
       }
+      return { from, to }
     }
-    setServerFilters({ ...draftFilters, from, to })
-    setPage(1)
+    return periodToRange(p)
+  }
+
+  const applyPeriod = (p: AuditPeriod) => {
+    setPeriod(p)
+    if (p === 'custom') return
+
+    if (p === '') {
+      setCustomFrom('')
+      setCustomTo('')
+      setDraft((f) => ({ ...f, from: '', to: '' }))
+      setApplied((f) => ({ ...f, from: '', to: '' }))
+      return
+    }
+
+    const range = periodToRange(p)
+    setDraft((f) => ({ ...f, from: range.from, to: range.to }))
+    setApplied((f) => ({ ...f, from: range.from, to: range.to }))
+  }
+
+  const applyFilters = () => {
+    const { from, to } = resolvePeriodDates(period, draft)
+    setApplied({ ...draft, from, to })
     setFiltersOpen(false)
   }
 
@@ -329,14 +339,12 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
     setSearch('')
     setStatusFilter('')
     setCategoryFilter('')
-    setClientActionFilter('')
     setPeriod('')
     setCustomFrom('')
     setCustomTo('')
-    setDraftFilters(EMPTY_SERVER)
-    setServerFilters(EMPTY_SERVER)
+    setDraft(EMPTY_FILTERS)
+    setApplied(EMPTY_FILTERS)
     setSelectedDocId(null)
-    setPage(1)
   }
 
   const exportLogs = async () => {
@@ -360,8 +368,6 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
     if (!resourceId) return
     setSelectedDocId(resourceId)
   }
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
 
   const renderStatus = (log: AuditLog) => {
     const s = statusKind(log)
@@ -478,7 +484,7 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
       </div>
       <h3>{t('docAudit.emptyTitle')}</h3>
       <p>{t('docAudit.emptyDesc')}</p>
-      {(hasClientFilters || hasServerFilters) && (
+      {hasAnyFilters && (
         <button type="button" className="btn btn-outline" onClick={clearFilters}>
           {t('docAudit.clearFilters')}
         </button>
@@ -514,12 +520,15 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
               <button
                 type="button"
                 className={`btn btn-sm btn-outline audit-filter-toggle${filtersOpen ? ' active' : ''}`}
-                onClick={() => setFiltersOpen((o) => !o)}
+                onClick={() => {
+                  if (!filtersOpen) setDraft(applied)
+                  setFiltersOpen((o) => !o)
+                }}
               >
                 <IconFilter size={16} />
                 {t('filter.advanced')}
               </button>
-              {(hasClientFilters || hasServerFilters) && (
+              {hasAnyFilters && (
                 <button type="button" className="btn btn-sm btn-outline" onClick={clearFilters}>
                   {t('docAudit.clearFilters')}
                 </button>
@@ -577,8 +586,8 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
                   <label htmlFor="doc-audit-document">{t('docAudit.colDocument')}</label>
                   <select
                     id="doc-audit-document"
-                    value={draftFilters.resourceId}
-                    onChange={(e) => setDraftFilters((f) => ({ ...f, resourceId: e.target.value }))}
+                    value={draft.resourceId}
+                    onChange={(e) => setDraft((f) => ({ ...f, resourceId: e.target.value }))}
                   >
                     <option value="">{t('filter.all')}</option>
                     {documentOptions.map((d) => (
@@ -592,8 +601,8 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
                   <label htmlFor="doc-audit-user">{t('audit.colUser')}</label>
                   <select
                     id="doc-audit-user"
-                    value={draftFilters.userId}
-                    onChange={(e) => setDraftFilters((f) => ({ ...f, userId: e.target.value }))}
+                    value={draft.userId}
+                    onChange={(e) => setDraft((f) => ({ ...f, userId: e.target.value }))}
                   >
                     <option value="">{t('filter.all')}</option>
                     {users.map((u) => (
@@ -607,18 +616,8 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
                   <label htmlFor="doc-audit-action">{t('audit.colAction')}</label>
                   <select
                     id="doc-audit-action"
-                    value={clientActionFilter || draftFilters.action}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      const serverActions = new Set(DOCUMENT_AUDIT_ACTIONS.map(String))
-                      if (serverActions.has(val)) {
-                        setDraftFilters((f) => ({ ...f, action: val }))
-                        setClientActionFilter('')
-                      } else {
-                        setDraftFilters((f) => ({ ...f, action: '' }))
-                        setClientActionFilter(val)
-                      }
-                    }}
+                    value={draft.actionFilter}
+                    onChange={(e) => setDraft((f) => ({ ...f, actionFilter: e.target.value }))}
                   >
                     <option value="">{t('filter.all')}</option>
                     {FILTER_ACTIONS.map((a) => (
@@ -668,7 +667,7 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
           <div className="audit-stats-row doc-audit-stats-row">
             <div className="audit-stat-card">
               <div className="audit-stat-icon audit-stat-icon-blue">
-                <IconList size={20} />
+                <IconList size={18} />
               </div>
               <div>
                 <div className="audit-stat-value">{stats.total}</div>
@@ -677,7 +676,7 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
             </div>
             <div className="audit-stat-card">
               <div className="audit-stat-icon audit-stat-icon-green">
-                <IconList size={20} />
+                <IconList size={18} />
               </div>
               <div>
                 <div className="audit-stat-value">{stats.uploaded}</div>
@@ -686,7 +685,7 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
             </div>
             <div className="audit-stat-card">
               <div className="audit-stat-icon audit-stat-icon-indigo">
-                <IconFileStack size={20} />
+                <IconFileStack size={18} />
               </div>
               <div>
                 <div className="audit-stat-value">{stats.downloaded}</div>
@@ -695,19 +694,16 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
             </div>
             <div className="audit-stat-card">
               <div className="audit-stat-icon audit-stat-icon-slate">
-                <IconClock size={20} />
+                <IconClock size={18} />
               </div>
               <div>
                 <div className="audit-stat-value">{stats.modified}</div>
                 <div className="audit-stat-label">{t('docAudit.statModified')}</div>
               </div>
             </div>
-          </div>
-
-          <div className="audit-stats-row doc-audit-stats-row doc-audit-stats-row-secondary">
             <div className="audit-stat-card">
               <div className="audit-stat-icon audit-stat-icon-blue">
-                <IconUsers size={20} />
+                <IconUsers size={18} />
               </div>
               <div>
                 <div className="audit-stat-value">{stats.shared}</div>
@@ -716,7 +712,7 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
             </div>
             <div className="audit-stat-card">
               <div className="audit-stat-icon audit-stat-icon-amber">
-                <IconRestore size={20} />
+                <IconRestore size={18} />
               </div>
               <div>
                 <div className="audit-stat-value">{stats.archived}</div>
@@ -725,7 +721,7 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
             </div>
             <div className="audit-stat-card">
               <div className="audit-stat-icon audit-stat-icon-green">
-                <IconRestore size={20} />
+                <IconRestore size={18} />
               </div>
               <div>
                 <div className="audit-stat-value">{stats.restored}</div>
@@ -734,7 +730,7 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
             </div>
             <div className="audit-stat-card">
               <div className="audit-stat-icon audit-stat-icon-slate">
-                <IconTrash size={20} />
+                <IconTrash size={18} />
               </div>
               <div>
                 <div className="audit-stat-value">{stats.deleted}</div>
@@ -852,52 +848,6 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
               <div className="audit-desktop-view">{renderTable()}</div>
               <div className="audit-mobile-view">{renderCards()}</div>
             </>
-          )}
-
-          {totalCount > 0 && (
-            <div className="audit-pagination">
-              <div className="audit-pagination-info">
-                {t('audit.paginationInfo', {
-                  from: String((page - 1) * pageSize + 1),
-                  to: String(Math.min(page * pageSize, totalCount)),
-                  total: String(totalCount),
-                })}
-              </div>
-              <div className="audit-pagination-controls">
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value))
-                    setPage(1)
-                  }}
-                >
-                  {PAGE_SIZES.map((s) => (
-                    <option key={s} value={s}>
-                      {s} / {t('audit.page')}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {t('audit.prevPage')}
-                </button>
-                <span className="audit-page-indicator">
-                  {page} / {totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {t('audit.nextPage')}
-                </button>
-              </div>
-            </div>
           )}
 
           {detail && (

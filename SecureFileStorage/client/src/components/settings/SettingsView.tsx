@@ -13,20 +13,38 @@ import { Modal } from '@/components/ui/Modal'
 import { useI18n } from '@/i18n/I18nContext'
 import { fmtDate, fmtSize } from '@/utils/format'
 import {
+  ALLOWED_FILE_EXTENSIONS,
+  APP_NAME,
   computeSecurityLevel,
   connectionPlaceholder,
   DATABASE_PROVIDERS,
+  ENCRYPTION_ALGORITHMS,
   formatBytesShort,
   healthToStatus,
   JWT_EXPIRATION_MINUTES,
+  MAX_FILE_SIZE_BYTES,
   SETTINGS_SECTIONS,
+  STORAGE_PROVIDERS,
   storageToForm,
   storageUsagePercent,
   type SettingsSection,
   type StorageFormState,
   type SystemStatus,
 } from '@/utils/settingsHelpers'
+import { useTheme } from '@/context/ThemeContext'
+import {
+  PREF_COMPACT_TABLE_KEY,
+  PREF_HOME_PAGE_KEY,
+  PREF_NOTIF_EMAIL_KEY,
+  PREF_NOTIF_INAPP_KEY,
+} from '@/constants'
 import type { AntivirusAlert, AntivirusStats, DashboardStats, StorageConfig } from '@/types'
+
+function readBoolPref(key: string, fallback = true) {
+  const v = localStorage.getItem(key)
+  if (v === null) return fallback
+  return v === 'true'
+}
 
 interface HealthResponse {
   status: string
@@ -89,6 +107,7 @@ interface SettingsViewProps {
 
 export function SettingsView({ onError }: SettingsViewProps) {
   const { t, locale, lang, setLang } = useI18n()
+  const { theme, setTheme } = useTheme()
 
   const [section, setSection] = useState<SettingsSection>('general')
   const [loading, setLoading] = useState(true)
@@ -106,6 +125,11 @@ export function SettingsView({ onError }: SettingsViewProps) {
   const [lastKeyId, setLastKeyId] = useState<string | null>(null)
 
   const [draftLang, setDraftLang] = useState(lang)
+  const [draftTheme, setDraftTheme] = useState<'light' | 'dark'>(theme)
+  const [draftHome, setDraftHome] = useState(() => localStorage.getItem(PREF_HOME_PAGE_KEY) || '/')
+  const [draftCompact, setDraftCompact] = useState(() => readBoolPref(PREF_COMPACT_TABLE_KEY, false))
+  const [draftNotifInApp, setDraftNotifInApp] = useState(() => readBoolPref(PREF_NOTIF_INAPP_KEY, true))
+  const [draftNotifEmail, setDraftNotifEmail] = useState(() => readBoolPref(PREF_NOTIF_EMAIL_KEY, true))
   const [rotateConfirm, setRotateConfirm] = useState(false)
   const [rotating, setRotating] = useState(false)
 
@@ -118,14 +142,29 @@ export function SettingsView({ onError }: SettingsViewProps) {
     setLoading(true)
     try {
       const [storage, avAlerts, avStatsRes, stats, healthRes] = await Promise.all([
-        api<StorageConfig>('/api/admin/storage'),
-        api<AntivirusAlert[]>('/api/admin/security/antivirus-alerts?take=50'),
-        api<AntivirusStats>('/api/admin/security/antivirus-stats'),
-        api<DashboardStats>('/api/dashboard'),
-        fetch(apiUrl('/health')).then((r) => r.json() as Promise<HealthResponse>),
+        api<StorageConfig>('/api/admin/storage').catch(() => null),
+        api<AntivirusAlert[]>('/api/admin/security/antivirus-alerts?take=50').catch(() => [] as AntivirusAlert[]),
+        api<AntivirusStats>('/api/admin/security/antivirus-stats').catch(() => null),
+        api<DashboardStats>('/api/dashboard').catch(() => null),
+        fetch(apiUrl('/health')).then((r) => r.json() as Promise<HealthResponse>).catch(() => null),
       ])
-      setConfig(storage)
-      setStorageForm(storageToForm(storage))
+      if (storage) {
+        setConfig(storage)
+        setStorageForm(storageToForm(storage))
+      } else {
+        setStorageForm({
+          providerType: 'LocalFileSystem',
+          databaseProvider: 'PostgreSql',
+          basePath: './storage',
+          connectionString: '',
+          compressionEnabled: true,
+          encryptionAlgorithm: 'AesGcm',
+          s3Endpoint: '',
+          s3Bucket: '',
+          s3AccessKey: '',
+          s3SecretKey: '',
+        })
+      }
       setAlerts(avAlerts || [])
       setAvStats(avStatsRes)
       setDashboard(stats)
@@ -148,13 +187,16 @@ export function SettingsView({ onError }: SettingsViewProps) {
     setChecking(true)
     try {
       const [healthRes, storageRes, avRes, avStatsRes] = await Promise.all([
-        fetch(apiUrl('/health')).then((r) => r.json() as Promise<HealthResponse>),
-        api<StorageConfig>('/api/admin/storage'),
-        api<AntivirusAlert[]>('/api/admin/security/antivirus-alerts?take=50'),
-        api<AntivirusStats>('/api/admin/security/antivirus-stats'),
+        fetch(apiUrl('/health')).then((r) => r.json() as Promise<HealthResponse>).catch(() => null),
+        api<StorageConfig>('/api/admin/storage').catch(() => null),
+        api<AntivirusAlert[]>('/api/admin/security/antivirus-alerts?take=50').catch(() => [] as AntivirusAlert[]),
+        api<AntivirusStats>('/api/admin/security/antivirus-stats').catch(() => null),
       ])
-      setHealth(healthRes)
-      setConfig(storageRes)
+      if (healthRes) setHealth(healthRes)
+      if (storageRes) {
+        setConfig(storageRes)
+        setStorageForm(storageToForm(storageRes))
+      }
       setAlerts(avRes || [])
       setAvStats(avStatsRes)
       showToast(t('settings.systemChecked'))
@@ -165,8 +207,31 @@ export function SettingsView({ onError }: SettingsViewProps) {
     }
   }
 
+  useEffect(() => {
+    setDraftLang(lang)
+  }, [lang])
+
+  useEffect(() => {
+    setDraftTheme(theme)
+  }, [theme])
+
+  const generalDirty =
+    draftLang !== lang ||
+    draftTheme !== theme ||
+    draftHome !== (localStorage.getItem(PREF_HOME_PAGE_KEY) || '/') ||
+    draftCompact !== readBoolPref(PREF_COMPACT_TABLE_KEY, false) ||
+    draftNotifInApp !== readBoolPref(PREF_NOTIF_INAPP_KEY, true) ||
+    draftNotifEmail !== readBoolPref(PREF_NOTIF_EMAIL_KEY, true)
+
   const saveGeneral = () => {
     setLang(draftLang)
+    setTheme(draftTheme)
+    localStorage.setItem(PREF_HOME_PAGE_KEY, draftHome)
+    localStorage.setItem(PREF_COMPACT_TABLE_KEY, String(draftCompact))
+    localStorage.setItem(PREF_NOTIF_INAPP_KEY, String(draftNotifInApp))
+    localStorage.setItem(PREF_NOTIF_EMAIL_KEY, String(draftNotifEmail))
+    window.dispatchEvent(new StorageEvent('storage', { key: PREF_NOTIF_INAPP_KEY }))
+    document.documentElement.dataset.compactTable = draftCompact ? 'true' : 'false'
     showToast(t('settings.saved'))
   }
 
@@ -187,6 +252,8 @@ export function SettingsView({ onError }: SettingsViewProps) {
         databaseProvider: storageForm.databaseProvider,
         basePath: storageForm.basePath || config?.basePath || './storage',
         connectionString: storageForm.connectionString.trim(),
+        compressionEnabled: storageForm.compressionEnabled,
+        encryptionAlgorithm: storageForm.encryptionAlgorithm,
         s3Endpoint: storageForm.s3Endpoint || undefined,
         s3Bucket: storageForm.s3Bucket || undefined,
         s3AccessKey: storageForm.s3AccessKey || undefined,
@@ -216,6 +283,9 @@ export function SettingsView({ onError }: SettingsViewProps) {
       )
       setLastKeyId(r.keyIdentifier)
       setLastKeyRotation(r.rotatedAt)
+      const updatedStorage = await api<StorageConfig>('/api/admin/storage')
+      setConfig(updatedStorage)
+      setStorageForm(storageToForm(updatedStorage))
       setRotateConfirm(false)
       showToast(t('settings.keyRotated'))
     } catch (e) {
@@ -257,29 +327,200 @@ export function SettingsView({ onError }: SettingsViewProps) {
         <h3>{t('settings.nav.general')}</h3>
         <p>{t('settings.generalDesc')}</p>
       </div>
+
+      <div className="settings-general-stats">
+        <div className="settings-general-stat">
+          <span className="settings-stat-label">{t('settings.platform')}</span>
+          <strong>{APP_NAME}</strong>
+        </div>
+        <div className="settings-general-stat">
+          <span className="settings-stat-label">{t('settings.language')}</span>
+          <strong>{lang === 'fr' ? 'Français' : 'English'}</strong>
+        </div>
+        <div className="settings-general-stat">
+          <span className="settings-stat-label">{t('settings.theme')}</span>
+          <strong>{t(theme === 'dark' ? 'settings.theme.dark' : 'settings.theme.light')}</strong>
+        </div>
+        <div className="settings-general-stat">
+          <span className="settings-stat-label">{t('settings.sessionExpiration')}</span>
+          <strong>{t('settings.minutesValue', { count: String(JWT_EXPIRATION_MINUTES) })}</strong>
+        </div>
+      </div>
+
       <div className="settings-card">
-        <div className="settings-field">
-          <label className="settings-label" htmlFor="settings-lang">{t('settings.language')}</label>
-          <select
-            id="settings-lang"
-            value={draftLang}
-            onChange={(e) => setDraftLang(e.target.value as 'fr' | 'en')}
-          >
-            <option value="fr">Français</option>
-            <option value="en">English</option>
-          </select>
-          <p className="settings-hint">{t('settings.languageHint')}</p>
+        <div className="settings-card-title-row">
+          <h4>{t('settings.appearance')}</h4>
         </div>
-        <div className="settings-actions">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={saveGeneral}
-            disabled={draftLang === lang}
-          >
-            {t('settings.saveChanges')}
-          </button>
+        <p className="settings-card-desc">{t('settings.appearanceDesc')}</p>
+        <div className="settings-form-grid">
+          <div className="settings-field">
+            <label className="settings-label" htmlFor="settings-lang">{t('settings.language')}</label>
+            <select
+              id="settings-lang"
+              value={draftLang}
+              onChange={(e) => setDraftLang(e.target.value as 'fr' | 'en')}
+            >
+              <option value="fr">Français</option>
+              <option value="en">English</option>
+            </select>
+            <p className="settings-hint">{t('settings.languageHint')}</p>
+          </div>
+          <div className="settings-field">
+            <label className="settings-label" htmlFor="settings-theme">{t('settings.theme')}</label>
+            <select
+              id="settings-theme"
+              value={draftTheme}
+              onChange={(e) => setDraftTheme(e.target.value as 'light' | 'dark')}
+            >
+              <option value="light">{t('settings.theme.light')}</option>
+              <option value="dark">{t('settings.theme.dark')}</option>
+            </select>
+            <p className="settings-hint">{t('settings.themeHint')}</p>
+          </div>
+          <div className="settings-field">
+            <label className="settings-label" htmlFor="settings-home">{t('settings.homePage')}</label>
+            <select
+              id="settings-home"
+              value={draftHome}
+              onChange={(e) => setDraftHome(e.target.value)}
+            >
+              <option value="/">{t('settings.home.dashboard')}</option>
+              <option value="/documents">{t('settings.home.documents')}</option>
+              <option value="/favorites">{t('settings.home.favorites')}</option>
+              <option value="/shared">{t('settings.home.shared')}</option>
+              <option value="/categories">{t('settings.home.categories')}</option>
+            </select>
+            <p className="settings-hint">{t('settings.homePageHint')}</p>
+          </div>
+          <div className="settings-field">
+            <label className="settings-label">{t('settings.tableDensity')}</label>
+            <div className="settings-switch-row" style={{ border: 'none', padding: '0.35rem 0' }}>
+              <div>
+                <strong>{t('settings.compactTable')}</strong>
+                <p>{t('settings.compactTableHint')}</p>
+              </div>
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={draftCompact}
+                  onChange={(e) => setDraftCompact(e.target.checked)}
+                />
+                <span className="settings-switch-slider" />
+              </label>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="settings-card">
+        <div className="settings-card-title-row">
+          <h4>{t('settings.nav.notifications')}</h4>
+        </div>
+        <p className="settings-card-desc">{t('settings.notificationsDesc')}</p>
+        <div className="settings-switch-row">
+          <div>
+            <strong>{t('profile.notifInApp')}</strong>
+            <p>{t('profile.notifInAppHint')}</p>
+          </div>
+          <label className="settings-switch">
+            <input
+              type="checkbox"
+              checked={draftNotifInApp}
+              onChange={(e) => setDraftNotifInApp(e.target.checked)}
+            />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
+        <div className="settings-switch-row">
+          <div>
+            <strong>{t('profile.notifEmail')}</strong>
+            <p>{t('profile.notifEmailHint')}</p>
+          </div>
+          <label className="settings-switch">
+            <input
+              type="checkbox"
+              checked={draftNotifEmail}
+              onChange={(e) => setDraftNotifEmail(e.target.checked)}
+            />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
+      </div>
+
+      <div className="settings-card">
+        <div className="settings-card-title-row">
+          <h4>{t('settings.documentPolicy')}</h4>
+        </div>
+        <p className="settings-card-desc">{t('settings.documentPolicyDesc')}</p>
+        <div className="settings-form-grid">
+          <ReadOnlyRow
+            label={t('settings.maxFileSize')}
+            value={fmtSize(MAX_FILE_SIZE_BYTES)}
+            hint={t('settings.maxFileSizeHint')}
+          />
+          <ReadOnlyRow
+            label={t('settings.defaultCategories')}
+            value={['RH', 'Factures', 'Contrats', 'General'].join(' · ')}
+          />
+          <div className="settings-field settings-field-full">
+            <label className="settings-label">{t('settings.allowedExtensions')}</label>
+            <div className="settings-ext-list">
+              {ALLOWED_FILE_EXTENSIONS.map((ext) => (
+                <span key={ext} className="settings-ext-pill">{ext}</span>
+              ))}
+            </div>
+            <p className="settings-hint">{t('settings.allowedExtensionsHint')}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-card settings-card-muted">
+        <div className="settings-card-title-row">
+          <h4>{t('settings.platformInfo')}</h4>
+          {health && (
+            <StatusIndicator
+              status={healthToStatus((health.status || '').toLowerCase() === 'healthy')}
+              label={t(`settings.status.${healthToStatus((health.status || '').toLowerCase() === 'healthy')}`)}
+            />
+          )}
+        </div>
+        <dl className="settings-info-grid">
+          <div>
+            <dt>{t('settings.platform')}</dt>
+            <dd>{APP_NAME}</dd>
+          </div>
+          <div>
+            <dt>{t('settings.locale')}</dt>
+            <dd>{locale}</dd>
+          </div>
+          <div>
+            <dt>{t('settings.storageProvider')}</dt>
+            <dd>{config?.providerType || '—'}</dd>
+          </div>
+          <div>
+            <dt>{t('settings.lastHealthCheck')}</dt>
+            <dd>{health?.timestamp ? fmtDate(health.timestamp, locale) : '—'}</dd>
+          </div>
+          <div>
+            <dt>{t('settings.documentsTotal')}</dt>
+            <dd>{dashboard?.totalDocuments ?? '—'}</dd>
+          </div>
+          <div>
+            <dt>{t('settings.usedStorage')}</dt>
+            <dd>{dashboard ? formatBytesShort(dashboard.storageUsedBytes || 0) : '—'}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="settings-actions">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={saveGeneral}
+          disabled={!generalDirty}
+        >
+          {t('settings.saveChanges')}
+        </button>
       </div>
     </div>
   )
@@ -324,31 +565,6 @@ export function SettingsView({ onError }: SettingsViewProps) {
           enabled={avStats?.enabled ?? false}
           t={t}
         />
-      </div>
-
-      <div className="settings-card settings-card-highlight">
-        <div className="settings-card-title-row">
-          <h4>{t('settings.encryptionKeys')}</h4>
-          <span className="settings-badge settings-badge-enabled">{t('settings.active')}</span>
-        </div>
-        <p className="settings-card-desc">{t('settings.encryptionKeysDesc')}</p>
-        <dl className="settings-dl">
-          <div>
-            <dt>{t('settings.lastKeyRotation')}</dt>
-            <dd>{lastKeyRotation ? fmtDate(lastKeyRotation, locale) : t('settings.notAvailable')}</dd>
-          </div>
-          {lastKeyId && (
-            <div>
-              <dt>{t('settings.keyIdentifier')}</dt>
-              <dd className="settings-mono">{lastKeyId}</dd>
-            </div>
-          )}
-        </dl>
-        <div className="settings-actions">
-          <button type="button" className="btn btn-warning" onClick={() => setRotateConfirm(true)}>
-            {t('settings.rotateKey')}
-          </button>
-        </div>
       </div>
 
       <div className="settings-card">
@@ -505,7 +721,106 @@ export function SettingsView({ onError }: SettingsViewProps) {
         {storageForm && (
           <div className="settings-card">
             <h4>{t('settings.storageConfig')}</h4>
-            <p className="settings-card-desc">{t('settings.db.configDesc')}</p>
+
+            <div className="settings-field">
+              <label className="settings-label" htmlFor="storage-provider">
+                {t('settings.storageType')}
+              </label>
+              <select
+                id="storage-provider"
+                value={storageForm.providerType}
+                onChange={(e) =>
+                  setStorageForm((f) => f && { ...f, providerType: e.target.value })
+                }
+              >
+                {STORAGE_PROVIDERS.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {t(p.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="settings-field">
+              <label className="settings-label" htmlFor="storage-path">
+                {t('settings.storageLocation')}
+              </label>
+              <input
+                id="storage-path"
+                type="text"
+                value={storageForm.basePath}
+                onChange={(e) =>
+                  setStorageForm((f) => f && { ...f, basePath: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="settings-switch-row">
+              <div className="settings-feature-info">
+                <strong>{t('settings.compression')}</strong>
+                <p>{t('settings.compressionToggleHint')}</p>
+              </div>
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={storageForm.compressionEnabled}
+                  onChange={(e) =>
+                    setStorageForm((f) => f && { ...f, compressionEnabled: e.target.checked })
+                  }
+                />
+                <span className="settings-switch-slider" />
+                <span className="sr-only">{t('settings.compression')}</span>
+              </label>
+            </div>
+
+            <div className="settings-field">
+              <label className="settings-label" htmlFor="storage-encryption-algorithm">
+                {t('settings.encryptionAlgorithm')}
+              </label>
+              <select
+                id="storage-encryption-algorithm"
+                value={storageForm.encryptionAlgorithm}
+                onChange={(e) =>
+                  setStorageForm((f) => f && { ...f, encryptionAlgorithm: e.target.value })
+                }
+              >
+                {ENCRYPTION_ALGORITHMS.map((algorithm) => (
+                  <option key={algorithm.value} value={algorithm.value}>
+                    {t(algorithm.labelKey)}
+                  </option>
+                ))}
+              </select>
+              <p className="settings-hint">{t('settings.encryptionAlgorithmHint')}</p>
+            </div>
+
+            <div className="settings-card settings-card-highlight">
+              <div className="settings-card-title-row">
+                <h4>{t('settings.encryptionKeys')}</h4>
+                <span className={`settings-badge ${config?.activeEncryptionKeyId ? 'settings-badge-enabled' : 'settings-badge-disabled'}`}>
+                  {config?.activeEncryptionKeyId ? t('settings.active') : t('settings.notAvailable')}
+                </span>
+              </div>
+              <p className="settings-card-desc">{t('settings.storageKeyAssociation')}</p>
+              <dl className="settings-dl">
+                <div>
+                  <dt>{t('settings.keyIdentifier')}</dt>
+                  <dd className="settings-mono">
+                    {config?.activeEncryptionKeyIdentifier || lastKeyId || t('settings.notAvailable')}
+                  </dd>
+                </div>
+                {(lastKeyRotation || config?.updatedAt) && (
+                  <div>
+                    <dt>{t('settings.lastKeyRotation')}</dt>
+                    <dd>{fmtDate(lastKeyRotation || config?.updatedAt || '', locale)}</dd>
+                  </div>
+                )}
+              </dl>
+              <div className="settings-actions">
+                <button type="button" className="btn btn-warning" onClick={() => setRotateConfirm(true)}>
+                  {t('settings.rotateKey')}
+                </button>
+              </div>
+            </div>
 
             <div className="settings-field">
               <label className="settings-label" htmlFor="storage-db">
@@ -524,7 +839,6 @@ export function SettingsView({ onError }: SettingsViewProps) {
                   </option>
                 ))}
               </select>
-              <p className="settings-hint">{t('settings.db.providerHint')}</p>
             </div>
 
             <div className="settings-field">

@@ -27,13 +27,24 @@ export const DOCUMENT_AUDIT_ACTIONS = [
   'CheckIn',
 ] as const
 
-const EXCLUDED_ACTIONS = new Set(['Search', 'PermissionChange', 'Login', 'Logout', 'AntivirusAlert'])
+/** Actions hors traçabilité « opération fichier » (bruit / auth / recherche). */
+const EXCLUDED_ACTIONS = new Set(['Search', 'Login', 'Logout'])
 
 export function isDocumentActivity(log: AuditLog) {
   if (log.resourceType !== 'Document') return false
   if (EXCLUDED_ACTIONS.has(log.action)) return false
-  if (log.action === 'Search') return false
   return true
+}
+
+/** Actions serveur réelles correspondant à un filtre UI spécial. */
+export function serverActionForFilter(action: string): string {
+  if (action === 'Edit' || action === 'VersionCreated') return 'Update'
+  if (action === 'Trash' || action === 'PermDelete') return 'Delete'
+  return action
+}
+
+export function isSpecialActionFilter(action: string) {
+  return action === 'Edit' || action === 'VersionCreated' || action === 'Trash' || action === 'PermDelete'
 }
 
 export function isVersionCreated(log: AuditLog) {
@@ -104,8 +115,11 @@ export function computeDocumentStats(logs: AuditLog[]): DocumentAuditStats {
     total: filtered.length,
     uploaded: filtered.filter((l) => l.action === 'Upload').length,
     downloaded: filtered.filter((l) => l.action === 'Download').length,
-    modified: filtered.filter((l) => l.action === 'Update' && !isVersionCreated(l)).length,
-    shared: filtered.filter((l) => l.action === 'Share').length,
+    // Toute mise à jour : nouvelle version + métadonnées / check-in-out
+    modified: filtered.filter(
+      (l) => l.action === 'Update' || l.action === 'CheckIn' || l.action === 'CheckOut'
+    ).length,
+    shared: filtered.filter((l) => l.action === 'Share' || l.action === 'PermissionChange').length,
     archived: filtered.filter((l) => l.action === 'Archive').length,
     restored: filtered.filter((l) => l.action === 'Restore').length,
     deleted: filtered.filter((l) => l.action === 'Delete').length,

@@ -11,10 +11,12 @@ namespace SecureFileStorage.Api.Controllers;
 public class ChatController : ControllerBase
 {
     private readonly IChatbotService _chatbot;
+    private readonly IChatbotAnalyticsService _analytics;
 
-    public ChatController(IChatbotService chatbot)
+    public ChatController(IChatbotService chatbot, IChatbotAnalyticsService analytics)
     {
         _chatbot = chatbot;
+        _analytics = analytics;
     }
 
     [HttpPost]
@@ -27,6 +29,8 @@ public class ChatController : ControllerBase
             return BadRequest(new { message = "Le message est trop long (max 2000 caractères)." });
 
         var response = await _chatbot.AskAsync(request, ct);
+        // Enregistre uniquement un compteur agrégé (date, thème, source), jamais le message.
+        await _analytics.RecordAnonymousUsageAsync(response.Source, response.Topic, ct);
         return Ok(response);
     }
 }

@@ -1,0 +1,133 @@
+@startuml Diagramme de cas d'utilisation - Utilisateur
+!theme plain
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #E8F4FC
+  BorderColor #1A5F7A
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #1A5F7A
+}
+skinparam package {
+  BackgroundColor #F7FBFE
+  BorderColor #1A5F7A
+}
+
+title Diagramme de cas d'utilisation — Acteur Utilisateur\nSecureFileStorage
+
+actor "Utilisateur" as User
+
+rectangle "SecureFileStorage" {
+  package "Authentification & compte" {
+    usecase "S'inscrire" as UC_Register
+    usecase "Se connecter" as UC_Login
+    usecase "Se déconnecter" as UC_Logout
+    usecase "Gérer mon profil" as UC_Profile
+    usecase "Changer mon mot de passe" as UC_Password
+  }
+
+  package "Gestion des documents" {
+    usecase "Téléverser un document" as UC_Upload
+    usecase "Importer depuis une URL" as UC_Import
+    usecase "Rechercher / lister des documents" as UC_Search
+    usecase "Consulter un document" as UC_View
+    usecase "Prévisualiser un document" as UC_Preview
+    usecase "Télécharger un document" as UC_Download
+    usecase "Modifier / nouvelle version" as UC_Version
+    usecase "Consulter l'historique des versions" as UC_History
+    usecase "Restaurer une version" as UC_RestoreVer
+    usecase "Vérifier l'intégrité (SHA-256)" as UC_Integrity
+    usecase "Archiver / restaurer" as UC_Archive
+    usecase "Mettre à la corbeille" as UC_Trash
+    usecase "Vider ma corbeille" as UC_EmptyTrash
+    usecase "Check-out / Check-in" as UC_Lock
+    usecase "Gérer les favoris" as UC_Fav
+    usecase "Gérer les catégories" as UC_Cat
+  }
+
+  package "Partage & collaboration" {
+    usecase "Partager avec un utilisateur" as UC_ShareUser
+    usecase "Générer un lien sécurisé" as UC_ShareLink
+    usecase "Révoquer un partage / lien" as UC_Revoke
+    usecase "Gérer les permissions" as UC_Perms
+    usecase "Voir les documents partagés avec moi" as UC_SharedWithMe
+  }
+
+  package "Tableau de bord & aide" {
+    usecase "Consulter mon tableau de bord" as UC_Dash
+    usecase "Utiliser le chatbot d'aide" as UC_Chat
+  }
+
+  ' Includes techniques (sous-système)
+  usecase "Valider le fichier\n(type / taille)" as UC_Validate
+  usecase "Scanner antivirus (ClamAV)" as UC_AV
+  usecase "Compresser GZip" as UC_Compress
+  usecase "Chiffrer AES-256" as UC_Encrypt
+  usecase "Déchiffrer et décompresser" as UC_Decrypt
+  usecase "Journaliser l'opération (audit)" as UC_Audit
+}
+
+User --> UC_Register
+User --> UC_Login
+User --> UC_Logout
+User --> UC_Profile
+User --> UC_Password
+
+User --> UC_Upload
+User --> UC_Import
+User --> UC_Search
+User --> UC_View
+User --> UC_Preview
+User --> UC_Download
+User --> UC_Version
+User --> UC_History
+User --> UC_RestoreVer
+User --> UC_Integrity
+User --> UC_Archive
+User --> UC_Trash
+User --> UC_EmptyTrash
+User --> UC_Lock
+User --> UC_Fav
+User --> UC_Cat
+
+User --> UC_ShareUser
+User --> UC_ShareLink
+User --> UC_Revoke
+User --> UC_Perms
+User --> UC_SharedWithMe
+
+User --> UC_Dash
+User --> UC_Chat
+
+UC_Upload ..> UC_Validate : <<include>>
+UC_Upload ..> UC_AV : <<include>>
+UC_Upload ..> UC_Compress : <<include>>
+UC_Upload ..> UC_Encrypt : <<include>>
+UC_Upload ..> UC_Audit : <<include>>
+UC_Download ..> UC_Decrypt : <<include>>
+UC_Download ..> UC_Audit : <<include>>
+UC_Preview ..> UC_Decrypt : <<include>>
+UC_Version ..> UC_Validate : <<include>>
+UC_Version ..> UC_AV : <<include>>
+UC_Version ..> UC_Compress : <<include>>
+UC_Version ..> UC_Encrypt : <<include>>
+UC_Version ..> UC_Audit : <<include>>
+
+note right of UC_Upload
+  Pipeline écriture :
+  validation → antivirus →
+  compression → chiffrement →
+  stockage → audit
+end note
+
+note right of UC_Download
+  Pipeline lecture :
+  lecture .enc → déchiffrement
+  AES-256 → décompression →
+  fichier original
+end note
+
+@enduml

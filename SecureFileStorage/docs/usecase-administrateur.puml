@@ -1,0 +1,104 @@
+@startuml Diagramme de cas d'utilisation - Administrateur
+!theme plain
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #FDECEA
+  BorderColor #8B1E1E
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #8B1E1E
+}
+skinparam package {
+  BackgroundColor #FFF8F7
+  BorderColor #8B1E1E
+}
+
+title Diagramme de cas d'utilisation — Acteur Administrateur\nSecureFileStorage
+
+actor "Administrateur" as Admin
+actor "Utilisateur" as User
+
+rectangle "SecureFileStorage" {
+  package "Capacités héritées (rôle User)" {
+    usecase "Gérer ses documents\n(téléverser, consulter, partager…)" as UC_UserDocs
+    usecase "Gérer son compte" as UC_UserAccount
+  }
+
+  package "Gestion des utilisateurs" {
+    usecase "Lister les utilisateurs" as UC_ListUsers
+    usecase "Créer un utilisateur" as UC_CreateUser
+    usecase "Modifier un utilisateur" as UC_EditUser
+    usecase "Désactiver un utilisateur" as UC_Deactivate
+    usecase "Supprimer un utilisateur" as UC_DeleteUser
+    usecase "Réinitialiser un mot de passe" as UC_ResetPwd
+  }
+
+  package "Gestion des rôles" {
+    usecase "Consulter les rôles (Admin / User)" as UC_ListRoles
+    usecase "Affecter un rôle" as UC_AssignRole
+    usecase "Modifier la description d'un rôle" as UC_EditRole
+  }
+
+  package "Administration documentaire" {
+    usecase "Voir / gérer tous les documents" as UC_AllDocs
+    usecase "Suppression définitive" as UC_HardDelete
+    usecase "Vider toute la corbeille" as UC_EmptyAllTrash
+    usecase "Changer le propriétaire d'un document" as UC_ChangeOwner
+  }
+
+  package "Stockage & sécurité" {
+    usecase "Configurer le stockage\n(Local / S3 / NAS)" as UC_Storage
+    usecase "Rotation de la clé de chiffrement" as UC_RotateKey
+    usecase "Consulter les alertes antivirus" as UC_AVAlerts
+  }
+
+  package "Audit & supervision" {
+    usecase "Consulter les journaux d'audit" as UC_AuditView
+    usecase "Rechercher dans l'audit" as UC_AuditSearch
+    usecase "Exporter l'audit (CSV)" as UC_AuditExport
+    usecase "Consulter le tableau de bord admin\n(score de maturité)" as UC_AdminDash
+  }
+}
+
+Admin --> UC_UserDocs
+Admin --> UC_UserAccount
+
+Admin --> UC_ListUsers
+Admin --> UC_CreateUser
+Admin --> UC_EditUser
+Admin --> UC_Deactivate
+Admin --> UC_DeleteUser
+Admin --> UC_ResetPwd
+
+Admin --> UC_ListRoles
+Admin --> UC_AssignRole
+Admin --> UC_EditRole
+
+Admin --> UC_AllDocs
+Admin --> UC_HardDelete
+Admin --> UC_EmptyAllTrash
+Admin --> UC_ChangeOwner
+
+Admin --> UC_Storage
+Admin --> UC_RotateKey
+Admin --> UC_AVAlerts
+
+Admin --> UC_AuditView
+Admin --> UC_AuditSearch
+Admin --> UC_AuditExport
+Admin --> UC_AdminDash
+
+' Généralisation : l'Admin hérite des cas d'utilisation User
+Admin --|> User
+
+note bottom of Admin
+  L'Administrateur possède
+  toutes les capacités Utilisateur
+  + les fonctions d'administration
+  (RBAC, audit, sécurité, stockage).
+end note
+
+@enduml

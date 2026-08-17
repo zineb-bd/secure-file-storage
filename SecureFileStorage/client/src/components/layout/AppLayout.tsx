@@ -243,7 +243,6 @@ export function AppLayout() {
         </div>
 
         <nav className="sidebar-nav">
-          <div className="nav-section">{t('nav.section')}</div>
           {navItems.map((item) => (
             <NavLink
               key={item.to}

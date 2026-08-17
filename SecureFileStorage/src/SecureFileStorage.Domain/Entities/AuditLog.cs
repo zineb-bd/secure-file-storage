@@ -28,6 +28,13 @@ public class StorageConfiguration
     public string? S3Bucket { get; set; }
     public string? S3AccessKey { get; set; }
     public string? S3SecretKey { get; set; }
+    /// <summary>Active la compression GZip avant chiffrement (nouveaux fichiers).</summary>
+    public bool CompressionEnabled { get; set; } = true;
+    /// <summary>Algorithme utilisé pour les nouveaux fichiers.</summary>
+    public EncryptionAlgorithm EncryptionAlgorithm { get; set; } = EncryptionAlgorithm.AesGcm;
+    /// <summary>Clé maître active, propre à cette configuration de stockage.</summary>
+    public Guid? ActiveEncryptionKeyId { get; set; }
+    public EncryptionKeyRecord? ActiveEncryptionKey { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
@@ -35,6 +42,8 @@ public class StorageConfiguration
 public class EncryptionKeyRecord
 {
     public Guid Id { get; set; }
+    public Guid StorageConfigurationId { get; set; }
+    public StorageConfiguration StorageConfiguration { get; set; } = null!;
     public string KeyIdentifier { get; set; } = string.Empty;
     public string EncryptedMasterKey { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
@@ -51,4 +60,18 @@ public class AntivirusAlert
     public string Details { get; set; } = string.Empty;
     public DateTime DetectedAt { get; set; } = DateTime.UtcNow;
     public bool IsResolved { get; set; }
+}
+
+/// <summary>
+/// Compteur quotidien anonyme du chatbot. Ne contient ni message, ni réponse,
+/// ni utilisateur, ni document ou métadonnée de document.
+/// </summary>
+public class ChatbotUsageMetric
+{
+    public Guid Id { get; set; }
+    public DateOnly Day { get; set; }
+    public string Topic { get; set; } = string.Empty;
+    public string Source { get; set; } = string.Empty;
+    public int RequestCount { get; set; }
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

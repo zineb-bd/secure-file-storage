@@ -2,14 +2,15 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from '@/api/client'
 import { UsersList } from '@/components/users/UsersList'
 import { UsersSkeleton } from '@/components/users/UsersSkeleton'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/context/AuthContext'
 import { useI18n } from '@/i18n/I18nContext'
+import { AdminGroupsPanel } from '@/pages/admin/AdminGroupsPage'
 import type { AdminUser } from '@/types'
 
 export function AdminUsersPage() {
   const { t } = useI18n()
   const { isAuthenticated } = useAuth()
+  const [tab, setTab] = useState<'users' | 'groups'>('users')
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -38,15 +39,47 @@ export function AdminUsersPage() {
   }, [load, isAuthenticated])
 
   return (
-    <section className="page users-page" id="page-admin-users">
-      <PageHeader title={t('page.adminUsers.title')} subtitle={t('page.adminUsers.subtitle')} />
+    <section className="page users-page files-like-page" id="page-admin-users">
+      <div className="profile-segmented admin-users-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'users'}
+          className={`profile-segment${tab === 'users' ? ' active' : ''}`}
+          onClick={() => setTab('users')}
+        >
+          {t('nav.users')}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'groups'}
+          className={`profile-segment${tab === 'groups' ? ' active' : ''}`}
+          onClick={() => setTab('groups')}
+        >
+          {t('nav.groups')}
+        </button>
+      </div>
 
-      {error && <div className="msg error">{error}</div>}
+      {tab === 'users' ? (
+        <>
+          {error && (
+            <div className="msg error">
+              {error}
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => void load()}>
+                {t('audit.refresh')}
+              </button>
+            </div>
+          )}
 
-      {loading ? (
-        <UsersSkeleton />
+          {loading ? (
+            <UsersSkeleton />
+          ) : (
+            <UsersList users={users} onChanged={load} />
+          )}
+        </>
       ) : (
-        <UsersList users={users} onChanged={load} />
+        <AdminGroupsPanel />
       )}
     </section>
   )

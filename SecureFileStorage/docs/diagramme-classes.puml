@@ -1,0 +1,295 @@
+@startuml Diagramme de classes complet - SecureFileStorage
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam linetype polyline
+skinparam nodesep 60
+skinparam ranksep 50
+skinparam packageStyle rectangle
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+  HeaderBackgroundColor #D6EAF8
+  FontSize 12
+}
+skinparam enum {
+  BackgroundColor #FCF3CF
+  BorderColor #B7950B
+  FontSize 11
+}
+skinparam package {
+  BackgroundColor #F8F9F9
+  BorderColor #5D6D7E
+  FontSize 13
+  FontStyle bold
+}
+
+title Diagramme de classes — SecureFileStorage\n(modèle domaine complet, sans redondance)
+
+' ===================== IDENTITÉ =====================
+package "Identité & RBAC" #EBF5FB {
+  class User {
+    Id : Guid
+    Email : string
+    PasswordHash : string
+    FirstName : string
+    LastName : string
+    IsActive : bool
+    CreatedAt : DateTime
+    UpdatedAt : DateTime?
+  }
+
+  class Role {
+    Id : Guid
+    Name : string
+    Description : string
+    CreatedAt : DateTime
+  }
+
+  class UserRole <<association>> {
+    AssignedAt : DateTime
+  }
+}
+
+' ===================== DOCUMENTS =====================
+package "Gestion documentaire" #E8F8F5 {
+  class Document {
+    Id : Guid
+    FileName : string
+    ContentType : string
+    SizeBytes : long
+    Category : string
+    Description : string
+    Sha256Hash : string
+    CurrentVersion : int
+    Status : DocumentStatus
+    Visibility : DocumentVisibility
+    PublicAccessLevel : ShareAccessLevel
+    LastScanResult : AntivirusScanResult
+    LastScanAt : DateTime?
+    LockedAt : DateTime?
+    LockExpiresAt : DateTime?
+    CreatedAt : DateTime
+    UpdatedAt : DateTime?
+    DeletedAt : DateTime?
+    ArchivedAt : DateTime?
+  }
+
+  class DocumentVersion {
+    Id : Guid
+    VersionNumber : int
+    StoragePath : string
+    EncryptedKey : string
+    Sha256Hash : string
+    SizeBytes : long
+    ChangeComment : string?
+    CreatedAt : DateTime
+  }
+
+  class StoredBlob {
+    Id : Guid
+    Sha256Hash : string {unique}
+    StoragePath : string
+    EncryptedKey : string
+    SizeBytes : long
+    ReferenceCount : int
+    CreatedAt : DateTime
+  }
+
+  class DocumentPermission {
+    Id : Guid
+    Permission : PermissionType
+    AccessLevel : ShareAccessLevel
+    ExpiresAt : DateTime?
+    GrantedAt : DateTime
+    GrantedById : Guid
+  }
+
+  class DocumentShareLink {
+    Id : Guid
+    TokenHash : string
+    AccessLevel : ShareAccessLevel
+    ExpiresAt : DateTime
+    CreatedById : Guid
+    CreatedAt : DateTime
+    IsRevoked : bool
+  }
+
+  class DocumentFavorite <<association>> {
+    Id : Guid
+    CreatedAt : DateTime
+  }
+}
+
+' ===================== AUDIT & ADMIN =====================
+package "Audit & Administration" #FDEDEC {
+  class AuditLog {
+    Id : Guid
+    Action : AuditAction
+    ResourceType : string
+    ResourceId : Guid?
+    Details : string
+    IpAddress : string
+    Success : bool
+    Timestamp : DateTime
+  }
+
+  class AntivirusAlert {
+    Id : Guid
+    FileName : string
+    ThreatName : string
+    Details : string
+    DetectedAt : DateTime
+    IsResolved : bool
+  }
+
+  class StorageConfiguration {
+    Id : Guid
+    ProviderType : StorageProviderType
+    DatabaseProvider : DatabaseProviderType
+    BasePath : string
+    S3Endpoint : string?
+    S3Bucket : string?
+    S3AccessKey : string?
+    S3SecretKey : string?
+    IsActive : bool
+    UpdatedAt : DateTime
+  }
+
+  class EncryptionKeyRecord {
+    Id : Guid
+    KeyIdentifier : string
+    EncryptedMasterKey : string
+    IsActive : bool
+    CreatedAt : DateTime
+    RotatedAt : DateTime?
+  }
+}
+
+' ===================== ENUMS =====================
+package "Énumérations" #FEF9E7 {
+  enum DocumentStatus {
+    Active
+    Archived
+    Deleted
+  }
+  enum DocumentVisibility {
+    Private
+    Shared
+    Public
+  }
+  enum ShareAccessLevel {
+    Read
+    Download
+    Write
+    Preview
+  }
+  enum PermissionType {
+    Read
+    Write
+    Delete
+    Admin
+  }
+  enum AntivirusScanResult {
+    Clean
+    Infected
+    Skipped
+    Error
+  }
+  enum AuditAction {
+    Upload
+    Download
+    View
+    Update
+    Delete
+    Archive
+    Restore
+    Search
+    Preview
+    Login
+    Logout
+    Share
+    CheckOut
+    CheckIn
+    Favorite
+    Import
+    PermissionChange
+    IntegrityCheck
+    AntivirusAlert
+  }
+  enum StorageProviderType {
+    LocalFileSystem
+    S3Compatible
+    Nas
+  }
+  enum DatabaseProviderType {
+    PostgreSql
+    SqlServer
+  }
+}
+
+' ===================== RELATIONS (une seule fois chacune) =====================
+
+' Identité N-N via classe d'association UserRole
+User "1" -- "0..*" UserRole
+Role "1" -- "0..*" UserRole
+
+' Document : propriétaire et verrou (deux rôles distincts, pas de doublon de table)
+User "1" --> "0..*" Document : possède
+User "0..1" --> "0..*" Document : verrouille
+
+' Composition versions
+Document "1" *-- "1..*" DocumentVersion : versions
+DocumentVersion "0..*" --> "0..1" StoredBlob : contenu chiffré
+User "1" <-- "0..*" DocumentVersion : téléverséPar
+
+' Partage utilisateur
+Document "1" *-- "0..*" DocumentPermission : permissions
+User "1" --> "0..*" DocumentPermission : bénéficiaire
+
+' Lien public
+Document "1" *-- "0..*" DocumentShareLink : liens
+
+' Favoris N-N via classe d'association
+User "1" -- "0..*" DocumentFavorite
+Document "1" -- "0..*" DocumentFavorite
+
+' Audit
+User "0..1" --> "0..*" AuditLog : génère
+
+' Alerte antivirus liée au document (optionnel)
+Document "0..1" <-- "0..*" AntivirusAlert : concerne
+
+' Types enum utilisés (dépendances)
+Document ..> DocumentStatus
+Document ..> DocumentVisibility
+Document ..> ShareAccessLevel
+Document ..> AntivirusScanResult
+DocumentPermission ..> PermissionType
+DocumentPermission ..> ShareAccessLevel
+DocumentShareLink ..> ShareAccessLevel
+AuditLog ..> AuditAction
+StorageConfiguration ..> StorageProviderType
+StorageConfiguration ..> DatabaseProviderType
+
+note bottom of UserRole
+  Classe d'association User ↔ Role
+  (pas de table RoleUser séparée)
+end note
+
+note bottom of DocumentFavorite
+  Classe d'association User ↔ Document
+  (favoris)
+end note
+
+note right of StoredBlob
+  Mode de stockage : physique
+  (fichier binaire chiffré .enc
+  sur le disque, pas un BLOB SQL).
+  Écriture : GZip puis AES-256.
+  Lecture : déchiffrement puis
+  décompression. Marqueur SFSZ.
+  Déduplication : plusieurs versions
+  peuvent partager le même fichier.
+end note
+
+@enduml

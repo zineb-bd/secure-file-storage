@@ -28,6 +28,14 @@ export interface SharedRow {
 
 export type UploadVisibility = 'Private' | 'Shared' | 'Public'
 
+/** Niveaux alignés sur ShareAccessLevel (backend). */
+export const UPLOAD_ACCESS_LEVELS = [
+  { value: 'Read', labelKey: 'access.read' as const },
+  { value: 'Preview', labelKey: 'access.preview' as const },
+  { value: 'Download', labelKey: 'access.download' as const },
+  { value: 'Write', labelKey: 'access.write' as const },
+] as const
+
 export function fileExtension(fileName: string): string {
   const ext = fileName.includes('.') ? fileName.split('.').pop() || '' : ''
   return ext.toLowerCase()
@@ -40,6 +48,15 @@ export function validateUploadFile(file: File): string | null {
   if (!UPLOAD_ALLOWED_EXTENSIONS.includes(ext as (typeof UPLOAD_ALLOWED_EXTENSIONS)[number])) {
     return 'invalidType'
   }
+  const type = file.type.toLowerCase()
+  const isAllowedMime = !type || type === 'application/octet-stream'
+    || type === 'application/pdf'
+    || type === 'application/msword'
+    || type.startsWith('application/vnd.')
+    || type.startsWith('image/')
+    || type.startsWith('text/')
+    || type === 'application/zip'
+  if (!isAllowedMime) return 'invalidMime'
   return null
 }
 
@@ -90,17 +107,20 @@ export function buildVersionFormData(file: File, changeComment: string): FormDat
 
 export const SECURITY_FEATURES = [
   'antivirus',
+  'compression',
   'encryption',
+  'decryption',
   'integrity',
   'accessControl',
   'audit',
 ] as const
 
-/** Aligné sur le parcours sécurité backend (validation → buffer → scan → encrypt → hash → store). */
+/** Aligné sur le parcours backend : validation → buffer → scan → compression → chiffrement → hash → stockage. */
 export const UPLOAD_PIPELINE_STEPS = [
   'validate',
   'tempStore',
   'scan',
+  'compress',
   'encrypt',
   'hash',
   'store',
@@ -123,6 +143,56 @@ export function isThreatUploadError(message: string): boolean {
     m.includes('security threat') ||
     m.includes('infecté') ||
     m.includes('infected') ||
-    m.includes('menace')
+    m.includes('menace') ||
+    m.includes('antivirus_unavailable') ||
+    m.includes('scan antivirus') ||
+    m.includes('sfs-demo-threat')
   )
 }
+
+/** Signatures alignées sur AntivirusService (moteur intégré) — pré-analyse locale. */
+const LOCAL_THREAT_MARKERS = [
+  'SFS-DEMO-THREAT-SIGNATURE',
+  'EICAR-STANDARD-ANTIVIRUS-TEST-FILE',
+] as const
+
+/** Lit le contenu du fichier et détecte les signatures de test antivirus. */
+export async function detectLocalThreatSignature(file: File): Promise<string | null> {
+  if (file.size <= 0 || file.size > 2 * 1024 * 1024) return null
+  try {
+    const text = await file.text()
+    for (const marker of LOCAL_THREAT_MARKERS) {
+      if (text.toUpperCase().includes(marker.toUpperCase())) return marker
+    }
+  } catch {
+    return null
+  }
+  return null
+}
+
+export async function sha256Hex(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer()
+  const digest = await crypto.subtle.digest('SHA-256', buffer)
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+export function keywordsFromFileName(name: string): string[] {
+  return name
+    .replace(/\.[^.]+$/, '')
+    .split(/[\s_\-.()[\]]+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length > 2)
+    .slice(0, 6)
+}
+
+export function guessLanguageFromName(name: string): string {
+  const n = name.toLowerCase()
+  if (/[àâäéèêëïîôùûüç]/.test(n) || /\b(fr|francais|français)\b/.test(n)) return 'fr'
+  if (/\b(en|english)\b/.test(n)) return 'en'
+  return '—'
+}
+
+export type ConfidentialityLevel = 'internal' | 'confidential' | 'secret'
+
+export const UPLOAD_DRAFT_KEY = 'sfs_upload_draft_v1'
+

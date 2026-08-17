@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import { ThemeProvider } from '@/context/ThemeContext'
@@ -17,6 +18,34 @@ import { ProfilePage } from '@/pages/ProfilePage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 import { AdminAuditPage } from '@/pages/admin/AdminAuditPage'
 import { AdminConfigPage } from '@/pages/admin/AdminPages'
+import { ShareLinkPage } from '@/pages/ShareLinkPage'
+import { PREF_COMPACT_TABLE_KEY, PREF_HOME_PAGE_KEY } from '@/constants'
+
+const HOME_PAGES = new Set(['/', '/documents', '/favorites', '/shared', '/categories'])
+
+function readHomePage() {
+  const v = localStorage.getItem(PREF_HOME_PAGE_KEY) || '/'
+  return HOME_PAGES.has(v) ? v : '/'
+}
+
+function HomeRoute() {
+  const home = readHomePage()
+  if (home !== '/') return <Navigate to={home} replace />
+  return <DashboardPage />
+}
+
+function CompactTableSync() {
+  useEffect(() => {
+    const apply = () => {
+      const on = localStorage.getItem(PREF_COMPACT_TABLE_KEY) === 'true'
+      document.documentElement.dataset.compactTable = on ? 'true' : 'false'
+    }
+    apply()
+    window.addEventListener('storage', apply)
+    return () => window.removeEventListener('storage', apply)
+  }, [])
+  return null
+}
 
 export default function App() {
   return (
@@ -24,12 +53,14 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter>
+            <CompactTableSync />
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<Navigate to="/login" replace />} />
+              <Route path="/share" element={<ShareLinkPage />} />
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
-                  <Route index element={<DashboardPage />} />
+                  <Route index element={<HomeRoute />} />
                   <Route path="documents/upload" element={<UploadPage />} />
                   <Route path="documents" element={<DocumentsPage />} />
                   <Route path="favorites" element={<FavoritesPage />} />
@@ -40,6 +71,7 @@ export default function App() {
                   <Route path="profile" element={<ProfilePage />} />
                   <Route element={<AdminRoute />}>
                     <Route path="admin/users" element={<AdminUsersPage />} />
+                    <Route path="admin/groups" element={<Navigate to="/admin/users" replace />} />
                     <Route path="admin/audit" element={<AdminAuditPage />} />
                     <Route path="admin/config" element={<AdminConfigPage />} />
                   </Route>

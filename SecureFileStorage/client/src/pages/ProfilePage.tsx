@@ -1,19 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { api } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
-import { useTheme } from '@/context/ThemeContext'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { ProfileSkeleton } from '@/components/profile/ProfileSkeleton'
 import {
   IconActivity,
   IconCalendar,
   IconCamera,
-  IconCheck,
   IconMail,
   IconPhone,
   IconShield,
   IconUser,
-  IconX,
 } from '@/components/profile/ProfileIcons'
 import { PREF_NOTIF_EMAIL_KEY, PREF_NOTIF_INAPP_KEY } from '@/constants'
 import { useI18n } from '@/i18n/I18nContext'
@@ -28,10 +24,6 @@ import {
 import type { DashboardStats, ProfileUser, RecentActivity } from '@/types'
 
 type ToastType = 'success' | 'error'
-
-const USER_PERMS = ['view', 'download', 'upload', 'edit', 'share'] as const
-const ADMIN_ONLY_PERMS = ['delete', 'adminUsers', 'adminRoles', 'adminAudit', 'adminConfig'] as const
-const ALL_PERMS = [...USER_PERMS, ...ADMIN_ONLY_PERMS] as const
 
 function readBoolPref(key: string, defaultValue = true) {
   const v = localStorage.getItem(key)
@@ -51,8 +43,7 @@ function actionIcon(action: string) {
 
 export function ProfilePage() {
   const { t, locale, lang, setLang } = useI18n()
-  const { user, isAdmin, logout } = useAuth()
-  const { theme, setTheme } = useTheme()
+  const { user, logout } = useAuth()
 
   const [profile, setProfile] = useState<ProfileUser | null>(null)
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -122,13 +113,6 @@ export function ProfilePage() {
     () => stats?.recentDocuments?.filter((d) => d.visibility !== 'Private').length ?? 0,
     [stats]
   )
-
-  const permissions = useMemo(() => {
-    return ALL_PERMS.map((key) => ({
-      key,
-      granted: isAdmin || (USER_PERMS as readonly string[]).includes(key),
-    }))
-  }, [isAdmin])
 
   const activityLabel = (action: string) => {
     const key = `action.${action}`
@@ -275,9 +259,7 @@ export function ProfilePage() {
   const primaryRole = profile?.roles?.includes('Admin') ? t('role.admin') : t('role.user')
 
   return (
-    <section className="page profile-page" id="page-profile">
-      <PageHeader title={t('page.profile.title')} subtitle={t('page.profile.subtitle')} />
-
+    <section className="page profile-page files-like-page" id="page-profile">
       {toast && (
         <div className={`profile-toast profile-toast-${toast.type}`} role="status">
           {toast.message}
@@ -555,29 +537,6 @@ export function ProfilePage() {
             <div className="profile-pref-list">
               <div className="profile-pref-item">
                 <div>
-                  <strong>{t('profile.appearance')}</strong>
-                  <p>{t('profile.appearanceHint')}</p>
-                </div>
-                <div className="profile-segmented" role="group" aria-label={t('profile.appearance')}>
-                  <button
-                    type="button"
-                    className={`profile-segment${theme === 'light' ? ' active' : ''}`}
-                    onClick={() => setTheme('light')}
-                  >
-                    {t('profile.themeLight')}
-                  </button>
-                  <button
-                    type="button"
-                    className={`profile-segment${theme === 'dark' ? ' active' : ''}`}
-                    onClick={() => setTheme('dark')}
-                  >
-                    {t('profile.themeDark')}
-                  </button>
-                </div>
-              </div>
-
-              <div className="profile-pref-item">
-                <div>
                   <strong>{t('profile.language')}</strong>
                   <p>{t('profile.languageHint')}</p>
                 </div>
@@ -620,27 +579,6 @@ export function ProfilePage() {
         </div>
 
         <div className="profile-column profile-column-aside">
-          {/* ── Rôle & permissions ── */}
-          <section className="profile-section card">
-            <div className="profile-section-head">
-              <h3 className="profile-section-title">{t('profile.rolesPermissions')}</h3>
-            </div>
-            <p className="profile-role-summary">
-              {t('profile.currentRole')}{' '}
-              <strong>{(profile?.roles || []).map(roleLabel).join(', ') || '—'}</strong>
-            </p>
-            <ul className="profile-perm-list">
-              {permissions.map(({ key, granted }) => (
-                <li key={key} className={`profile-perm-item${granted ? ' granted' : ' denied'}`}>
-                  <span className="profile-perm-icon" aria-hidden="true">
-                    {granted ? <IconCheck /> : <IconX />}
-                  </span>
-                  <span>{t(`perm.${key}`)}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
           {/* ── Activité récente ── */}
           <section className="profile-section card">
             <div className="profile-section-head">

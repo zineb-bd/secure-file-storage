@@ -171,6 +171,32 @@ export interface RoleDto {
   description: string
 }
 
+export interface UserGroupMember {
+  userId: string
+  email: string
+  fullName: string
+  joinedAt: string
+}
+
+export interface UserGroup {
+  id: string
+  name: string
+  description: string
+  memberCount: number
+  createdAt: string
+  updatedAt?: string | null
+  members: UserGroupMember[]
+}
+
+export interface CategoryAccessRule {
+  id: string
+  category: string
+  userGroupId: string
+  userGroupName: string
+  accessLevel: string
+  createdAt: string
+}
+
 export interface AuditLog {
   id: string
   userId?: string | null
@@ -194,11 +220,18 @@ export interface StorageConfig {
   s3Bucket?: string | null
   isActive: boolean
   updatedAt: string
+  compressionEnabled?: boolean
+  encryptionAlgorithm?: string
+  activeEncryptionKeyId?: string | null
+  activeEncryptionKeyIdentifier?: string | null
 }
 
 export interface DocumentDetail extends DocumentDto {
   extension: string
   storagePath?: string | null
+  isEncrypted?: boolean
+  isCompressed?: boolean
+  encryptionAlgorithm?: string
 }
 
 export interface DocumentVersion {

@@ -251,6 +251,7 @@ public class DocumentsController : ControllerBase
     public async Task<ActionResult<CreateShareLinkResponse>> CreateShareLink(Guid id, [FromBody] CreateShareLinkRequest request, CancellationToken ct)
     {
         if (_currentUser.UserId is null) return Unauthorized();
+        // Toujours l'URL publique de l'API (pas le frontend local) : le lien marche hors machine.
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
         var result = await _documentService.CreateShareLinkAsync(id, request, _currentUser.UserId.Value, baseUrl, ct);
         return result is null ? BadRequest(new { message = "Impossible de créer le lien de partage." }) : Ok(result);

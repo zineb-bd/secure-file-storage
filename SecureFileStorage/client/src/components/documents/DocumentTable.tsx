@@ -27,6 +27,8 @@ interface DocumentTableProps {
   showOwner?: boolean
   sharedMode?: boolean
   showFavorite?: boolean
+  /** Fewer columns for narrower layouts (Mes fichiers) */
+  compact?: boolean
 }
 
 export function DocumentTable({
@@ -37,6 +39,7 @@ export function DocumentTable({
   showOwner = true,
   sharedMode = false,
   showFavorite = true,
+  compact = false,
 }: DocumentTableProps) {
   const { t, locale } = useI18n()
   const { isAdmin } = useAuth()
@@ -126,15 +129,15 @@ export function DocumentTable({
   return (
     <>
       {toast && <div className="profile-toast profile-toast-success">{toast}</div>}
-      <table className="data-table">
+      <table className={`data-table${compact ? ' data-table-compact' : ''}`}>
         <thead>
           <tr>
             <th />
             <th>{t('table.name')}</th>
             {!sharedMode && <th>{t('table.category')}</th>}
-            <th>{t('table.type')}</th>
+            {!compact && <th>{t('table.type')}</th>}
             <th>{t('table.size')}</th>
-            {!sharedMode && <th>{t('table.version')}</th>}
+            {!sharedMode && !compact && <th>{t('table.version')}</th>}
             {showOwner && <th>{t('table.owner')}</th>}
             {sharedMode && <th>{t('table.rights')}</th>}
             <th>{sharedMode ? t('table.date') : t('table.updated')}</th>
@@ -158,16 +161,16 @@ export function DocumentTable({
                   </span>
                 </td>
                 <td>
-                  <span className="doc-name">
-                    {d.fileName}
+                  <span className="doc-name" title={d.fileName}>
+                    <span className="doc-name-text">{d.fileName}</span>
                     <VisibilityBadge visibility={d.visibility} />
                     <LockBadge doc={d} />
                   </span>
                 </td>
                 {!sharedMode && <td>{d.category || '—'}</td>}
-                <td>{(d.contentType || '—').split('/').pop()}</td>
+                {!compact && <td>{(d.contentType || '—').split('/').pop()}</td>}
                 <td>{fmtSize(d.sizeBytes)}</td>
-                {!sharedMode && <td>{d.currentVersion || 1}</td>}
+                {!sharedMode && !compact && <td>{d.currentVersion || 1}</td>}
                 {showOwner && <td>{d.ownerName || '—'}</td>}
                 {sharedMode && <td>{d.myAccessLevel || '—'}</td>}
                 <td>{fmtDate(sharedMode ? d.createdAt : d.updatedAt || d.createdAt, locale)}</td>

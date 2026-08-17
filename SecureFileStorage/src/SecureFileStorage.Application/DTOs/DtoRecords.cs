@@ -182,7 +182,11 @@ public record StorageConfigDto(
     string? S3Endpoint,
     string? S3Bucket,
     bool IsActive,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    bool CompressionEnabled = true,
+    string EncryptionAlgorithm = "AesGcm",
+    string? ActiveEncryptionKeyId = null,
+    string? ActiveEncryptionKeyIdentifier = null);
 
 public record UpdateStorageConfigRequest(
     string ProviderType,
@@ -192,7 +196,9 @@ public record UpdateStorageConfigRequest(
     string? S3Endpoint,
     string? S3Bucket,
     string? S3AccessKey,
-    string? S3SecretKey);
+    string? S3SecretKey,
+    bool? CompressionEnabled = null,
+    string? EncryptionAlgorithm = null);
 
 public record AuditLogDto(
     Guid Id,
@@ -294,8 +300,54 @@ public record DocumentDetailDto(
     bool IsLockedByCurrentUser = false,
     bool CanModify = false,
     string Visibility = "Private",
-    string PublicAccessLevel = "Read");
+    string PublicAccessLevel = "Read",
+    bool IsEncrypted = true,
+    bool IsCompressed = false,
+    string EncryptionAlgorithm = "AesCbcLegacy");
 
 public record ChatRequest(string Message, string? Locale = null);
 
-public record ChatResponse(string Reply, string Source);
+public record ChatResponse(string Reply, string Source, string Topic = "other");
+
+public record ChatbotUsageStatsDto(
+    int TotalRequests,
+    int FaqRequests,
+    int AiRequests,
+    int FallbackRequests,
+    IEnumerable<ChatbotTopicStatDto> TopTopics);
+
+public record ChatbotTopicStatDto(string Topic, int Count);
+
+public record UserGroupMemberDto(
+    Guid UserId,
+    string Email,
+    string FullName,
+    DateTime JoinedAt);
+
+public record UserGroupDto(
+    Guid Id,
+    string Name,
+    string Description,
+    int MemberCount,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt,
+    IEnumerable<UserGroupMemberDto> Members);
+
+public record CreateUserGroupRequest(string Name, string? Description);
+
+public record UpdateUserGroupRequest(string? Name, string? Description);
+
+public record AddGroupMemberRequest(Guid UserId);
+
+public record CategoryAccessRuleDto(
+    Guid Id,
+    string Category,
+    Guid UserGroupId,
+    string UserGroupName,
+    string AccessLevel,
+    DateTime CreatedAt);
+
+public record UpsertCategoryAccessRuleRequest(
+    string Category,
+    Guid UserGroupId,
+    string AccessLevel);

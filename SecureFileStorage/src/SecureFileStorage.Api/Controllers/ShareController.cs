@@ -16,6 +16,40 @@ public class ShareController : ControllerBase
 
     public ShareController(IDocumentService documentService) => _documentService = documentService;
 
+    [HttpGet("info")]
+    [SwaggerOperation(Summary = "Informations d'un partage (query)", Description = "Consulte les métadonnées via ?token=… — accessible sans authentification.")]
+    public async Task<ActionResult<SharedDocumentInfoDto>> GetInfoByQuery([FromQuery] string token, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return BadRequest(new { message = "Jeton manquant." });
+        var info = await _documentService.GetSharedInfoAsync(token.Trim(), ct);
+        return info is null ? NotFound(new { message = "Lien invalide, expiré ou révoqué." }) : Ok(info);
+    }
+
+    [HttpGet("preview")]
+    [SwaggerOperation(Summary = "Prévisualiser via lien (query)")]
+    public async Task<IActionResult> PreviewByQuery([FromQuery] string token, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return BadRequest(new { message = "Jeton manquant." });
+        var result = await _documentService.PreviewByTokenAsync(token.Trim(), ct);
+        if (result is null)
+            return NotFound(new { message = "Prévisualisation indisponible pour ce lien." });
+        return File(result.Value.Stream, result.Value.ContentType);
+    }
+
+    [HttpGet("download")]
+    [SwaggerOperation(Summary = "Télécharger via lien (query)")]
+    public async Task<IActionResult> DownloadByQuery([FromQuery] string token, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return BadRequest(new { message = "Jeton manquant." });
+        var result = await _documentService.DownloadByTokenAsync(token.Trim(), ct);
+        if (result is null)
+            return NotFound(new { message = "Téléchargement non autorisé pour ce lien." });
+        return File(result.Value.Stream, result.Value.ContentType, result.Value.FileName);
+    }
+
     [HttpGet("{token}/info")]
     [SwaggerOperation(Summary = "Informations d'un partage", Description = "Consulte les métadonnées d'un document partagé via lien sécurisé.")]
     public async Task<ActionResult<SharedDocumentInfoDto>> GetInfo(string token, CancellationToken ct)

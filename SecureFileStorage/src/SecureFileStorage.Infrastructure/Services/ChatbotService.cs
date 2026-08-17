@@ -36,14 +36,14 @@ public class ChatbotService : IChatbotService
         var locale = string.IsNullOrWhiteSpace(request.Locale) ? "fr" : request.Locale!;
 
         if (string.IsNullOrWhiteSpace(message))
-            return new ChatResponse(FallbackReply(locale), "fallback");
+            return new ChatResponse(FallbackReply(locale), "fallback", "empty");
 
         var faq = ChatFaqMatcher.TryMatch(message, locale);
         if (faq is not null)
-            return new ChatResponse(faq.Value.Reply, "faq");
+            return new ChatResponse(faq.Value.Reply, "faq", faq.Value.Intent);
 
         if (!_settings.Enabled || string.IsNullOrWhiteSpace(_settings.ApiKey))
-            return new ChatResponse(FallbackReply(locale), "fallback");
+            return new ChatResponse(FallbackReply(locale), "fallback", "other");
 
         try
         {
@@ -67,17 +67,16 @@ public class ChatbotService : IChatbotService
             using var res = await _http.SendAsync(req, ct);
             if (!res.IsSuccessStatusCode)
             {
-                var body = await res.Content.ReadAsStringAsync(ct);
-                _logger.LogWarning("Chatbot provider returned {Status}: {Body}", (int)res.StatusCode, Truncate(body));
-                return new ChatResponse(FallbackReply(locale), "fallback");
+                _logger.LogWarning("Chatbot provider returned status {Status}", (int)res.StatusCode);
+                return new ChatResponse(FallbackReply(locale), "fallback", "other");
             }
 
             var payload = await res.Content.ReadFromJsonAsync<OpenAiChatCompletion>(JsonOptions, ct);
             var reply = payload?.Choices?.FirstOrDefault()?.Message?.Content?.Trim();
             if (string.IsNullOrWhiteSpace(reply))
-                return new ChatResponse(FallbackReply(locale), "fallback");
+                return new ChatResponse(FallbackReply(locale), "fallback", "other");
 
-            return new ChatResponse(reply, "ai");
+            return new ChatResponse(reply, "ai", "other");
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -86,7 +85,7 @@ public class ChatbotService : IChatbotService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Chatbot AI request failed");
-            return new ChatResponse(FallbackReply(locale), "fallback");
+            return new ChatResponse(FallbackReply(locale), "fallback", "other");
         }
     }
 
@@ -122,9 +121,6 @@ public class ChatbotService : IChatbotService
             ? "I couldn't find a precise answer. Topics I can help with: upload, sharing, trash, categories, security. Rephrase your question or use a suggestion."
             : "Je n'ai pas trouvé de réponse précise. Voici des sujets sur lesquels je peux vous aider : téléversement, partage, corbeille, catégories, sécurité. Reformulez votre question ou utilisez une suggestion.";
     }
-
-    private static string Truncate(string value) =>
-        value.Length <= 300 ? value : value[..300] + "…";
 
     private sealed class OpenAiChatCompletion
     {

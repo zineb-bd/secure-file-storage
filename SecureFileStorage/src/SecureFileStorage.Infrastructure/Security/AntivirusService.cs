@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SecureFileStorage.Application.DTOs;
 using SecureFileStorage.Application.Interfaces;
@@ -15,6 +16,15 @@ namespace SecureFileStorage.Infrastructure.Security;
 
 public class AntivirusService : IAntivirusService
 {
+    /// <summary>Chaîne de test EICAR (standard antivirus) — détectée sans ClamAV.</summary>
+    private const string EicarMarker = "EICAR-STANDARD-ANTIVIRUS-TEST-FILE";
+
+    /// <summary>
+    /// Signature de démo inoffensive (ne déclenche pas Windows Defender).
+    /// Utiliser le fichier docs/test-antivirus-demo.txt pour les tests locaux.
+    /// </summary>
+    private const string DemoThreatMarker = "SFS-DEMO-THREAT-SIGNATURE";
+
     private const int MaxRecentDurations = 100;
 
     private static long _totalScans;
@@ -28,30 +38,54 @@ public class AntivirusService : IAntivirusService
 
     private readonly AntivirusSettings _settings;
     private readonly ApplicationDbContext _context;
+    private readonly ILogger<AntivirusService> _logger;
 
-    public AntivirusService(IOptions<AntivirusSettings> settings, ApplicationDbContext context)
+    public AntivirusService(
+        IOptions<AntivirusSettings> settings,
+        ApplicationDbContext context,
+        ILogger<AntivirusService> logger)
     {
         _settings = settings.Value;
         _context = context;
+        _logger = logger;
     }
 
     public async Task<(AntivirusScanResult Result, string? ThreatName)> ScanAsync(
         Stream fileStream, string fileName, CancellationToken ct = default)
     {
-        if (!_settings.Enabled)
-        {
-            RecordScan(AntivirusScanResult.Skipped, 0);
-            return (AntivirusScanResult.Skipped, null);
-        }
-
         var sw = Stopwatch.StartNew();
-        try
-        {
-            using var ms = new MemoryStream();
-            await fileStream.CopyToAsync(ms, ct);
-            var data = ms.ToArray();
+        using var ms = new MemoryStream();
+        await fileStream.CopyToAsync(ms, ct);
+        var data = ms.ToArray();
+        if (fileStream.CanSeek)
             fileStream.Position = 0;
 
+        // 1) Moteur intégré (signatures) — toujours au téléversement
+        var localThreat = DetectBuiltInThreat(data);
+        if (localThreat is not null)
+        {
+            sw.Stop();
+            await PersistAlertAsync(fileName, localThreat, "Détection moteur intégré au téléversement", ct);
+            _logger.LogWarning(
+                "Antivirus : fichier rejeté au téléversement — {FileName} menace={Threat}",
+                fileName, localThreat);
+            RecordScan(AntivirusScanResult.Infected, sw.ElapsedMilliseconds);
+            return (AntivirusScanResult.Infected, localThreat);
+        }
+
+        // 2) ClamAV (optionnel) — sinon le moteur intégré valide déjà le fichier
+        if (!_settings.Enabled)
+        {
+            sw.Stop();
+            _logger.LogInformation(
+                "Antivirus : scan signatures OK au téléversement — {FileName} (ClamAV désactivé)",
+                fileName);
+            RecordScan(AntivirusScanResult.Clean, sw.ElapsedMilliseconds);
+            return (AntivirusScanResult.Clean, null);
+        }
+
+        try
+        {
             using var client = new TcpClient();
             await client.ConnectAsync(_settings.ClamAvHost, _settings.ClamAvPort, ct);
             await using var stream = client.GetStream();
@@ -74,6 +108,7 @@ public class AntivirusService : IAntivirusService
 
             if (response.Contains("OK", StringComparison.OrdinalIgnoreCase))
             {
+                _logger.LogInformation("Antivirus ClamAV : fichier sain — {FileName}", fileName);
                 RecordScan(AntivirusScanResult.Clean, sw.ElapsedMilliseconds);
                 return (AntivirusScanResult.Clean, null);
             }
@@ -82,24 +117,27 @@ public class AntivirusService : IAntivirusService
                 ? response.Split(':').LastOrDefault()?.Trim()
                 : "Unknown";
 
-            await _context.AntivirusAlerts.AddAsync(new AntivirusAlert
-            {
-                Id = Guid.NewGuid(),
-                FileName = fileName,
-                ThreatName = threat ?? "Unknown",
-                Details = response.Trim(),
-                DetectedAt = DateTime.UtcNow
-            }, ct);
-            await _context.SaveChangesAsync(ct);
-
+            await PersistAlertAsync(fileName, threat ?? "Unknown", response.Trim(), ct);
+            _logger.LogWarning(
+                "Antivirus ClamAV : fichier rejeté au téléversement — {FileName} menace={Threat}",
+                fileName, threat);
             RecordScan(AntivirusScanResult.Infected, sw.ElapsedMilliseconds);
             return (AntivirusScanResult.Infected, threat);
         }
-        catch
+        catch (Exception ex)
         {
             sw.Stop();
+            await PersistAlertAsync(
+                fileName,
+                "SCAN_FAILED",
+                $"Échec du scan antivirus au téléversement : {ex.GetType().Name} — {ex.Message}",
+                ct);
+            _logger.LogError(
+                ex,
+                "Antivirus : échec du scan au téléversement — {FileName} (fichier rejeté)",
+                fileName);
             RecordScan(AntivirusScanResult.Error, sw.ElapsedMilliseconds);
-            return (AntivirusScanResult.Error, null);
+            return (AntivirusScanResult.Error, "SCAN_FAILED");
         }
     }
 
@@ -151,7 +189,7 @@ public class AntivirusService : IAntivirusService
 
         return new AntivirusStatsDto(
             Enabled: _settings.Enabled,
-            Engine: "ClamAV",
+            Engine: _settings.Enabled ? "ClamAV + signatures" : "Signatures (intégré)",
             Host: _settings.ClamAvHost,
             Port: _settings.ClamAvPort,
             TotalScansSession: (int)Interlocked.Read(ref _totalScans),
@@ -168,6 +206,30 @@ public class AntivirusService : IAntivirusService
             DocumentsScanned: documentsScanned,
             LastDetectionAt: lastDetectionAt,
             TopThreats: topThreats);
+    }
+
+    private async Task PersistAlertAsync(string fileName, string threatName, string details, CancellationToken ct)
+    {
+        await _context.AntivirusAlerts.AddAsync(new AntivirusAlert
+        {
+            Id = Guid.NewGuid(),
+            FileName = fileName,
+            ThreatName = threatName,
+            Details = details,
+            DetectedAt = DateTime.UtcNow
+        }, ct);
+        await _context.SaveChangesAsync(ct);
+    }
+
+    private static string? DetectBuiltInThreat(byte[] data)
+    {
+        // UTF-8 + ASCII : couvre BOM, retours ligne, fichiers édités sous Windows
+        var text = Encoding.UTF8.GetString(data);
+        if (text.Contains(DemoThreatMarker, StringComparison.OrdinalIgnoreCase))
+            return "SFS-Demo-Threat";
+        if (text.Contains(EicarMarker, StringComparison.OrdinalIgnoreCase))
+            return "EICAR-Test-File";
+        return null;
     }
 
     private static void RecordScan(AntivirusScanResult result, long durationMs)

@@ -22,10 +22,10 @@ public class DocumentService : IDocumentService
     ];
 
     private readonly IDocumentRepository _documentRepository;
-    private readonly IStorageService _storageService;
     private readonly IEncryptionService _encryptionService;
     private readonly IAntivirusService _antivirusService;
     private readonly IPermissionChecker _permissionChecker;
+    private readonly PermissionChecker _accessEvaluator;
     private readonly IAuditService _auditService;
     private readonly INotificationService _notificationService;
     private readonly ApplicationDbContext _context;
@@ -34,7 +34,6 @@ public class DocumentService : IDocumentService
 
     public DocumentService(
         IDocumentRepository documentRepository,
-        IStorageService storageService,
         IEncryptionService encryptionService,
         IAntivirusService antivirusService,
         IPermissionChecker permissionChecker,
@@ -45,10 +44,11 @@ public class DocumentService : IDocumentService
         StoredBlobService storedBlobService)
     {
         _documentRepository = documentRepository;
-        _storageService = storageService;
         _encryptionService = encryptionService;
         _antivirusService = antivirusService;
         _permissionChecker = permissionChecker;
+        _accessEvaluator = permissionChecker as PermissionChecker
+            ?? throw new InvalidOperationException("IPermissionChecker doit être PermissionChecker.");
         _auditService = auditService;
         _notificationService = notificationService;
         _context = context;
@@ -66,29 +66,20 @@ public class DocumentService : IDocumentService
         if (!validation.IsValid)
             throw new InvalidOperationException(validation.Error);
 
+        var plainData = ms.ToArray();
+        var contentValidation = FileValidator.ValidateContent(fileName, plainData);
+        if (!contentValidation.IsValid)
+            throw new InvalidOperationException(contentValidation.Error);
+        var expectedHash = _encryptionService.ComputeSha256Hash(plainData);
+
         ms.Position = 0;
         var (scanResult, threat) = await _antivirusService.ScanAsync(ms, fileName, ct);
-        if (scanResult == AntivirusScanResult.Infected)
-        {
-            await _auditService.LogAsync(
-                userId,
-                AuditAction.AntivirusAlert,
-                "Document",
-                null,
-                $"Menace antivirus détectée — fichier rejeté : {fileName} ({threat})",
-                "",
-                success: false,
-                ct: ct);
-            throw new InvalidOperationException(
-                $"THREAT_DETECTED: The document could not be uploaded because a security threat was detected. ({threat})");
-        }
-
-        // Temporary buffer held in memory only — permanent encrypted storage happens after a clean/skipped scan.
-        ms.Position = 0;
-        var plainData = ms.ToArray();
+        await EnsureAntivirusAllowsUploadAsync(scanResult, threat, fileName, userId, documentId: null, ct);
 
         var (blob, deduplicated) = await AcquireBlobWithRetryAsync(plainData, ct);
         var hash = blob.Sha256Hash;
+        if (!string.Equals(hash, expectedHash, StringComparison.Ordinal))
+            throw new CryptographicException("Échec du contrôle d'intégrité SHA-256 avant stockage.");
         var documentId = Guid.NewGuid();
 
         var version = new DocumentVersion
@@ -171,11 +162,7 @@ public class DocumentService : IDocumentService
         var docVersion = doc.Versions.FirstOrDefault(v => v.VersionNumber == versionNumber);
         if (docVersion is null) return null;
 
-        var (storagePath, encryptedKey) = StoredBlobService.ResolveStorage(docVersion);
-        await using var encryptedStream = await _storageService.ReadAsync(storagePath, ct);
-        using var ms = new MemoryStream();
-        await encryptedStream.CopyToAsync(ms, ct);
-        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), encryptedKey, ct);
+        var plain = await _storedBlobService.ReadPlainAsync(docVersion, ct);
 
         await _auditService.LogAsync(userId, AuditAction.Download, "Document", documentId,
             $"Téléchargement v{versionNumber}", "", ct: ct);
@@ -196,16 +183,19 @@ public class DocumentService : IDocumentService
         var docVersion = doc.Versions.FirstOrDefault(v => v.VersionNumber == doc.CurrentVersion);
         if (docVersion is null) return null;
 
-        var (storagePath, encryptedKey) = StoredBlobService.ResolveStorage(docVersion);
-        await using var encryptedStream = await _storageService.ReadAsync(storagePath, ct);
-        using var ms = new MemoryStream();
-        await encryptedStream.CopyToAsync(ms, ct);
-        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), encryptedKey, ct);
+        try
+        {
+            var plain = await _storedBlobService.ReadPlainAsync(docVersion, ct);
 
-        await _auditService.LogAsync(userId, AuditAction.Preview, "Document", documentId,
-            "Prévisualisation", "", ct: ct);
+            await _auditService.LogAsync(userId, AuditAction.Preview, "Document", documentId,
+                "Prévisualisation", "", ct: ct);
 
-        return (new MemoryStream(plain), doc.ContentType);
+            return (new MemoryStream(plain), doc.ContentType);
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
     }
 
     public async Task<DocumentDto?> GetByIdAsync(Guid id, Guid userId, CancellationToken ct = default)
@@ -231,13 +221,13 @@ public class DocumentService : IDocumentService
             user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase));
 
         var (items, total) = await _documentRepository.SearchAsync(request, ownerFilter: null, ct);
+        var accessCtx = await _accessEvaluator.BuildAccessContextAsync(userId, ct);
 
         if (!isAdmin)
         {
             items = items.Where(d =>
-                d.OwnerId == userId ||
-                d.Visibility == DocumentVisibility.Public ||
-                d.Permissions.Any(p => p.UserId == userId && PermissionChecker.IsActive(p))).ToList();
+                PermissionChecker.GetEffectiveLevelOnDocument(d, userId, isAdmin, accessCtx) is not null)
+                .ToList();
             total = items.Count();
         }
 
@@ -254,8 +244,8 @@ public class DocumentService : IDocumentService
             if (hadLock && !DocumentLockHelper.IsActiveLock(doc))
                 anyLockCleared = true;
 
-            var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin);
-            dtos.Add(MapDocument(doc, userId, isAdmin, false, canModify, favoriteIds.Contains(doc.Id)));
+            var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin, accessCtx);
+            dtos.Add(MapDocument(doc, userId, isAdmin, accessCtx, false, canModify, favoriteIds.Contains(doc.Id)));
         }
 
         if (anyLockCleared)
@@ -276,15 +266,13 @@ public class DocumentService : IDocumentService
 
         var searchRequest = request with { Status = request.Status ?? "Active", Page = 1, PageSize = 500 };
         var (items, _) = await _documentRepository.SearchAsync(searchRequest, ownerFilter: null, ct);
+        var accessCtx = await _accessEvaluator.BuildAccessContextAsync(userId, ct);
 
         var shared = items
             .Where(d =>
                 d.OwnerId != userId &&
                 d.Status == DocumentStatus.Active &&
-                (
-                    d.Permissions.Any(p => p.UserId == userId && PermissionChecker.IsActive(p)) ||
-                    d.Visibility == DocumentVisibility.Public
-                ))
+                PermissionChecker.GetEffectiveLevelOnDocument(d, userId, isAdmin, accessCtx) is not null)
             .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
             .ToList();
 
@@ -310,8 +298,8 @@ public class DocumentService : IDocumentService
             if (hadLock && !DocumentLockHelper.IsActiveLock(doc))
                 anyLockCleared = true;
 
-            var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin);
-            dtos.Add(MapDocument(doc, userId, isAdmin, false, canModify, favoriteIds.Contains(doc.Id)));
+            var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin, accessCtx);
+            dtos.Add(MapDocument(doc, userId, isAdmin, accessCtx, false, canModify, favoriteIds.Contains(doc.Id)));
         }
 
         if (anyLockCleared)
@@ -346,26 +334,24 @@ public class DocumentService : IDocumentService
         var doc = await _documentRepository.GetByIdWithVersionsAsync(documentId, ct);
         if (doc is null || doc.Status == DocumentStatus.Deleted) return null;
 
-        var (scanResult, threat) = await _antivirusService.ScanAsync(fileStream, fileName, ct);
-        if (scanResult == AntivirusScanResult.Infected)
-        {
-            await _auditService.LogAsync(
-                userId,
-                AuditAction.AntivirusAlert,
-                "Document",
-                documentId,
-                $"Menace antivirus détectée — version rejetée : {fileName} ({threat})",
-                "",
-                success: false,
-                ct: ct);
-            throw new InvalidOperationException(
-                $"THREAT_DETECTED: The document could not be uploaded because a security threat was detected. ({threat})");
-        }
-
         using var ms = new MemoryStream();
         await fileStream.CopyToAsync(ms, ct);
+        var validation = FileValidator.Validate(fileName, contentType, ms.Length);
+        if (!validation.IsValid)
+            throw new InvalidOperationException(validation.Error);
         var plainData = ms.ToArray();
+        var contentValidation = FileValidator.ValidateContent(fileName, plainData);
+        if (!contentValidation.IsValid)
+            throw new InvalidOperationException(contentValidation.Error);
+        var expectedHash = _encryptionService.ComputeSha256Hash(plainData);
+
+        ms.Position = 0;
+        var (scanResult, threat) = await _antivirusService.ScanAsync(ms, fileName, ct);
+        await EnsureAntivirusAllowsUploadAsync(scanResult, threat, fileName, userId, documentId, ct);
+
         var (blob, deduplicated) = await AcquireBlobWithRetryAsync(plainData, ct);
+        if (!string.Equals(blob.Sha256Hash, expectedHash, StringComparison.Ordinal))
+            throw new CryptographicException("Échec du contrôle d'intégrité SHA-256 avant stockage.");
 
         var newVersionNumber = doc.CurrentVersion + 1;
         var version = new DocumentVersion
@@ -574,11 +560,7 @@ public class DocumentService : IDocumentService
             throw new KeyNotFoundException("Document introuvable.");
 
         var version = doc.Versions.First(v => v.VersionNumber == doc.CurrentVersion);
-        var (storagePath, encryptedKey) = StoredBlobService.ResolveStorage(version);
-        await using var encryptedStream = await _storageService.ReadAsync(storagePath, ct);
-        using var ms = new MemoryStream();
-        await encryptedStream.CopyToAsync(ms, ct);
-        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), encryptedKey, ct);
+        var plain = await _storedBlobService.ReadPlainAsync(version, ct);
         var actualHash = _encryptionService.ComputeSha256Hash(plain);
         var isValid = actualHash == version.Sha256Hash;
 
@@ -601,8 +583,9 @@ public class DocumentService : IDocumentService
 
         var version = doc.Versions.FirstOrDefault(v => v.VersionNumber == doc.CurrentVersion);
         await RefreshExpiredLockAsync(doc, ct);
-        return await ToDetailDtoAsync(doc, userId,
-            version is null ? null : StoredBlobService.ResolveStorage(version).StoragePath, ct);
+        var storagePath = version is null ? null : StoredBlobService.ResolveStorage(version).StoragePath;
+        var isCompressed = version?.StoredBlob?.IsCompressed ?? false;
+        return await ToDetailDtoAsync(doc, userId, storagePath, isCompressed, ct);
     }
 
     public async Task<DocumentDto?> UpdateMetadataAsync(
@@ -940,13 +923,48 @@ public class DocumentService : IDocumentService
         var version = doc.Versions.FirstOrDefault(v => v.VersionNumber == doc.CurrentVersion);
         if (version is null) return null;
 
-        var (storagePath, encryptedKey) = StoredBlobService.ResolveStorage(version);
-        await using var encryptedStream = await _storageService.ReadAsync(storagePath, ct);
-        using var ms = new MemoryStream();
-        await encryptedStream.CopyToAsync(ms, ct);
-        var plain = await _encryptionService.DecryptAsync(ms.ToArray(), encryptedKey, ct);
+        var plain = await _storedBlobService.ReadPlainAsync(version, ct);
 
         return (new MemoryStream(plain), doc.FileName, doc.ContentType, doc.Id);
+    }
+
+    private async Task EnsureAntivirusAllowsUploadAsync(
+        AntivirusScanResult scanResult,
+        string? threat,
+        string fileName,
+        Guid userId,
+        Guid? documentId,
+        CancellationToken ct)
+    {
+        if (scanResult is AntivirusScanResult.Clean or AntivirusScanResult.Skipped)
+            return;
+
+        if (scanResult == AntivirusScanResult.Infected)
+        {
+            await _auditService.LogAsync(
+                userId,
+                AuditAction.AntivirusAlert,
+                "Document",
+                documentId,
+                $"Menace antivirus détectée — fichier rejeté au téléversement : {fileName} ({threat})",
+                "",
+                success: false,
+                ct: ct);
+            throw new InvalidOperationException(
+                $"THREAT_DETECTED: The document could not be uploaded because a security threat was detected. ({threat})");
+        }
+
+        await _auditService.LogAsync(
+            userId,
+            AuditAction.AntivirusAlert,
+            "Document",
+            documentId,
+            $"Échec du scan antivirus — fichier rejeté au téléversement : {fileName}",
+            "",
+            success: false,
+            ct: ct);
+        throw new InvalidOperationException(
+            "ANTIVIRUS_UNAVAILABLE: Le scan antivirus a échoué ; le document est rejeté et une alerte a été générée.");
     }
 
     private async Task<(StoredBlob Blob, bool Deduplicated)> AcquireBlobWithRetryAsync(
@@ -1048,7 +1066,8 @@ public class DocumentService : IDocumentService
         var canModify = await _permissionChecker.CanWriteAsync(doc.Id, userId, ct);
         var isFavorite = await _context.DocumentFavorites
             .AnyAsync(f => f.UserId == userId && f.DocumentId == doc.Id, ct);
-        return MapDocument(doc, userId, isAdmin, wasDeduplicated, canModify, isFavorite);
+        var accessCtx = await _accessEvaluator.BuildAccessContextAsync(userId, ct);
+        return MapDocument(doc, userId, isAdmin, accessCtx, wasDeduplicated, canModify, isFavorite);
     }
 
     private async Task<HashSet<Guid>> GetFavoriteIdSetAsync(Guid userId, CancellationToken ct) =>
@@ -1132,17 +1151,13 @@ public class DocumentService : IDocumentService
             .OrderByDescending(f => f.CreatedAt)
             .ToListAsync(ct);
 
+        var accessCtx = await _accessEvaluator.BuildAccessContextAsync(userId, ct);
         var accessible = new List<Document>();
         foreach (var fav in favorites)
         {
             var doc = fav.Document;
-            if (isAdmin ||
-                doc.OwnerId == userId ||
-                doc.Visibility == DocumentVisibility.Public ||
-                doc.Permissions.Any(p => p.UserId == userId && PermissionChecker.IsActive(p)))
-            {
+            if (PermissionChecker.GetEffectiveLevelOnDocument(doc, userId, isAdmin, accessCtx) is not null)
                 accessible.Add(doc);
-            }
         }
 
         var total = accessible.Count;
@@ -1152,8 +1167,8 @@ public class DocumentService : IDocumentService
 
         var dtos = paged.Select(doc =>
         {
-            var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin);
-            return MapDocument(doc, userId, isAdmin, false, canModify, true);
+            var canModify = PermissionChecker.CanWriteLoadedDocument(doc, userId, isAdmin, accessCtx);
+            return MapDocument(doc, userId, isAdmin, accessCtx, false, canModify, true);
         }).ToList();
 
         return new PagedResult<DocumentDto>(dtos, total, page, pageSize);
@@ -1203,15 +1218,15 @@ public class DocumentService : IDocumentService
     }
 
     private async Task<DocumentDetailDto> ToDetailDtoAsync(
-        Document doc, Guid userId, string? storagePath, CancellationToken ct = default)
+        Document doc, Guid userId, string? storagePath, bool isCompressed, CancellationToken ct = default)
     {
         await RefreshExpiredLockAsync(doc, ct);
         var canModify = await _permissionChecker.CanWriteAsync(doc.Id, userId, ct);
-        return MapDetail(doc, storagePath, userId, canModify);
+        return MapDetail(doc, storagePath, userId, canModify, isCompressed);
     }
 
     private static DocumentDetailDto MapDetail(
-        Document doc, string? storagePath, Guid userId, bool canModify) =>
+        Document doc, string? storagePath, Guid userId, bool canModify, bool isCompressed = false) =>
         new(doc.Id, doc.FileName, FileValidator.GetExtension(doc.FileName), doc.ContentType, doc.SizeBytes,
             doc.Category, doc.Description, doc.Sha256Hash, doc.CurrentVersion, doc.Status.ToString(),
             doc.OwnerId, $"{doc.Owner.FirstName} {doc.Owner.LastName}", doc.CreatedAt, doc.UpdatedAt,
@@ -1224,13 +1239,18 @@ public class DocumentService : IDocumentService
             DocumentLockHelper.IsLockedByUser(doc, userId),
             canModify,
             doc.Visibility.ToString(),
-            doc.PublicAccessLevel.ToString());
+            doc.PublicAccessLevel.ToString(),
+            IsEncrypted: !string.IsNullOrEmpty(storagePath),
+            IsCompressed: isCompressed,
+            EncryptionAlgorithm: doc.Versions
+                .FirstOrDefault(v => v.VersionNumber == doc.CurrentVersion)?.StoredBlob?.EncryptionAlgorithm.ToString()
+                ?? EncryptionAlgorithm.AesCbcLegacy.ToString());
 
     private static DocumentDto MapDocument(
-        Document doc, Guid userId, bool isAdmin, bool wasDeduplicated = false, bool canModify = false,
-        bool isFavorite = false)
+        Document doc, Guid userId, bool isAdmin, AccessEvaluationContext accessCtx,
+        bool wasDeduplicated = false, bool canModify = false, bool isFavorite = false)
     {
-        var myLevel = PermissionChecker.GetEffectiveLevelOnDocument(doc, userId, isAdmin);
+        var myLevel = PermissionChecker.GetEffectiveLevelOnDocument(doc, userId, isAdmin, accessCtx);
         return new(doc.Id, doc.FileName, doc.ContentType, doc.SizeBytes, doc.Category, doc.Description,
             doc.Sha256Hash, doc.CurrentVersion, doc.Status.ToString(), doc.OwnerId,
             $"{doc.Owner.FirstName} {doc.Owner.LastName}", doc.CreatedAt, doc.UpdatedAt, doc.DeletedAt,
@@ -1299,8 +1319,26 @@ public class StorageConfigService : IStorageConfigService
 
     public async Task<StorageConfigDto?> GetActiveAsync(CancellationToken ct = default)
     {
-        var config = await _context.StorageConfigurations.FirstOrDefaultAsync(c => c.IsActive, ct);
-        return config is null ? null : Map(config);
+        var config = await _context.StorageConfigurations
+            .Include(c => c.ActiveEncryptionKey)
+            .FirstOrDefaultAsync(c => c.IsActive, ct);
+        if (config is not null)
+            return Map(config);
+
+        config = new StorageConfiguration
+        {
+            Id = Guid.NewGuid(),
+            ProviderType = StorageProviderType.LocalFileSystem,
+            DatabaseProvider = DatabaseProviderType.PostgreSql,
+            BasePath = "./storage",
+            CompressionEnabled = true,
+            EncryptionAlgorithm = EncryptionAlgorithm.AesGcm,
+            IsActive = true,
+            UpdatedAt = DateTime.UtcNow
+        };
+        await _context.StorageConfigurations.AddAsync(config, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return Map(config);
     }
 
     public async Task<StorageConfigDto> UpdateAsync(UpdateStorageConfigRequest request, CancellationToken ct = default)
@@ -1317,7 +1355,9 @@ public class StorageConfigService : IStorageConfigService
             ProviderType = Enum.TryParse<StorageProviderType>(request.ProviderType, true, out var provider)
                 ? provider
                 : previous?.ProviderType ?? StorageProviderType.LocalFileSystem,
-            DatabaseProvider = Enum.Parse<DatabaseProviderType>(request.DatabaseProvider, true),
+            DatabaseProvider = Enum.TryParse<DatabaseProviderType>(request.DatabaseProvider, true, out var dbProvider)
+                ? dbProvider
+                : previous?.DatabaseProvider ?? DatabaseProviderType.PostgreSql,
             BasePath = string.IsNullOrWhiteSpace(request.BasePath)
                 ? previous?.BasePath ?? "./storage"
                 : request.BasePath,
@@ -1326,6 +1366,11 @@ public class StorageConfigService : IStorageConfigService
             S3Bucket = request.S3Bucket ?? previous?.S3Bucket,
             S3AccessKey = request.S3AccessKey ?? previous?.S3AccessKey,
             S3SecretKey = request.S3SecretKey ?? previous?.S3SecretKey,
+            CompressionEnabled = request.CompressionEnabled ?? previous?.CompressionEnabled ?? true,
+            EncryptionAlgorithm = Enum.TryParse<EncryptionAlgorithm>(request.EncryptionAlgorithm, true, out var algorithm)
+                && algorithm != EncryptionAlgorithm.AesCbcLegacy
+                    ? algorithm
+                    : previous?.EncryptionAlgorithm ?? EncryptionAlgorithm.AesGcm,
             IsActive = true,
             UpdatedAt = DateTime.UtcNow
         };
@@ -1344,7 +1389,9 @@ public class StorageConfigService : IStorageConfigService
 
     private static StorageConfigDto Map(StorageConfiguration c) =>
         new(c.Id, c.ProviderType.ToString(), c.DatabaseProvider.ToString(), c.BasePath,
-            MaskConnectionString(c.ConnectionString), c.S3Endpoint, c.S3Bucket, c.IsActive, c.UpdatedAt);
+            MaskConnectionString(c.ConnectionString), c.S3Endpoint, c.S3Bucket, c.IsActive, c.UpdatedAt,
+            c.CompressionEnabled, c.EncryptionAlgorithm.ToString(),
+            c.ActiveEncryptionKeyId?.ToString(), c.ActiveEncryptionKey?.KeyIdentifier);
 
     private static string? MaskConnectionString(string? value)
     {

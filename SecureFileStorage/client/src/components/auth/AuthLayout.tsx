@@ -17,7 +17,7 @@ export function AuthLayout({ children, formKey = 'form' }: AuthLayoutProps) {
       <aside className="auth-brand-panel">
         <div className="auth-brand-panel-inner">
           <div className="auth-brand-top">
-            <BrandLogo size={48} />
+            <BrandLogo size={44} />
           </div>
 
           <div className="auth-brand-copy">

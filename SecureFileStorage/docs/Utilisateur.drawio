@@ -1,0 +1,270 @@
+<mxfile host="app.diagrams.net" modified="2026-08-02T12:00:00.000Z" agent="Cursor" version="22.1.0" type="device">
+  <diagram id="uc-utilisateur" name="Utilisateur">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Titre -->
+        <mxCell id="title" value="Diagramme de cas d'utilisation — Utilisateur" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="480" y="20" width="520" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Acteur -->
+        <mxCell id="actor" value="Utilisateur" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="430" width="40" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== CAS PRINCIPAUX ========== -->
+        <mxCell id="ucAuth" value="Authentification" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="280" y="80" width="170" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="ucDocs" value="Gestion des documents" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="280" y="280" width="170" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="ucVer" value="Versioning" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="280" y="500" width="170" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="ucShare" value="Partage sécurisé" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="280" y="680" width="170" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="ucProfil" value="Gestion du profil" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="280" y="860" width="170" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="ucFav" value="Favoris et catégories" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="520" y="860" width="170" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="ucDash" value="Tableau de bord" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="860" width="170" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Associations acteur → UC principaux -->
+        <mxCell id="a1" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" edge="1" parent="1" source="actor" target="ucAuth">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" edge="1" parent="1" source="actor" target="ucDocs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" edge="1" parent="1" source="actor" target="ucVer">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" edge="1" parent="1" source="actor" target="ucShare">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a5" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" edge="1" parent="1" source="actor" target="ucProfil">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a6" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" edge="1" parent="1" source="actor" target="ucFav">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a7" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" edge="1" parent="1" source="actor" target="ucDash">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== AUTHENTIFICATION includes ========== -->
+        <mxCell id="iReg" value="S'inscrire" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="40" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iLogin" value="Se connecter" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="720" y="40" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iLogout" value="Se déconnecter" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="880" y="40" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eAuth1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucAuth" target="iReg">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eAuth2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucAuth" target="iLogin">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eAuth3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucAuth" target="iLogout">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== GESTION DOCUMENTS includes ========== -->
+        <mxCell id="iUp" value="Téléverser un document" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="140" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="iView" value="Consulter un document" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="730" y="140" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="iPrev" value="Prévisualiser un document" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="900" y="140" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="iDl" value="Télécharger un document" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="140" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="iEdit" value="Modifier un document" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="220" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="iArch" value="Archiver un document" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="730" y="220" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="iRest" value="Restaurer un document" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="900" y="220" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="iTrash" value="Mettre à la corbeille" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="220" width="150" height="55" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="eDoc1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDocs" target="iUp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eDoc2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDocs" target="iView">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eDoc3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDocs" target="iPrev">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eDoc4" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDocs" target="iDl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eDoc5" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDocs" target="iEdit">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eDoc6" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDocs" target="iArch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eDoc7" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDocs" target="iRest">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eDoc8" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDocs" target="iTrash">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Pipeline sécurité sur Téléverser (comme ton style include) -->
+        <mxCell id="iVal" value="Valider le fichier" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="80" width="130" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="iAv" value="Scanner antivirus" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="80" width="130" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="iEnc" value="Chiffrer AES-256" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="150" width="130" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="iLog" value="Journaliser l'opération" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="150" width="130" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="eSec1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=9;verticalAlign=bottom;" edge="1" parent="1" source="iUp" target="iVal">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eSec2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=9;verticalAlign=bottom;" edge="1" parent="1" source="iUp" target="iAv">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eSec3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=9;verticalAlign=bottom;" edge="1" parent="1" source="iUp" target="iEnc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eSec4" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=9;verticalAlign=bottom;" edge="1" parent="1" source="iUp" target="iLog">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== VERSIONING includes ========== -->
+        <mxCell id="iHist" value="Consulter l'historique" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="420" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iNewVer" value="Créer une nouvelle version" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="730" y="420" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iRestVer" value="Restaurer une version" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="910" y="420" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iInteg" value="Vérifier l'intégrité SHA-256" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="420" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eVer1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucVer" target="iHist">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eVer2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucVer" target="iNewVer">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eVer3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucVer" target="iRestVer">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eVer4" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucVer" target="iInteg">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== PARTAGE includes ========== -->
+        <mxCell id="iShareU" value="Partager avec un utilisateur" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="580" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iShareL" value="Générer un lien sécurisé" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="740" y="580" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iRevoke" value="Révoquer un partage" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="910" y="580" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iShared" value="Voir les documents partagés" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="580" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eSh1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucShare" target="iShareU">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eSh2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucShare" target="iShareL">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eSh3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucShare" target="iRevoke">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eSh4" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucShare" target="iShared">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== PROFIL includes ========== -->
+        <mxCell id="iProfV" value="Consulter mon profil" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="980" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iProfE" value="Modifier mon profil" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="980" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iPwd" value="Changer mon mot de passe" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="980" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ePr1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucProfil" target="iProfV">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ePr2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucProfil" target="iProfE">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ePr3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucProfil" target="iPwd">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== FAVORIS includes ========== -->
+        <mxCell id="iFavA" value="Ajouter aux favoris" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="770" y="980" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iFavR" value="Retirer des favoris" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="930" y="980" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iCat" value="Gérer les catégories" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="980" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eFav1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucFav" target="iFavA">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eFav2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucFav" target="iFavR">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eFav3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucFav" target="iCat">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== DASHBOARD includes ========== -->
+        <mxCell id="iStat" value="Consulter mes statistiques" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="900" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="iChat" value="Utiliser le chatbot d'aide" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="980" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eDash1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDash" target="iStat">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="eDash2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="ucDash" target="iChat">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

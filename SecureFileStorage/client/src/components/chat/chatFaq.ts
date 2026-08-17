@@ -117,7 +117,7 @@ export const CHAT_FAQ: ChatFaqEntry[] = [
     intent: 'security',
     replyKey: 'chat.faq.security',
     suggestionKey: 'chat.suggest.security',
-    keywords: ['sécurité', 'securite', 'security', 'chiffrement', 'encrypt', 'intégrité', 'integrite', 'hash', 'jwt'],
+    keywords: ['sécurité', 'securite', 'security', 'chiffrement', 'encrypt', 'déchiffrement', 'dechiffrement', 'decrypt', 'compression', 'gzip', 'intégrité', 'integrite', 'hash', 'jwt'],
   },
 ]
 

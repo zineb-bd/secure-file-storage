@@ -1,0 +1,255 @@
+@startuml Diagramme de classes - SecureFileStorage
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 45
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+  HeaderBackgroundColor #D6EAF8
+  FontSize 11
+}
+skinparam package {
+  BackgroundColor #F8F9F9
+  BorderColor #5D6D7E
+  FontSize 12
+  FontStyle bold
+}
+
+title Diagramme de classes — SecureFileStorage
+
+package "Acteurs" #EBF5FB {
+  class Utilisateur {
+    - id : int
+    - nom : string
+    - prenom : string
+    - email : string
+    - motDePasse : string
+    - statut : bool
+    - dateCreation : DateTime
+    --
+    + seConnecter()
+    + seDeconnecter()
+    + modifierProfil()
+    + televerserDocument()
+    + consulterDocument()
+    + telechargerDocument()
+    + ajouterFavori()
+  }
+
+  class Admin {
+    --
+    + ajouterUtilisateur()
+    + modifierUtilisateur()
+    + supprimerUtilisateur()
+    + gererRoles()
+    + consulterAudit()
+    + configurerStockage()
+  }
+
+  Admin --|> Utilisateur
+}
+
+package "Accès & droits" #FEF9E7 {
+  class Role {
+    - idRole : int
+    - nomRole : string
+    - description : string
+    --
+    + ajouterRole()
+    + modifierRole()
+    + supprimerRole()
+  }
+
+  class Permission {
+    - idPermission : int
+    - nomPermission : string
+    - description : string
+    --
+    + attribuerPermission()
+    + retirerPermission()
+  }
+}
+
+package "Documents" #E8F8F5 {
+  class Document {
+    - idDocument : int
+    - nom : string
+    - description : string
+    - type : string
+    - taille : long
+    - statut : string
+    - visibilite : string
+    - dateCreation : DateTime
+    --
+    + televerser()
+    + consulter()
+    + telecharger()
+    + previsualiser()
+    + partager()
+    + archiver()
+    + restaurer()
+    + supprimer()
+  }
+
+  class Categorie {
+    - idCategorie : int
+    - nom : string
+    - description : string
+    --
+    + ajouterCategorie()
+    + modifierCategorie()
+    + supprimerCategorie()
+  }
+
+  class Metadonnee {
+    - idMetadata : int
+    - auteur : string
+    - tags : string
+    - motsCles : string
+    - dateCreation : DateTime
+    --
+    + modifierMetadata()
+  }
+
+  class VersionDocument {
+    - idVersion : int
+    - numeroVersion : int
+    - dateVersion : DateTime
+    - commentaire : string
+    --
+    + creerVersion()
+    + restaurerVersion()
+  }
+
+  class BlobStocke {
+    - idBlob : int
+    - chemin : string
+    - taille : long
+    - typeStockage : string
+    --
+    + stocker()
+    + recuperer()
+    + supprimer()
+  }
+}
+
+package "Partage & favoris" #F5EEF8 {
+  class Partage {
+    - idPartage : int
+    - datePartage : DateTime
+    - permission : string
+    --
+    + partagerDocument()
+    + modifierPermission()
+    + supprimerPartage()
+  }
+
+  class LienPartage {
+    - idLien : int
+    - url : string
+    - dateExpiration : DateTime
+    - actif : bool
+    --
+    + genererLien()
+    + desactiverLien()
+  }
+
+  class Favori {
+    - idFavori : int
+    - dateAjout : DateTime
+    --
+    + ajouter()
+    + supprimer()
+  }
+}
+
+package "Sécurité & admin" #FDEDEC {
+  class JournalAudit {
+    - idAudit : int
+    - action : string
+    - dateAction : DateTime
+    - resultat : string
+    --
+    + enregistrerAction()
+  }
+
+  class AlerteAntivirus {
+    - idAnalyse : int
+    - statut : string
+    - virusDetecte : string
+    - dateAnalyse : DateTime
+    --
+    + analyserDocument()
+  }
+
+  class ConfigurationStockage {
+    - idConfiguration : int
+    - typeStockage : string
+    - emplacement : string
+    - capacite : string
+    --
+    + modifierConfiguration()
+  }
+
+  class CleChiffrement {
+    - idCle : int
+    - algorithme : string
+    - hash : string
+    - dateGeneration : DateTime
+    --
+    + chiffrer()
+    + dechiffrer()
+    + verifierIntegrite()
+  }
+}
+
+' ===== Relations =====
+
+' Rôle 1 —— 0..* Utilisateur
+Role "1" --> "0..*" Utilisateur : possède
+
+' Rôle * —— * Permission
+Role "*" -- "*" Permission : a
+
+' Utilisateur 1 —— 0..* Document
+Utilisateur "1" --> "0..*" Document : possède
+
+' Catégorie 1 —— 0..* Document
+Categorie "1" --> "0..*" Document : contient
+
+' Document 1 —— 1 Métadonnée
+Document "1" --> "1" Metadonnee : a
+
+' Document 1 —— 0..* VersionDocument
+Document "1" *-- "0..*" VersionDocument : versions
+
+' Document 1 —— 1 BlobStocké
+Document "1" --> "1" BlobStocke : fichier
+
+' Document 1 —— 0..* Partage
+Document "1" *-- "0..*" Partage : partages
+
+' Partage 1 —— 0..1 LienPartage
+Partage "1" --> "0..1" LienPartage : génère
+
+' Utilisateur 1 —— 0..* Favori
+Utilisateur "1" --> "0..*" Favori : a
+
+' Document 1 —— 0..* Favori
+Document "1" --> "0..*" Favori : est favori
+
+' Document 1 —— 0..* JournalAudit
+Document "1" --> "0..*" JournalAudit : journalisé
+
+' Document 1 —— 0..* AlerteAntivirus
+Document "1" --> "0..*" AlerteAntivirus : analysé
+
+' ConfigurationStockage 1 —— 0..* BlobStocké
+ConfigurationStockage "1" --> "0..*" BlobStocke : gère
+
+' Document 1 —— 1 CléChiffrement
+Document "1" --> "1" CleChiffrement : protégé par
+
+@enduml

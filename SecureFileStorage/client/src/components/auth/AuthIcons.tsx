@@ -96,19 +96,19 @@ export function AuthHeroIllustration() {
       <g className="auth-hero-float auth-hero-float-c">
         <rect x="156" y="78" width="140" height="184" rx="14" fill="url(#authDocFill)" />
         <path d="M268 78v36a12 12 0 0 0 12 12h36" fill="#ffffff" fillOpacity="0.55" />
-        <path d="M268 78l48 48h-36a12 12 0 0 1-12-12V78z" fill="#1e4fd9" fillOpacity="0.2" />
-        <rect x="178" y="120" width="72" height="8" rx="4" fill="#1e4fd9" fillOpacity="0.35" />
-        <rect x="178" y="140" width="96" height="6" rx="3" fill="#1e4fd9" fillOpacity="0.18" />
-        <rect x="178" y="156" width="88" height="6" rx="3" fill="#1e4fd9" fillOpacity="0.18" />
-        <rect x="178" y="172" width="64" height="6" rx="3" fill="#1e4fd9" fillOpacity="0.18" />
-        <rect x="178" y="198" width="40" height="40" rx="10" fill="#1e4fd9" fillOpacity="0.12" />
+        <path d="M268 78l48 48h-36a12 12 0 0 1-12-12V78z" fill="#0ea5e9" fillOpacity="0.2" />
+        <rect x="178" y="120" width="72" height="8" rx="4" fill="#0ea5e9" fillOpacity="0.35" />
+        <rect x="178" y="140" width="96" height="6" rx="3" fill="#0ea5e9" fillOpacity="0.18" />
+        <rect x="178" y="156" width="88" height="6" rx="3" fill="#0ea5e9" fillOpacity="0.18" />
+        <rect x="178" y="172" width="64" height="6" rx="3" fill="#0ea5e9" fillOpacity="0.18" />
+        <rect x="178" y="198" width="40" height="40" rx="10" fill="#0ea5e9" fillOpacity="0.12" />
         <path
           d="M198 212v-4a8 8 0 0 1 16 0v4"
-          stroke="#1e4fd9"
+          stroke="#0ea5e9"
           strokeWidth="2"
           strokeLinecap="round"
         />
-        <rect x="192" y="212" width="28" height="18" rx="4" stroke="#1e4fd9" strokeWidth="2" />
+        <rect x="192" y="212" width="28" height="18" rx="4" stroke="#0ea5e9" strokeWidth="2" />
       </g>
 
       {/* Shield badge */}
@@ -116,7 +116,7 @@ export function AuthHeroIllustration() {
         <circle cx="118" cy="210" r="36" fill="#ffffff" fillOpacity="0.95" />
         <path
           d="M118 192l14 6v10c0 8.5-5.7 15.3-14 17-8.3-1.7-14-8.5-14-17v-10l14-6z"
-          fill="#1e4fd9"
+          fill="#0ea5e9"
           fillOpacity="0.9"
         />
         <path d="M112 210l4 4 8-8" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -125,8 +125,8 @@ export function AuthHeroIllustration() {
       {/* Floating lock chip */}
       <g className="auth-hero-float auth-hero-float-e">
         <rect x="300" y="196" width="56" height="56" rx="14" fill="#ffffff" fillOpacity="0.95" />
-        <rect x="316" y="218" width="24" height="18" rx="4" stroke="#1e4fd9" strokeWidth="2" />
-        <path d="M322 218v-6a6 6 0 0 1 12 0v6" stroke="#1e4fd9" strokeWidth="2" strokeLinecap="round" />
+        <rect x="316" y="218" width="24" height="18" rx="4" stroke="#06b6d4" strokeWidth="2" />
+        <path d="M322 218v-6a6 6 0 0 1 12 0v6" stroke="#06b6d4" strokeWidth="2" strokeLinecap="round" />
       </g>
     </svg>
   )

@@ -103,8 +103,10 @@ public interface IStorageService
 
 public interface IEncryptionService
 {
-    Task<(byte[] EncryptedData, string EncryptedKey)> EncryptAsync(byte[] plainData, CancellationToken ct = default);
-    Task<byte[]> DecryptAsync(byte[] encryptedData, string encryptedKey, CancellationToken ct = default);
+    Task<(byte[] EncryptedData, string EncryptedKey)> EncryptAsync(
+        byte[] plainData, EncryptionAlgorithm algorithm, CancellationToken ct = default);
+    Task<byte[]> DecryptAsync(
+        byte[] encryptedData, string encryptedKey, EncryptionAlgorithm algorithm, CancellationToken ct = default);
     string ComputeSha256Hash(byte[] data);
     Task<string> RotateMasterKeyAsync(CancellationToken ct = default);
 }
@@ -191,6 +193,7 @@ public interface IAuditRepository
 public interface IPermissionChecker
 {
     Task<bool> CanReadAsync(Guid documentId, Guid userId, CancellationToken ct = default);
+    Task<bool> CanPreviewAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<bool> CanDownloadAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<bool> CanWriteAsync(Guid documentId, Guid userId, CancellationToken ct = default);
     Task<bool> CanDeleteAsync(Guid documentId, Guid userId, CancellationToken ct = default);
@@ -199,7 +202,32 @@ public interface IPermissionChecker
     bool IsAdmin(IEnumerable<string> roles);
 }
 
+public interface IUserGroupService
+{
+    Task<IEnumerable<UserGroupDto>> GetAllAsync(CancellationToken ct = default);
+    Task<UserGroupDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<UserGroupDto> CreateAsync(CreateUserGroupRequest request, CancellationToken ct = default);
+    Task<UserGroupDto?> UpdateAsync(Guid id, UpdateUserGroupRequest request, CancellationToken ct = default);
+    Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);
+    Task<UserGroupDto?> AddMemberAsync(Guid groupId, Guid userId, CancellationToken ct = default);
+    Task<bool> RemoveMemberAsync(Guid groupId, Guid userId, CancellationToken ct = default);
+}
+
+public interface ICategoryAccessService
+{
+    Task<IEnumerable<CategoryAccessRuleDto>> GetByCategoryAsync(string category, CancellationToken ct = default);
+    Task<IEnumerable<CategoryAccessRuleDto>> GetAllAsync(CancellationToken ct = default);
+    Task<CategoryAccessRuleDto> UpsertAsync(UpsertCategoryAccessRuleRequest request, Guid actorId, CancellationToken ct = default);
+    Task<bool> DeleteAsync(Guid ruleId, CancellationToken ct = default);
+}
+
 public interface IChatbotService
 {
     Task<ChatResponse> AskAsync(ChatRequest request, CancellationToken ct = default);
+}
+
+public interface IChatbotAnalyticsService
+{
+    Task RecordAnonymousUsageAsync(string source, string topic, CancellationToken ct = default);
+    Task<ChatbotUsageStatsDto> GetAnonymousStatsAsync(CancellationToken ct = default);
 }

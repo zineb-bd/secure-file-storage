@@ -4,6 +4,7 @@ import { CATEGORIES } from '@/constants'
 import { useAuth } from '@/context/AuthContext'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { CategoryDocumentView } from '@/components/categories/CategoryDocumentView'
+import { CategoryAccessPanel } from '@/components/categories/CategoryAccessPanel'
 import {
   CategoryIcon,
   IconChevronRight,
@@ -73,7 +74,7 @@ function fmtRelativeDate(
 
 export function CategoriesPage() {
   const { t, locale } = useI18n()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAdmin } = useAuth()
   const [docs, setDocs] = useState<DocumentDto[]>([])
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
@@ -508,6 +509,10 @@ export function CategoriesPage() {
           onChanged={load}
         />
 
+        {isAdmin && (
+          <CategoryAccessPanel category={selected} categoryLabel={getLabel(selected)} />
+        )}
+
         {toast && (
           <div className={`profile-toast profile-toast-${toast.type}`} role="status">
             {toast.message}
@@ -519,26 +524,61 @@ export function CategoriesPage() {
 
   return (
     <section className="page cat-page" id="page-categories">
-      <PageHeader
-        title={t('page.categories.title')}
-        subtitle={t('page.categories.subtitle')}
-        actions={
-          <button type="button" className="btn btn-primary" onClick={openCreateModal}>
-            <IconPlus size={16} />
-            {t('cat.newCategory')}
-          </button>
-        }
-      />
+      <div className="cat-stats-row">
+        <article className="cat-stat-card cat-stat-tone-blue">
+          <div className="cat-stat-icon cat-stat-icon-blue">
+            <IconLayers size={18} />
+          </div>
+          <div>
+            <div className="cat-stat-value">{stats.totalCategories}</div>
+            <div className="cat-stat-label">{t('cat.statTotal')}</div>
+          </div>
+        </article>
+        <article className="cat-stat-card cat-stat-tone-green">
+          <div className="cat-stat-icon cat-stat-icon-green">
+            <IconFileStack size={18} />
+          </div>
+          <div>
+            <div className="cat-stat-value">{stats.totalDocuments}</div>
+            <div className="cat-stat-label">{t('cat.statDocs')}</div>
+          </div>
+        </article>
+        <article className="cat-stat-card cat-stat-tone-indigo">
+          <div className="cat-stat-icon cat-stat-icon-indigo">
+            <IconTrending size={18} />
+          </div>
+          <div>
+            <div className="cat-stat-value cat-stat-value-sm">{stats.topCategory}</div>
+            <div className="cat-stat-label">{t('cat.statTop')}</div>
+            {stats.topCount > 0 && (
+              <div className="cat-stat-hint">{stats.topCount} {t('cat.documents')}</div>
+            )}
+          </div>
+        </article>
+        <article className="cat-stat-card cat-stat-tone-amber">
+          <div className="cat-stat-icon cat-stat-icon-amber">
+            <IconClock size={18} />
+          </div>
+          <div>
+            <div className="cat-stat-value cat-stat-value-sm">{stats.recentLabel}</div>
+            <div className="cat-stat-label">{t('cat.statRecent')}</div>
+            {stats.recentDate && (
+              <div className="cat-stat-hint">{fmtRelativeDate(stats.recentDate, locale, t)}</div>
+            )}
+          </div>
+        </article>
+      </div>
 
       <div className="cat-toolbar">
         <div className="cat-search-wrap">
-          <IconSearch size={18} className="cat-search-icon" />
+          <IconSearch size={16} className="cat-search-icon" />
           <input
             type="search"
             className="cat-search-input"
             placeholder={t('cat.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label={t('filter.search')}
           />
         </div>
         <div className="cat-toolbar-actions">
@@ -562,64 +602,37 @@ export function CategoriesPage() {
               <IconList size={16} />
             </button>
           </div>
+          <button type="button" className="btn btn-primary btn-sm" onClick={openCreateModal}>
+            <IconPlus size={16} />
+            {t('cat.newCategory')}
+          </button>
         </div>
       </div>
 
       {error && <div className="msg error">{error}</div>}
 
-      {loading ? (
-        <CategorySkeleton />
-      ) : (
-        <>
-          <div className="cat-stats-row">
-            <div className="cat-stat-card">
-              <div className="cat-stat-icon cat-stat-icon-blue">
-                <IconLayers size={20} />
-              </div>
-              <div>
-                <div className="cat-stat-value">{stats.totalCategories}</div>
-                <div className="cat-stat-label">{t('cat.statTotal')}</div>
-              </div>
-            </div>
-            <div className="cat-stat-card">
-              <div className="cat-stat-icon cat-stat-icon-green">
-                <IconFileStack size={20} />
-              </div>
-              <div>
-                <div className="cat-stat-value">{stats.totalDocuments}</div>
-                <div className="cat-stat-label">{t('cat.statDocs')}</div>
-              </div>
-            </div>
-            <div className="cat-stat-card">
-              <div className="cat-stat-icon cat-stat-icon-indigo">
-                <IconTrending size={20} />
-              </div>
-              <div>
-                <div className="cat-stat-value cat-stat-value-sm">{stats.topCategory}</div>
-                <div className="cat-stat-label">{t('cat.statTop')}</div>
-                {stats.topCount > 0 && (
-                  <div className="cat-stat-hint">{stats.topCount} {t('cat.documents')}</div>
-                )}
-              </div>
-            </div>
-            <div className="cat-stat-card">
-              <div className="cat-stat-icon cat-stat-icon-amber">
-                <IconClock size={20} />
-              </div>
-              <div>
-                <div className="cat-stat-value cat-stat-value-sm">{stats.recentLabel}</div>
-                <div className="cat-stat-label">{t('cat.statRecent')}</div>
-                {stats.recentDate && (
-                  <div className="cat-stat-hint">{fmtRelativeDate(stats.recentDate, locale, t)}</div>
-                )}
-              </div>
-            </div>
+      <section className="cat-panel">
+        <div className="cat-panel-header">
+          <div>
+            <h2>{t('cat.listTitle')}</h2>
+            <p>
+              {loading
+                ? t('files.loading')
+                : t('cat.count', { count: String(filteredKeys.length) })}
+            </p>
           </div>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => void load()}>
+            {t('audit.refresh')}
+          </button>
+        </div>
 
-          {!filteredKeys.length ? (
+        <div className="cat-panel-body">
+          {loading ? (
+            <CategorySkeleton />
+          ) : !filteredKeys.length ? (
             <div className="cat-empty-state">
               <div className="cat-empty-icon">
-                <IconEmptyFolder size={56} />
+                <IconEmptyFolder size={48} />
               </div>
               <h3>{search.trim() ? t('cat.noResults') : t('cat.emptyTitle')}</h3>
               <p>{search.trim() ? t('cat.noResultsDesc') : t('cat.emptyDesc')}</p>
@@ -634,8 +647,8 @@ export function CategoriesPage() {
           ) : (
             <div className="cat-list">{filteredKeys.map(renderCategoryRow)}</div>
           )}
-        </>
-      )}
+        </div>
+      </section>
 
       {modalOpen && (
         <Modal

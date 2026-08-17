@@ -115,6 +115,20 @@ app.MapControllers();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
+// Garantit l'accès public au partage même si le fallback SPA est actif.
+app.MapGet("/share.html", async (HttpContext context, IWebHostEnvironment env) =>
+{
+    var path = Path.Combine(env.WebRootPath ?? "wwwroot", "share.html");
+    if (!System.IO.File.Exists(path))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        await context.Response.WriteAsync("share.html introuvable");
+        return;
+    }
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.SendFileAsync(path);
+});
+
 // Ne pas renvoyer le SPA pour les routes API inconnues (évite un faux 200 HTML).
 app.MapFallback(async context =>
 {

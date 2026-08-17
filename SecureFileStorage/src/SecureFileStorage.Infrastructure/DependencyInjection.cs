@@ -45,6 +45,8 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IUserGroupService, UserGroupService>();
+        services.AddScoped<ICategoryAccessService, CategoryAccessService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IDocumentImportService, DocumentImportService>();
         services.AddScoped<IDocumentImportSource, DeviceImportSource>();
@@ -70,6 +72,7 @@ public static class DependencyInjection
             ? "https://api.openai.com/v1/"
             : chatbotSettings.BaseUrl.TrimEnd('/') + "/";
 
+        services.AddScoped<IChatbotAnalyticsService, ChatbotAnalyticsService>();
         services.AddHttpClient<IChatbotService, ChatbotService>(client =>
         {
             client.BaseAddress = new Uri(baseUrl);
