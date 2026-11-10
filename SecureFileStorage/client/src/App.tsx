@@ -14,8 +14,7 @@ import { SharedPage } from '@/pages/SharedPage'
 import { CategoriesPage } from '@/pages/CategoriesPage'
 import { ArchivedPage } from '@/pages/ArchivedPage'
 import { TrashPage } from '@/pages/TrashPage'
-import { ProfilePage } from '@/pages/ProfilePage'
-import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
+import { AnnuairePage } from '@/pages/AnnuairePage'
 import { AdminAuditPage } from '@/pages/admin/AdminAuditPage'
 import { AdminConfigPage } from '@/pages/admin/AdminPages'
 import { ShareLinkPage } from '@/pages/ShareLinkPage'
@@ -68,10 +67,11 @@ export default function App() {
                   <Route path="categories" element={<CategoriesPage />} />
                   <Route path="archived" element={<ArchivedPage />} />
                   <Route path="trash" element={<TrashPage />} />
-                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="annuaire" element={<AnnuairePage />} />
+                  <Route path="profile" element={<Navigate to="/annuaire" replace />} />
+                  <Route path="admin/users" element={<Navigate to="/annuaire?tab=users" replace />} />
+                  <Route path="admin/groups" element={<Navigate to="/annuaire?tab=groups" replace />} />
                   <Route element={<AdminRoute />}>
-                    <Route path="admin/users" element={<AdminUsersPage />} />
-                    <Route path="admin/groups" element={<Navigate to="/admin/users" replace />} />
                     <Route path="admin/audit" element={<AdminAuditPage />} />
                     <Route path="admin/config" element={<AdminConfigPage />} />
                   </Route>

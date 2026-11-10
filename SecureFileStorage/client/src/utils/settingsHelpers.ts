@@ -1,13 +1,19 @@
-import type { AntivirusAlert, StorageConfig } from '@/types'
+import type { StorageConfig } from '@/types'
 
 /** Valeurs alignées sur appsettings.json et FileValidator.cs (lecture seule côté UI). */
 export const APP_NAME = 'SecureFileStorage'
 export const JWT_EXPIRATION_MINUTES = 60
-export const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024
+export const PASSWORD_MIN_LENGTH = 8
+export const MAX_FAILED_LOGINS = 5
+export const LOCKOUT_MINUTES = 15
+export const MAX_FILE_SIZE_BYTES = 1024 * 1024 * 1024 * 1024
+export const STORAGE_QUOTA_BYTES = 10 * 1024 * 1024 * 1024 * 1024
 
 export const ALLOWED_FILE_EXTENSIONS = [
   '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
   '.jpg', '.jpeg', '.png', '.gif', '.webp', '.txt', '.csv', '.zip',
+  '.mp4', '.webm', '.mkv', '.avi', '.mov', '.m4v', '.wmv',
+  '.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma',
 ] as const
 
 export type SettingsSection = 'general' | 'security' | 'storage' | 'system'
@@ -30,9 +36,77 @@ export function providerLabel(type: string, t: (k: string) => string) {
 
 export type SecurityLevel = 'strong' | 'medium' | 'basic'
 
-export function computeSecurityLevel(alerts: AntivirusAlert[]): SecurityLevel {
-  if (alerts.length > 0) return 'medium'
-  return 'strong'
+export interface SecuritySignals {
+  unresolvedAlerts: number
+  antivirusEnabled: boolean
+  encryptionActive: boolean
+}
+
+export function computeSecurityLevel(signals: SecuritySignals): SecurityLevel {
+  if (signals.encryptionActive && signals.antivirusEnabled) return 'strong'
+  if (signals.encryptionActive || signals.antivirusEnabled) return 'medium'
+  return 'basic'
+}
+
+/** Le chiffrement au repos est actif dès qu’un algorithme (AES-GCM…) est configuré, même sans rotation de clé. */
+export function isEncryptionActive(
+  algorithm: string | null | undefined,
+  keyId?: string | null,
+  keyIdentifier?: string | null,
+) {
+  if (keyId || keyIdentifier) return true
+  const algo = (algorithm || '').trim()
+  return algo.length > 0 && algo.toLowerCase() !== 'none'
+}
+
+export function isClamAvEngine(engine: string | null | undefined) {
+  return (engine || '').toLowerCase().includes('clamav')
+}
+
+export interface ThreatStatLike {
+  threatName: string
+  count: number
+  lastDetectedAt: string
+}
+
+export function threatsFromAlerts(
+  alerts: { threatName?: string | null; detectedAt: string }[],
+): ThreatStatLike[] {
+  const map = new Map<string, ThreatStatLike>()
+  for (const a of alerts) {
+    const name = (a.threatName || '').trim() || 'unknown'
+    const prev = map.get(name)
+    if (!prev) {
+      map.set(name, { threatName: name, count: 1, lastDetectedAt: a.detectedAt })
+      continue
+    }
+    map.set(name, {
+      threatName: name,
+      count: prev.count + 1,
+      lastDetectedAt: a.detectedAt > prev.lastDetectedAt ? a.detectedAt : prev.lastDetectedAt,
+    })
+  }
+  return [...map.values()].sort((a, b) => b.count - a.count)
+}
+
+export function latestDetectionAt(
+  alerts: { detectedAt: string }[],
+  fromStats?: string | null,
+) {
+  if (fromStats) return fromStats
+  return alerts.reduce<string | null>((max, a) => {
+    if (!max || a.detectedAt > max) return a.detectedAt
+    return max
+  }, null)
+}
+
+export function encryptionAlgorithmLabel(algorithm: string | null | undefined, t: (k: string) => string) {
+  const map: Record<string, string> = {
+    AesGcm: t('settings.encryptionAlgorithm.aesGcm'),
+    ChaCha20Poly1305: t('settings.encryptionAlgorithm.chacha20'),
+    AesCbcLegacy: t('settings.encryptionAlgorithm.aesCbc'),
+  }
+  return map[algorithm || ''] || (algorithm ? algorithm : t('settings.notAvailable'))
 }
 
 export type SystemStatus = 'operational' | 'warning' | 'error'
@@ -58,8 +132,6 @@ export interface StorageFormState {
 
 export const STORAGE_PROVIDERS = [
   { value: 'LocalFileSystem', labelKey: 'settings.storage.local' },
-  { value: 'S3Compatible', labelKey: 'settings.storage.s3' },
-  { value: 'Nas', labelKey: 'settings.storage.nas' },
 ] as const
 
 export const ENCRYPTION_ALGORITHMS = [
@@ -109,10 +181,11 @@ export function formatBytesShort(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+  if (bytes < 1024 * 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+  return `${(bytes / (1024 * 1024 * 1024 * 1024)).toFixed(2)} TB`
 }
 
-export function storageUsagePercent(used: number, logical: number) {
-  if (!logical || logical <= 0) return Math.min(used > 0 ? 15 : 0, 100)
-  return Math.min(Math.round((used / logical) * 100), 100)
+export function storageUsagePercent(used: number, quota: number) {
+  if (!quota || quota <= 0) return used > 0 ? 1 : 0
+  return Math.min(Math.round((used / quota) * 100), 100)
 }

@@ -1,50 +1,24 @@
-import { useEffect, useState } from 'react'
-import { api } from '@/api/client'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { api, downloadBlob } from '@/api/client'
 import { CATEGORIES } from '@/constants'
 import { useI18n } from '@/i18n/I18nContext'
 import { fmtDate, fmtSize } from '@/utils/format'
-import type { DocumentCollaborators, DocumentDetail, DocumentDto, DocumentVersion } from '@/types'
+import { canInlinePreview, previewKindOf } from '@/utils/previewHelpers'
+import { toggleFavoriteApi } from '@/utils/favoritesApi'
+import { loadCustomCategories } from '@/utils/categoryStorage'
+import type {
+  DocumentCollaborators,
+  DocumentDetail,
+  DocumentDto,
+} from '@/types'
 import { Modal } from '@/components/ui/Modal'
 import { FileIcon } from '@/components/documents/FileIcon'
-import { loadCustomCategories } from '@/utils/categoryStorage'
 
 interface MetadataModalProps {
   doc: DocumentDto
   onClose: () => void
   onSaved?: () => void
-}
-
-type DetailsTab = 'info' | 'security' | 'access'
-
-function accessLabel(level: string, t: (k: string) => string) {
-  const map: Record<string, string> = {
-    Owner: t('collab.role.owner'),
-    Read: t('access.read'),
-    Preview: t('access.preview'),
-    Download: t('access.download'),
-    Write: t('access.write'),
-  }
-  return map[level] || level
-}
-
-function visibilityLabel(value: string, t: (k: string) => string) {
-  const map: Record<string, string> = {
-    Private: t('vis.private'),
-    Public: t('vis.public'),
-  }
-  return map[value] || value
-}
-
-function initialsOf(name: string, email: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-  if (parts.length === 1 && parts[0].length) return parts[0].slice(0, 2).toUpperCase()
-  return (email[0] || '?').toUpperCase()
-}
-
-function shortId(id: string) {
-  if (!id) return '—'
-  return id.length > 12 ? `${id.slice(0, 8)}…` : id
 }
 
 function statusLabel(status: string, t: (k: string) => string) {
@@ -56,491 +30,496 @@ function statusLabel(status: string, t: (k: string) => string) {
   return map[status] || status || '—'
 }
 
+function scanKind(scan: string): 'ok' | 'warn' | 'muted' {
+  const s = (scan || '').toLowerCase()
+  if (s === 'clean') return 'ok'
+  if (s.includes('infect') || s.includes('found') || s.includes('threat')) return 'warn'
+  return 'muted'
+}
+
+function scanLabel(scan: string, t: (k: string) => string) {
+  const s = (scan || '').toLowerCase()
+  if (s === 'clean') return t('details.scan.clean')
+  if (s === 'skipped') return t('details.scan.skipped')
+  if (s.includes('infect') || s.includes('found') || s.includes('threat')) return t('details.scan.threat')
+  if (s === 'pending' || s === 'scanning') return t('details.scan.pending')
+  return scan || t('details.scan.unknown')
+}
+
+function fileTypeLabel(contentType: string, ext: string, t: (k: string) => string) {
+  const e = ext.replace(/^\./, '').toLowerCase()
+  const names: Record<string, string> = {
+    pdf: 'PDF', doc: 'Word', docx: 'Word', xls: 'Excel', xlsx: 'Excel',
+    ppt: 'PowerPoint', pptx: 'PowerPoint', png: 'PNG', jpg: 'JPEG', jpeg: 'JPEG',
+    gif: 'GIF', webp: 'WebP', txt: t('details.typeText'), csv: 'CSV', zip: 'ZIP',
+    mp4: 'MP4', mp3: 'MP3',
+  }
+  if (names[e]) return names[e]
+  if (contentType.startsWith('image/')) return t('details.typeImage')
+  if (contentType.startsWith('video/')) return t('details.typeVideo')
+  if (contentType.startsWith('audio/')) return t('details.typeAudio')
+  return e ? e.toUpperCase() : contentType || '—'
+}
+
+function accessRank(level: string | null | undefined, isOwner: boolean) {
+  if (isOwner) return 5
+  const map: Record<string, number> = { Read: 1, Preview: 2, Download: 3, Write: 4, Owner: 5 }
+  return map[level || ''] || 0
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd title={value}>{value}</dd>
+    </div>
+  )
+}
+
+function DocumentPreviewPane({ doc }: { doc: DocumentDto }) {
+  const { t } = useI18n()
+  const kind = useMemo(() => previewKindOf(doc.contentType || '', doc.fileName || ''), [doc])
+  const canInline = canInlinePreview(kind)
+  const ext = (doc.fileName || '').split('.').pop()?.toUpperCase() || 'FILE'
+  const [url, setUrl] = useState<string | null>(null)
+  const [text, setText] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(canInline)
+  const [retryKey, setRetryKey] = useState(0)
+
+  useEffect(() => {
+    if (!canInline) {
+      setLoading(false)
+      return
+    }
+    let active = true
+    let createdUrl: string | null = null
+    void (async () => {
+      setLoading(true)
+      setError('')
+      setUrl(null)
+      setText('')
+      try {
+        const endpoint = kind === 'text'
+          ? `/api/documents/${doc.id}/download`
+          : `/api/documents/${doc.id}/preview`
+        const res = await api<Response>(endpoint, { raw: true })
+        if (res.status === 401) throw new Error(t('preview.sessionExpired'))
+        if (!res.ok) throw new Error(t('preview.unavailable'))
+        const blob = await res.blob()
+        if (kind === 'text') {
+          const body = await blob.text()
+          if (active) setText(body.slice(0, 80_000))
+          return
+        }
+        const objectUrl = URL.createObjectURL(blob)
+        if (!active) {
+          URL.revokeObjectURL(objectUrl)
+          return
+        }
+        createdUrl = objectUrl
+        setUrl(objectUrl)
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : t('preview.unavailable'))
+      } finally {
+        if (active) setLoading(false)
+      }
+    })()
+    return () => {
+      active = false
+      if (createdUrl) URL.revokeObjectURL(createdUrl)
+    }
+  }, [doc.id, t, retryKey, canInline, kind])
+
+  if (!canInline) {
+    return (
+      <div className="fiche-preview-empty">
+        <span className="fiche-preview-ext">{ext}</span>
+        <p>{kind === 'office' ? t('preview.officeDesc') : t('preview.unsupportedType')}</p>
+      </div>
+    )
+  }
+  if (loading) return <div className="fiche-preview-empty">{t('preview.loading')}</div>
+  if (error) {
+    return (
+      <div className="fiche-preview-empty">
+        <p>{error}</p>
+        <button type="button" className="btn btn-sm btn-outline" onClick={() => setRetryKey((n) => n + 1)}>
+          {t('preview.retry')}
+        </button>
+      </div>
+    )
+  }
+  if (url && kind === 'pdf') return <iframe src={url} title={doc.fileName} className="fiche-preview-frame" />
+  if (url && kind === 'image') return <img src={url} alt={doc.fileName} className="fiche-preview-image" />
+  if (url && kind === 'video') return <video src={url} controls className="fiche-preview-media" title={doc.fileName} />
+  if (url && kind === 'audio') return <audio src={url} controls className="fiche-preview-audio" title={doc.fileName} />
+  if (kind === 'text') return <pre className="fiche-preview-text">{text}</pre>
+  return null
+}
+
 export function MetadataModal({ doc, onClose, onSaved }: MetadataModalProps) {
   const { t, locale } = useI18n()
-  const [tab, setTab] = useState<DetailsTab>('info')
+  const navigate = useNavigate()
   const [detail, setDetail] = useState<DocumentDetail | null>(null)
   const [collaborators, setCollaborators] = useState<DocumentCollaborators | null>(null)
-  const [versions, setVersions] = useState<DocumentVersion[]>([])
+  const [integrity, setIntegrity] = useState<{ ok: boolean } | null>(null)
   const [category, setCategory] = useState(doc.category)
   const [description, setDescription] = useState(doc.description || '')
+  const [favorite, setFavorite] = useState(!!doc.isFavorite)
+  const [editing, setEditing] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const [msg, setMsg] = useState('')
-  const [msgOk, setMsgOk] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [integrity, setIntegrity] = useState<{ ok: boolean; message: string } | null>(null)
-  const [checking, setChecking] = useState(false)
   const [loading, setLoading] = useState(true)
+  const moreRef = useRef<HTMLDivElement>(null)
 
   const categories = [...new Set([...CATEGORIES, ...loadCustomCategories().map((c) => c.name), doc.category])]
   const canModify = detail?.canModify ?? doc.canModify
+  const isOwner = doc.isOwner
+  const status = detail?.status || doc.status
+  const isArchived = status === 'Archived'
+  const isDeleted = status === 'Deleted'
+  const rank = accessRank(doc.myAccessLevel, isOwner)
+  const canDownload = !doc.isFolder && rank >= 3
+  const canFavorite = !doc.isFolder && !isDeleted
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (!moreRef.current?.contains(e.target as Node)) setMoreOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    setDetail(null)
-    setCollaborators(null)
-    setVersions([])
-
     const load = async () => {
-      const [detailResult, collabResult, versionsResult] = await Promise.allSettled([
+      const [detailResult, collabResult] = await Promise.allSettled([
         api<DocumentDetail>(`/api/documents/${doc.id}/detail`),
         api<DocumentCollaborators>(`/api/documents/${doc.id}/collaborators`),
-        api<DocumentVersion[]>(`/api/documents/${doc.id}/versions`),
       ])
-
       if (cancelled) return
-
       if (detailResult.status === 'fulfilled') {
         setDetail(detailResult.value)
         setCategory(detailResult.value.category)
         setDescription(detailResult.value.description || '')
       }
-
-      if (collabResult.status === 'fulfilled') {
-        setCollaborators(collabResult.value)
-      }
-
-      if (versionsResult.status === 'fulfilled') {
-        setVersions(versionsResult.value || [])
-      }
-
+      if (collabResult.status === 'fulfilled') setCollaborators(collabResult.value)
       setLoading(false)
     }
-
     void load()
     return () => {
       cancelled = true
     }
   }, [doc.id])
 
-  const save = async () => {
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const r = await api<{ isValid: boolean }>(`/api/documents/${doc.id}/integrity`)
+        if (!cancelled) setIntegrity({ ok: r.isValid })
+      } catch {
+        if (!cancelled) setIntegrity(null)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [doc.id])
+
+  const fileName = detail?.fileName || doc.fileName
+  const contentType = detail?.contentType || doc.contentType || ''
+  const size = detail?.sizeBytes ?? doc.sizeBytes
+  const owner = collaborators?.owner.userName || detail?.ownerName || doc.ownerName
+  const ownerEmail = collaborators?.owner.userEmail || ''
+  const created = detail?.createdAt || doc.createdAt
+  const updated = detail?.updatedAt || doc.updatedAt
+  const ext = detail?.extension || (fileName.includes('.') ? fileName.split('.').pop() : '') || ''
+  const scan = detail?.lastScanResult || doc.lastScanResult || ''
+  const version = detail?.currentVersion ?? doc.currentVersion
+  const visibility = detail?.visibility || doc.visibility
+  const isEncrypted = detail?.isEncrypted ?? true
+  const isLocked = detail?.isLocked ?? doc.isLocked
+  const sharedCount = collaborators?.collaborators.length ?? 0
+  const isShared = sharedCount > 0 || visibility === 'Public'
+  const isConfidential = visibility === 'Private'
+  const scanOk = scanKind(scan) === 'ok'
+  const typeLabel = fileTypeLabel(contentType, ext, t)
+
+  const notify = (text: string) => {
+    setMsg(text)
+    window.setTimeout(() => setMsg(''), 3500)
+  }
+
+  const afterChange = () => {
+    onSaved?.()
+  }
+
+  const saveMeta = async () => {
     if (!canModify) return
-    setMsg('')
-    setMsgOk(false)
     setSaving(true)
     try {
       await api(`/api/documents/${doc.id}/metadata`, {
         method: 'PUT',
         body: JSON.stringify({ category, description }),
       })
-      setMsgOk(true)
-      setMsg(t('details.saved'))
-      onSaved?.()
-      onClose()
+      notify(t('details.saved'))
+      setEditing(false)
+      afterChange()
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'Erreur')
+      notify(err instanceof Error ? err.message : 'Erreur')
     } finally {
       setSaving(false)
     }
   }
 
-  const checkIntegrity = async () => {
-    setChecking(true)
-    setIntegrity(null)
-    try {
-      const r = await api<{ isValid: boolean; message: string }>(`/api/documents/${doc.id}/integrity`)
-      setIntegrity({ ok: r.isValid, message: r.message })
-    } catch (err) {
-      setIntegrity({
-        ok: false,
-        message: err instanceof Error ? err.message : 'Erreur',
-      })
-    } finally {
-      setChecking(false)
-    }
+  const onDownload = () => void downloadBlob(`/api/documents/${doc.id}/download`, fileName)
+
+  const onToggleFavorite = async () => {
+    const result = await toggleFavoriteApi(doc.id, favorite)
+    setFavorite(result.isFavorite)
+    notify(result.isFavorite ? t('favorites.added') : t('favorites.removed'))
+    afterChange()
   }
 
-  const fileName = detail?.fileName || doc.fileName
-  const size = detail?.sizeBytes ?? doc.sizeBytes
-  const owner = detail?.ownerName || doc.ownerName
-  const ownerId = detail?.ownerId || doc.ownerId
-  const created = detail?.createdAt || doc.createdAt
-  const updated = detail?.updatedAt || doc.updatedAt
-  const ext = detail?.extension || (fileName.includes('.') ? fileName.split('.').pop() : '') || '—'
-  const hash = detail?.sha256Hash || doc.sha256Hash
-  const scan = detail?.lastScanResult || doc.lastScanResult
-  const version = detail?.currentVersion ?? doc.currentVersion
-  const visibility = detail?.visibility || doc.visibility
-  const isEncrypted = detail?.isEncrypted ?? true
-  const isCompressed = detail?.isCompressed ?? false
-  const encryptionAlgo = detail?.encryptionAlgorithm || 'AesCbcLegacy'
-  const isLocked = detail?.isLocked ?? doc.isLocked
-  const myAccess = doc.myAccessLevel || (doc.isOwner ? 'Owner' : null)
-  const peopleCount = collaborators ? collaborators.collaborators.length + 1 : 0
-  const scanOk = (scan || '').toLowerCase() === 'clean'
-  const status = detail?.status || doc.status
-  const createdMs = created ? new Date(created).getTime() : NaN
-  const ageDays = Number.isNaN(createdMs)
-    ? null
-    : Math.max(0, Math.floor((Date.now() - createdMs) / 86_400_000))
+  const onArchive = async () => {
+    await api(`/api/documents/${doc.id}/archive`, { method: 'POST' })
+    afterChange()
+    onClose()
+  }
 
-  return (
-    <Modal title={t('action.details')} onClose={onClose} wide>
-      <div className="details-studio">
-        <div className="details-doc-chip">
-          <FileIcon contentType={detail?.contentType || doc.contentType} fileName={fileName} />
-          <div className="details-doc-chip-text">
-            <span className="details-doc-label">{t('details.document')}</span>
-            <strong title={fileName}>{fileName}</strong>
-            <span className="details-doc-sub">
-              .{ext} · v{version} · {visibilityLabel(visibility, t)}
-              {myAccess ? ` · ${accessLabel(myAccess, t)}` : ''}
+  const onRestore = async () => {
+    await api(`/api/documents/${doc.id}/restore`, { method: 'POST' })
+    afterChange()
+    onClose()
+  }
+
+  const onTrash = async () => {
+    if (!window.confirm(t('details.confirmTrash'))) return
+    await api(`/api/documents/${doc.id}`, { method: 'DELETE' })
+    afterChange()
+    onClose()
+  }
+
+  const infoCard = (
+    <section className="fiche-card">
+      <header className="fiche-card-head">
+        <h4>{t('details.infoTitle')}</h4>
+      </header>
+      <dl className="fiche-facts">
+        <Fact label={t('table.name')} value={fileName} />
+        <Fact label={t('details.type')} value={typeLabel} />
+        <Fact label={t('table.size')} value={fmtSize(size)} />
+        <Fact label={t('filter.category')} value={category || '—'} />
+        <Fact label={t('table.owner')} value={ownerEmail ? `${owner}` : owner} />
+        <Fact label={t('table.created')} value={fmtDate(created, locale)} />
+        <Fact label={t('details.updated')} value={updated ? fmtDate(updated, locale) : '—'} />
+        <Fact label={t('details.version')} value={`v${version}`} />
+      </dl>
+    </section>
+  )
+
+  const securityCard = (
+    <section className="fiche-card">
+      <header className="fiche-card-head">
+        <h4>{t('details.securityTitle')}</h4>
+      </header>
+      <ul className="fiche-security">
+        <li className={scanOk ? 'ok' : scanKind(scan) === 'warn' ? 'warn' : ''}>
+          <span className="fiche-dot" aria-hidden />
+          <div>
+            <strong>{t('details.antivirus')}</strong>
+            <span>{scanOk ? t('details.avSecure') : scanLabel(scan, t)}</span>
+          </div>
+        </li>
+        <li className={integrity?.ok ? 'ok' : integrity && !integrity.ok ? 'warn' : ''}>
+          <span className="fiche-dot" aria-hidden />
+          <div>
+            <strong>{t('details.integrityTitle')}</strong>
+            <span>
+              {integrity?.ok
+                ? t('details.integrityVerified')
+                : integrity
+                  ? t('details.integrityFailed')
+                  : t('details.integrityPending')}
             </span>
           </div>
-          <div className="details-chip-badges">
-            {scan && (
-              <span className={`details-scan-pill ${scanOk ? 'ok' : 'warn'}`}>{scan}</span>
-            )}
-            {isLocked && <span className="details-scan-pill lock">{t('details.locked')}</span>}
+        </li>
+        <li className={isEncrypted ? 'ok' : ''}>
+          <span className="fiche-dot" aria-hidden />
+          <div>
+            <strong>{t('details.encryptionStatus')}</strong>
+            <span>{isEncrypted ? t('details.encryptedOk') : t('details.notEncrypted')}</span>
           </div>
-        </div>
+        </li>
+      </ul>
+    </section>
+  )
 
-        <div className="details-segment collab-segment" role="tablist" aria-label={t('action.details')}>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'info'}
-            className={tab === 'info' ? 'active' : ''}
-            onClick={() => setTab('info')}
-          >
-            {t('details.tab.info')}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'security'}
-            className={tab === 'security' ? 'active' : ''}
-            onClick={() => setTab('security')}
-          >
-            {t('details.tab.security')}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'access'}
-            className={tab === 'access' ? 'active' : ''}
-            onClick={() => setTab('access')}
-          >
-            {t('details.tab.access')}
-            {peopleCount > 0 && <span className="collab-count">{peopleCount}</span>}
-          </button>
-        </div>
-
-        {loading && (
-          <div className="details-loading-inline" aria-live="polite">
-            <div className="spinner" />
-            <span>{t('details.loading')}</span>
-          </div>
-        )}
-
-        {tab === 'info' && (
-          <div className="details-panel">
-            <div className="details-kpis">
-              <div className="details-kpi">
-                <span className="details-kpi-label">{t('table.size')}</span>
-                <strong className="details-kpi-value">{fmtSize(size)}</strong>
-                <span className="details-kpi-sub">.{ext}</span>
-              </div>
-              <div className="details-kpi">
-                <span className="details-kpi-label">{t('details.version')}</span>
-                <strong className="details-kpi-value">v{version}</strong>
-                <span className="details-kpi-sub">
-                  {versions.length
-                    ? `${versions.length} ${t('details.versionsCount')}`
-                    : t('details.singleVersion')}
-                </span>
-              </div>
-              <div className="details-kpi">
-                <span className="details-kpi-label">{t('table.status')}</span>
-                <strong className="details-kpi-value">{statusLabel(status, t)}</strong>
-                <span className="details-kpi-sub">{visibilityLabel(visibility, t)}</span>
-              </div>
-              <div className="details-kpi">
-                <span className="details-kpi-label">{t('details.age')}</span>
-                <strong className="details-kpi-value">
-                  {ageDays !== null ? `${ageDays} ${t('details.days')}` : '—'}
-                </strong>
-                <span className="details-kpi-sub">
-                  {updated ? t('details.updatedShort') : t('details.neverUpdated')}
-                </span>
+  return (
+    <>
+      <Modal title={fileName} onClose={onClose} xl bare>
+        <div className="doc-fiche">
+          <header className="fiche-header">
+            <FileIcon contentType={contentType} fileName={fileName} />
+            <div className="fiche-header-text">
+              <h2 title={fileName}>{fileName}</h2>
+              <div className="fiche-badges">
+                {scanOk && <span className="fiche-badge ok">{t('details.badge.secure')}</span>}
+                {isConfidential && (
+                  <span className="fiche-badge lock">{t('details.badge.confidential')}</span>
+                )}
+                {isShared && <span className="fiche-badge info">{t('details.badge.shared')}</span>}
+                {isArchived && <span className="fiche-badge warn">{t('details.badge.archived')}</span>}
+                {isDeleted && <span className="fiche-badge danger">{statusLabel(status, t)}</span>}
+                {isLocked && <span className="fiche-badge warn">{t('details.locked')}</span>}
               </div>
             </div>
-
-            <section className="details-card">
-              <header className="details-card-head">
-                <h4>{t('details.overview')}</h4>
-              </header>
-              <dl className="details-stats">
-                <div>
-                  <dt>{t('table.name')}</dt>
-                  <dd title={fileName}>{fileName}</dd>
-                </div>
-                <div>
-                  <dt>{t('details.type')}</dt>
-                  <dd title={detail?.contentType || doc.contentType || undefined}>
-                    {detail?.contentType || doc.contentType || '—'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{t('table.owner')}</dt>
-                  <dd title={ownerId ? `${owner} (${ownerId})` : owner}>{owner}</dd>
-                </div>
-                <div>
-                  <dt>{t('details.ownerId')}</dt>
-                  <dd className="details-mono" title={ownerId}>
-                    {shortId(ownerId)}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{t('table.created')}</dt>
-                  <dd>{fmtDate(created, locale)}</dd>
-                </div>
-                <div>
-                  <dt>{t('details.updated')}</dt>
-                  <dd>{updated ? fmtDate(updated, locale) : '—'}</dd>
-                </div>
-                <div>
-                  <dt>{t('filter.category')}</dt>
-                  <dd>{category || '—'}</dd>
-                </div>
-                <div>
-                  <dt>{t('details.docId')}</dt>
-                  <dd className="details-mono" title={doc.id}>
-                    {shortId(doc.id)}
-                  </dd>
-                </div>
-              </dl>
-            </section>
-
-            {!canModify && (
-              <section className="details-card">
-                <header className="details-card-head">
-                  <h4>{t('upload.description')}</h4>
-                  <span className="details-readonly-pill">{t('details.readOnly')}</span>
-                </header>
-                {description.trim() ? (
-                  <p className="details-description">{description}</p>
-                ) : (
-                  <p className="details-empty">{t('details.noDescription')}</p>
-                )}
-              </section>
-            )}
-
-            <section className="details-card">
-              <header className="details-card-head">
-                <h4>{t('details.recentVersions')}</h4>
-                <span className="details-count">{versions.length}</span>
-              </header>
-              {versions.length ? (
-                <ol className="details-versions">
-                  {[...versions]
-                    .sort((a, b) => b.versionNumber - a.versionNumber)
-                    .slice(0, 4)
-                    .map((v) => (
-                      <li key={v.id} className={v.versionNumber === version ? 'current' : ''}>
-                        <span className="details-version-tag">v{v.versionNumber}</span>
-                        <div className="details-version-body">
-                          <strong>{v.uploadedByName}</strong>
-                          <span>
-                            {fmtSize(v.sizeBytes)} · {fmtDate(v.createdAt, locale)}
-                          </span>
-                          {v.changeComment && <em>{v.changeComment}</em>}
-                        </div>
-                      </li>
-                    ))}
-                </ol>
-              ) : (
-                <p className="details-empty">{t('empty.none')}</p>
+            <div className="fiche-header-actions">
+              {canDownload && (
+                <button type="button" className="btn btn-primary" onClick={onDownload}>
+                  {t('action.download')}
+                </button>
               )}
-            </section>
-
-            {canModify && (
-              <section className="details-card">
-                <header className="details-card-head">
-                  <h4>{t('details.edit')}</h4>
-                </header>
-                <div className="details-form">
-                  <div className="form-group">
-                    <label htmlFor="meta-category">{t('filter.category')}</label>
-                    <select
-                      id="meta-category"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      disabled={saving}
-                    >
-                      {categories.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group details-form-full">
-                    <label htmlFor="meta-desc">{t('upload.description')}</label>
-                    <textarea
-                      id="meta-desc"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={3}
-                      disabled={saving}
-                      placeholder={t('details.descPlaceholder')}
-                    />
-                  </div>
-                </div>
-              </section>
-            )}
-          </div>
-        )}
-
-        {tab === 'security' && (
-          <div className="details-panel">
-            <section className="details-card">
-              <header className="details-card-head">
-                <h4>{t('details.protection')}</h4>
-              </header>
-              <div className="details-protect-grid">
-                <div className={`details-protect-item ${isEncrypted ? 'ok' : ''}`}>
-                  <span className="details-protect-label">{t('details.encryptionStatus')}</span>
-                  <strong>
-                    {isEncrypted
-                      ? `${t('details.encrypted')} (${encryptionAlgo})`
-                      : t('details.notEncrypted')}
-                  </strong>
-                </div>
-                <div className={`details-protect-item ${isCompressed ? 'ok' : ''}`}>
-                  <span className="details-protect-label">{t('details.compressionStatus')}</span>
-                  <strong>
-                    {isCompressed ? t('details.compressed') : t('details.notCompressed')}
-                  </strong>
-                </div>
-                <div className={`details-protect-item ${scanOk ? 'ok' : scan ? 'warn' : ''}`}>
-                  <span className="details-protect-label">{t('details.antivirus')}</span>
-                  <strong>{scan || '—'}</strong>
-                </div>
-                <div className={`details-protect-item ${isLocked ? 'warn' : ''}`}>
-                  <span className="details-protect-label">{t('details.lockStatus')}</span>
-                  <strong>
-                    {isLocked
-                      ? `${t('details.locked')}${detail?.lockedByName || doc.lockedByName ? ` · ${detail?.lockedByName || doc.lockedByName}` : ''}`
-                      : t('details.unlocked')}
-                  </strong>
-                </div>
-              </div>
-            </section>
-
-            <section className="details-card">
-              <header className="details-card-head">
-                <h4>{t('details.decryptIntegrityTitle')}</h4>
+              {canFavorite && (
                 <button
                   type="button"
-                  className="btn btn-sm btn-primary"
-                  disabled={checking}
-                  onClick={() => void checkIntegrity()}
+                  className={`btn${favorite ? ' fiche-fav-on' : ''}`}
+                  onClick={() => void onToggleFavorite()}
                 >
-                  {checking ? t('details.checking') : t('details.decryptAndVerify')}
+                  {favorite ? t('action.unfavorite') : t('action.favorite')}
                 </button>
-              </header>
-              <p className="details-hint">{t('details.integrityHint')}</p>
-              <p className="details-hash-label">{t('upload.studio.hashLabel')}</p>
-              <p className="details-hash">{hash || '—'}</p>
-              {integrity && (
-                <div className={`details-integrity-result ${integrity.ok ? 'ok' : 'err'}`}>
-                  <strong>{integrity.ok ? t('details.integrityOk') : t('details.integrityFail')}</strong>
-                  <span>{integrity.message}</span>
-                </div>
               )}
-            </section>
-          </div>
-        )}
+              <div className="fiche-more" ref={moreRef}>
+                {(canModify && !isDeleted) && (
+                  <>
+                <button
+                  type="button"
+                  className="btn fiche-more-btn"
+                  aria-label={t('action.more')}
+                  onClick={() => setMoreOpen((v) => !v)}
+                >
+                  ⋮
+                </button>
+                {moreOpen && (
+                  <div className="fiche-more-menu" role="menu">
+                    {canModify && !isDeleted && !isArchived && (
+                      <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); setEditing(true) }}>
+                        {t('action.edit')}
+                      </button>
+                    )}
+                    {canModify && !isDeleted && !isArchived && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMoreOpen(false)
+                          onClose()
+                          navigate(`/documents/upload?documentId=${encodeURIComponent(doc.id)}`)
+                        }}
+                      >
+                        {t('action.newVersion')}
+                      </button>
+                    )}
+                    {canModify && !isDeleted && !isArchived && (
+                      <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); void onArchive() }}>
+                        {t('action.archive')}
+                      </button>
+                    )}
+                    {canModify && isArchived && (
+                      <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); void onRestore() }}>
+                        {t('action.restore')}
+                      </button>
+                    )}
+                    {canModify && !isDeleted && (
+                      <button type="button" role="menuitem" className="danger" onClick={() => { setMoreOpen(false); void onTrash() }}>
+                        {t('action.trash')}
+                      </button>
+                    )}
+                  </div>
+                )}
+                  </>
+                )}
+              </div>
+              <button type="button" className="modal-close" onClick={onClose} aria-label={t('btn.close')}>
+                &times;
+              </button>
+            </div>
+          </header>
 
-        {tab === 'access' && (
-          <div className="details-panel">
-            <section className="details-card">
-              <header className="details-card-head">
-                <h4>{t('details.visibility')}</h4>
-              </header>
-              <dl className="details-stats details-stats-compact">
-                <div>
-                  <dt>{t('details.visibility')}</dt>
-                  <dd>{visibilityLabel(visibility, t)}</dd>
-                </div>
-                <div>
-                  <dt>{t('details.publicAccess')}</dt>
-                  <dd>
-                    {visibility === 'Public'
-                      ? accessLabel(detail?.publicAccessLevel || doc.publicAccessLevel, t)
-                      : '—'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{t('details.myAccess')}</dt>
-                  <dd>{myAccess ? accessLabel(myAccess, t) : '—'}</dd>
-                </div>
-                <div>
-                  <dt>{t('filter.category')}</dt>
-                  <dd>{category || '—'}</dd>
-                </div>
-              </dl>
-              <p className="details-hint">{t('details.categoryAccessHint')}</p>
-            </section>
+          {msg && <div className="fiche-toast" role="status">{msg}</div>}
 
-            <section className="details-card">
-              <header className="details-card-head">
-                <h4>{t('collab.sharedWith')}</h4>
-                <span className="details-count">{peopleCount || 0}</span>
-              </header>
-              {collaborators ? (
-                <ul className="details-people">
-                  <li className="details-person owner">
-                    <span className="collab-avatar" aria-hidden>
-                      {initialsOf(collaborators.owner.userName, collaborators.owner.userEmail)}
-                    </span>
-                    <div className="collab-person-meta">
-                      <strong>{collaborators.owner.userName}</strong>
-                      <span>{collaborators.owner.userEmail}</span>
-                    </div>
-                    <span className="collab-pill owner">{t('collab.role.owner')}</span>
-                  </li>
-                  {collaborators.collaborators.map((c) => (
-                    <li key={c.permissionId || c.userId || c.userEmail} className="details-person">
-                      <span className="collab-avatar" aria-hidden>
-                        {initialsOf(c.userName, c.userEmail)}
-                      </span>
-                      <div className="collab-person-meta">
-                        <strong>{c.userName}</strong>
-                        <span>{c.userEmail}</span>
+          {loading && (
+            <div className="details-loading-inline">
+              <div className="spinner" />
+              <span>{t('details.loading')}</span>
+            </div>
+          )}
+
+          {!loading && (
+            <div className="fiche-split">
+              <div className="fiche-preview">
+                {doc.isFolder ? (
+                  <div className="fiche-preview-empty">{t('details.folderNoPreview')}</div>
+                ) : (
+                  <DocumentPreviewPane doc={doc} />
+                )}
+              </div>
+              <div className="fiche-side">
+                {infoCard}
+                {securityCard}
+                {editing && canModify && !isDeleted && (
+                  <section className="fiche-card">
+                    <header className="fiche-card-head">
+                      <h4>{t('details.edit')}</h4>
+                    </header>
+                    <div className="details-form">
+                      <div className="form-group">
+                        <label htmlFor="meta-category">{t('filter.category')}</label>
+                        <select id="meta-category" value={category} onChange={(e) => setCategory(e.target.value)} disabled={saving}>
+                          {categories.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
                       </div>
-                      <span className="collab-pill">{accessLabel(c.accessLevel, t)}</span>
-                    </li>
-                  ))}
-                  {!collaborators.collaborators.length && (
-                    <li className="details-empty">{t('collab.none')}</li>
-                  )}
-                </ul>
-              ) : (
-                <p className="details-empty">{t('details.accessUnavailable')}</p>
-              )}
-            </section>
-          </div>
-        )}
-
-        {msg && (
-          <div className={`collab-alert${msgOk ? ' ok' : ' err'}`} role="status">
-            {msg}
-          </div>
-        )}
-
-        <div className="details-footer">
-          <button type="button" className="btn" onClick={onClose} disabled={saving}>
-            {canModify && tab === 'info' ? t('btn.cancel') : t('btn.close')}
-          </button>
-          {canModify && tab === 'info' && (
-            <button type="button" className="btn btn-primary" onClick={() => void save()} disabled={saving}>
-              {saving ? t('details.saving') : t('btn.save')}
-            </button>
+                      <div className="form-group details-form-full">
+                        <label htmlFor="meta-desc">{t('upload.description')}</label>
+                        <textarea
+                          id="meta-desc"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          rows={3}
+                          disabled={saving}
+                          placeholder={t('details.descPlaceholder')}
+                        />
+                      </div>
+                    </div>
+                    <div className="fiche-card-actions">
+                      <button type="button" className="btn" onClick={() => setEditing(false)}>
+                        {t('btn.cancel')}
+                      </button>
+                      <button type="button" className="btn btn-primary" onClick={() => void saveMeta()} disabled={saving}>
+                        {saving ? t('details.saving') : t('btn.save')}
+                      </button>
+                    </div>
+                  </section>
+                )}
+                {!editing && description.trim() && (
+                  <section className="fiche-card">
+                    <header className="fiche-card-head">
+                      <h4>{t('upload.description')}</h4>
+                    </header>
+                    <p className="details-description">{description}</p>
+                  </section>
+                )}
+              </div>
+            </div>
           )}
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </>
   )
 }

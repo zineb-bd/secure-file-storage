@@ -21,6 +21,16 @@ export interface ProfileUser {
   isActive: boolean
   roles: string[]
   createdAt: string
+  avatarUrl?: string | null
+}
+
+export interface DocumentCategoryDto {
+  id: string
+  name: string
+  description: string
+  icon: string
+  color: string
+  isBuiltin: boolean
 }
 
 export interface DocumentDto {
@@ -30,7 +40,6 @@ export interface DocumentDto {
   sizeBytes: number
   category: string
   description: string
-  sha256Hash: string
   currentVersion: number
   status: string
   ownerId: string
@@ -52,6 +61,19 @@ export interface DocumentDto {
   myAccessLevel?: string | null
   isOwner: boolean
   isFavorite?: boolean
+  isFolder?: boolean
+  parentId?: string | null
+}
+
+export interface FolderPathItem {
+  id: string
+  name: string
+}
+
+export interface FolderTreeItem {
+  id: string
+  name: string
+  parentId?: string | null
 }
 
 export interface FavoriteToggleResult {
@@ -130,6 +152,7 @@ export interface DashboardStats {
   totalDocuments: number
   storageUsedBytes: number
   logicalStorageBytes: number
+  storageQuotaBytes?: number
   bytesSavedByDedup: number
   recentDocuments: DocumentDto[]
   recentActivity: RecentActivity[]
@@ -153,6 +176,9 @@ export interface UserDirectoryEntry {
   id: string
   email: string
   fullName: string
+  firstName?: string
+  lastName?: string
+  avatarUrl?: string | null
 }
 
 export interface AdminUser {
@@ -163,6 +189,7 @@ export interface AdminUser {
   isActive: boolean
   roles: string[]
   createdAt: string
+  avatarUrl?: string | null
 }
 
 export interface RoleDto {
@@ -238,7 +265,6 @@ export interface DocumentVersion {
   id: string
   versionNumber: number
   sizeBytes: number
-  sha256Hash: string
   uploadedById: string
   uploadedByName: string
   createdAt: string
@@ -349,4 +375,5 @@ export interface DocActionOpts {
   noTrash?: boolean
   isFavorite?: boolean
   showFavorite?: boolean
+  isFolder?: boolean
 }

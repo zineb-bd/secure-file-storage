@@ -57,8 +57,8 @@ const ROUTE_META: Record<string, { titleKey: string; subtitleKey?: string }> = {
   '/categories': { titleKey: 'page.categories.title', subtitleKey: 'page.categories.subtitle' },
   '/archived': { titleKey: 'page.archived.title', subtitleKey: 'page.archived.subtitle' },
   '/trash': { titleKey: 'page.trash.title', subtitleKey: 'page.trash.subtitle' },
-  '/profile': { titleKey: 'page.profile.title', subtitleKey: 'page.profile.subtitle' },
-  '/admin/users': { titleKey: 'page.adminUsers.title', subtitleKey: 'page.adminUsers.subtitle' },
+  '/annuaire': { titleKey: 'page.annuaire.title', subtitleKey: 'page.annuaire.subtitle' },
+  '/profile': { titleKey: 'page.annuaire.title', subtitleKey: 'page.annuaire.subtitle' },
   '/admin/audit': { titleKey: 'page.adminAudit.title', subtitleKey: 'page.adminAudit.subtitle' },
   '/admin/config': { titleKey: 'page.adminConfig.title', subtitleKey: 'page.adminConfig.subtitle' },
 }
@@ -162,6 +162,10 @@ export function AppLayout() {
       }
     }
     closeMenus()
+    if (n.documentId) {
+      navigate(`/documents?highlight=${encodeURIComponent(n.documentId)}`)
+      return
+    }
     navigate('/shared')
   }
 
@@ -189,7 +193,18 @@ export function AppLayout() {
 
   const routeMeta = ROUTE_META[location.pathname] ?? ROUTE_META['/']
   const breadcrumb = t(routeMeta.titleKey)
-  const breadcrumbSub = routeMeta.subtitleKey ? t(routeMeta.subtitleKey) : ''
+  const annuaireTab = new URLSearchParams(location.search).get('tab')
+  const subtitleKey =
+    location.pathname === '/annuaire'
+      ? annuaireTab === 'groups' && isAdmin
+        ? 'page.annuaire.subtitleGroups'
+        : annuaireTab === 'users'
+          ? isAdmin
+            ? 'page.annuaire.subtitle'
+            : 'page.annuaire.subtitleUser'
+          : 'page.profile.subtitle'
+      : routeMeta.subtitleKey
+  const breadcrumbSub = subtitleKey ? t(subtitleKey) : ''
 
   const navItems = [
     { to: '/', label: t('nav.dashboard'), icon: 'dashboard' },
@@ -203,7 +218,6 @@ export function AppLayout() {
 
   const adminItems = isAdmin
     ? [
-        { to: '/admin/users', label: t('nav.users'), icon: 'users' },
         { to: '/admin/audit', label: t('nav.audit'), icon: 'audit' },
         { to: '/admin/config', label: t('nav.config'), icon: 'config' },
       ]
@@ -258,12 +272,12 @@ export function AppLayout() {
           ))}
           <div className="nav-section">{t('nav.account')}</div>
           <NavLink
-            to="/profile"
+            to="/annuaire"
             className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
             onClick={closeMenus}
           >
-            <NavIcon name="profile" />
-            <span className="nav-item-label">{t('nav.profile')}</span>
+            <NavIcon name="users" />
+            <span className="nav-item-label">{t('nav.annuaire')}</span>
           </NavLink>
           {isAdmin && (
             <>
@@ -406,8 +420,8 @@ export function AppLayout() {
               </button>
               {userMenuOpen && (
                 <div className="dropdown" id="user-dropdown">
-                  <button type="button" className="dropdown-item" onClick={() => { navigate('/profile'); closeMenus() }}>
-                    {t('user.profile')}
+                  <button type="button" className="dropdown-item" onClick={() => { navigate('/annuaire'); closeMenus() }}>
+                    {t('nav.annuaire')}
                   </button>
                   <div className="dropdown-divider" />
                   <button type="button" className="dropdown-item danger" id="btn-logout" onClick={() => void logout()}>

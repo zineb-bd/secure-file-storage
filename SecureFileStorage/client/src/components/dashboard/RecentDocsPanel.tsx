@@ -40,9 +40,12 @@ export function RecentDocsPanel({
         <ul className="recent-docs-list">
           {documents.map((d) => (
             <li key={d.id}>
-              <Link to="/documents" className="recent-docs-item">
+              <Link
+                to={d.isFolder ? `/documents?folder=${encodeURIComponent(d.id)}` : '/documents'}
+                className="recent-docs-item"
+              >
                 <div className="recent-docs-icon">
-                  <FileIcon contentType={d.contentType} fileName={d.fileName} />
+                  <FileIcon contentType={d.contentType} fileName={d.fileName} isFolder={d.isFolder} />
                 </div>
                 <div className="recent-docs-body">
                   <strong className="recent-docs-name" title={d.fileName}>

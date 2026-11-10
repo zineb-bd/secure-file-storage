@@ -7,7 +7,9 @@ export function fmtSize(bytes: number | null | undefined): string {
   if (bytes == null) return '—'
   if (bytes < 1024) return `${bytes} o`
   if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} Ko`
-  return `${(bytes / 1048576).toFixed(2)} Mo`
+  if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(2)} Mo`
+  if (bytes < 1099511627776) return `${(bytes / 1073741824).toFixed(2)} Go`
+  return `${(bytes / 1099511627776).toFixed(2)} To`
 }
 
 export function buildQuery(params: Record<string, string | number | undefined | null>): string {

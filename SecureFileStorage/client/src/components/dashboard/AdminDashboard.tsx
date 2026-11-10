@@ -4,11 +4,11 @@ import { DashboardCharts } from '@/components/dashboard/DashboardCharts'
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton'
 import { RecentDocsPanel } from '@/components/dashboard/RecentDocsPanel'
 import { useI18n } from '@/i18n/I18nContext'
-import { buildQuery, fmtDate, fmtSize } from '@/utils/format'
+import { buildQuery, fmtSize } from '@/utils/format'
 import type { AdminUser, DashboardStats, DocumentDto, PagedResult } from '@/types'
 
 export function AdminDashboard() {
-  const { t, locale } = useI18n()
+  const { t } = useI18n()
   const [data, setData] = useState<DashboardStats | null>(null)
   const [documents, setDocuments] = useState<DocumentDto[]>([])
   const [userCount, setUserCount] = useState(0)
@@ -79,21 +79,6 @@ export function AdminDashboard() {
         showOwner
         className="admin-recent-docs"
       />
-
-      {data.notifications?.length > 0 && (
-        <section className="admin-dash-panel">
-          <h2>{t('topbar.notifications')}</h2>
-          <ul className="admin-dash-notif-list">
-            {data.notifications.map((n, i) => (
-              <li key={i}>
-                <strong>{n.type}</strong>
-                <p>{n.message}</p>
-                <time>{fmtDate(n.date, locale)}</time>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   )
 }

@@ -108,3 +108,14 @@ export function IconGlobe({ size = 20, className }: IconProps) {
     </svg>
   )
 }
+
+export function IconSparkles({ size = 16, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3L12 3zM19 14l.7 2.3 2.3.7-2.3.7L19 20l-.7-2.3L16 17l2.3-.7L19 14zM5 15l.6 1.8L7.5 17.5 5.6 18.2 5 20l-.6-1.8L2.5 17.5l1.9-.7L5 15z"
+        fill="currentColor"
+      />
+    </svg>
+  )
+}

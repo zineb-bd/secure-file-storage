@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api, downloadBlob } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { useI18n } from '@/i18n/I18nContext'
@@ -18,12 +19,15 @@ import { MetadataModal } from '@/components/modals/MetadataModal'
 import { PreviewModal } from '@/components/modals/PreviewModal'
 import { ShareModal } from '@/components/modals/ShareModal'
 import { VersionsModal } from '@/components/modals/VersionsModal'
+import { MoveModal } from './FolderModals'
 
 interface DocumentTableProps {
   documents: DocumentDto[]
   emptyMsg?: string
   actionOpts?: Partial<DocActionOpts>
   onChanged?: () => void
+  onOpenFolder?: (doc: DocumentDto) => void
+  onMove?: (doc: DocumentDto) => void
   showOwner?: boolean
   sharedMode?: boolean
   showFavorite?: boolean
@@ -36,6 +40,8 @@ export function DocumentTable({
   emptyMsg,
   actionOpts = {},
   onChanged,
+  onOpenFolder,
+  onMove,
   showOwner = true,
   sharedMode = false,
   showFavorite = true,
@@ -43,12 +49,19 @@ export function DocumentTable({
 }: DocumentTableProps) {
   const { t, locale } = useI18n()
   const { isAdmin } = useAuth()
+  const navigate = useNavigate()
   const [preview, setPreview] = useState<DocumentDto | null>(null)
   const [metadata, setMetadata] = useState<DocumentDto | null>(null)
   const [share, setShare] = useState<DocumentDto | null>(null)
   const [versions, setVersions] = useState<DocumentDto | null>(null)
+  const [moveDoc, setMoveDoc] = useState<DocumentDto | null>(null)
   const [localDocs, setLocalDocs] = useState<DocumentDto[] | null>(null)
   const [toast, setToast] = useState('')
+
+  const openFolder = (doc: DocumentDto) => {
+    if (onOpenFolder) onOpenFolder(doc)
+    else navigate(`/documents?folder=${encodeURIComponent(doc.id)}`)
+  }
 
   useEffect(() => {
     setLocalDocs(null)
@@ -68,11 +81,11 @@ export function DocumentTable({
 
   const makeActions = useCallback(
     (doc: DocumentDto): DocActions => ({
-      onPreview: () => setPreview(doc),
-      onDownload: () => void downloadBlob(`/api/documents/${doc.id}/download`, doc.fileName),
+      onPreview: doc.isFolder ? undefined : () => setPreview(doc),
+      onDownload: doc.isFolder ? undefined : () => void downloadBlob(`/api/documents/${doc.id}/download`, doc.fileName),
       onShare: () => setShare(doc),
       onMetadata: () => setMetadata(doc),
-      onVersions: () => setVersions(doc),
+      onVersions: doc.isFolder ? undefined : () => setVersions(doc),
       onFavorite: async () => {
         const result = await toggleFavoriteApi(doc.id, !!doc.isFavorite)
         setLocalDocs((prev) => {
@@ -118,8 +131,13 @@ export function DocumentTable({
         await api(`/api/documents/${doc.id}/checkin`, { method: 'POST' })
         onChanged?.()
       },
+      onMove: doc.canModify !== false ? () => (onMove ? onMove(doc) : setMoveDoc(doc)) : undefined,
+      onNewVersion:
+        !doc.isFolder && doc.canModify !== false
+          ? () => navigate(`/documents/upload?documentId=${encodeURIComponent(doc.id)}`)
+          : undefined,
     }),
-    [actionOpts.showPermDelete, documents, onChanged, t]
+    [actionOpts.showPermDelete, documents, navigate, onChanged, onMove, t]
   )
 
   if (!docs.length) {
@@ -156,21 +174,38 @@ export function DocumentTable({
             return (
               <tr key={d.id}>
                 <td>
-                  <span className="file-icon">
-                    <FileIcon contentType={d.contentType} fileName={d.fileName} />
-                  </span>
+                  {d.isFolder ? (
+                    <button
+                      type="button"
+                      className="file-icon file-icon-btn"
+                      onClick={() => openFolder(d)}
+                      aria-label={d.fileName}
+                    >
+                      <FileIcon contentType={d.contentType} fileName={d.fileName} isFolder />
+                    </button>
+                  ) : (
+                    <span className="file-icon">
+                      <FileIcon contentType={d.contentType} fileName={d.fileName} />
+                    </span>
+                  )}
                 </td>
                 <td>
                   <span className="doc-name" title={d.fileName}>
-                    <span className="doc-name-text">{d.fileName}</span>
+                    {d.isFolder ? (
+                      <button type="button" className="doc-name-link" onClick={() => openFolder(d)}>
+                        {d.fileName}
+                      </button>
+                    ) : (
+                      <span className="doc-name-text">{d.fileName}</span>
+                    )}
                     <VisibilityBadge visibility={d.visibility} />
                     <LockBadge doc={d} />
                   </span>
                 </td>
                 {!sharedMode && <td>{d.category || '—'}</td>}
-                {!compact && <td>{(d.contentType || '—').split('/').pop()}</td>}
-                <td>{fmtSize(d.sizeBytes)}</td>
-                {!sharedMode && !compact && <td>{d.currentVersion || 1}</td>}
+                {!compact && <td>{d.isFolder ? t('files.folderType') : (d.contentType || '—').split('/').pop()}</td>}
+                <td>{d.isFolder ? '—' : fmtSize(d.sizeBytes)}</td>
+                {!sharedMode && !compact && <td>{d.isFolder ? '—' : d.currentVersion || 1}</td>}
                 {showOwner && <td>{d.ownerName || '—'}</td>}
                 {sharedMode && <td>{d.myAccessLevel || '—'}</td>}
                 <td>{fmtDate(sharedMode ? d.createdAt : d.updatedAt || d.createdAt, locale)}</td>
@@ -194,6 +229,9 @@ export function DocumentTable({
       )}
       {share && <ShareModal doc={share} onClose={() => setShare(null)} />}
       {versions && <VersionsModal doc={versions} onClose={() => setVersions(null)} onChanged={onChanged} />}
+      {!onMove && moveDoc && (
+        <MoveModal doc={moveDoc} onClose={() => setMoveDoc(null)} onMoved={() => onChanged?.()} />
+      )}
     </>
   )
 }

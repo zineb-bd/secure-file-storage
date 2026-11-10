@@ -16,6 +16,7 @@ import {
   groupByCategory,
   storageMeterPercent,
 } from '@/utils/dashboardHelpers'
+import { STORAGE_QUOTA_BYTES } from '@/utils/settingsHelpers'
 import type { DashboardStats, DocumentDto, PagedResult } from '@/types'
 
 interface HomeData {
@@ -96,7 +97,8 @@ export function HomeDashboard() {
 
   const { dashboard, shared, archivedCount } = data
   const isEmpty = dashboard.totalDocuments === 0
-  const storagePct = storageMeterPercent(dashboard.storageUsedBytes, dashboard.logicalStorageBytes)
+  const storageQuota = dashboard.storageQuotaBytes || STORAGE_QUOTA_BYTES
+  const storagePct = storageMeterPercent(dashboard.storageUsedBytes, storageQuota)
   const sharedCount = shared.totalCount ?? shared.items?.length ?? 0
 
   const stats = [
@@ -202,6 +204,10 @@ export function HomeDashboard() {
             </div>
             <dl className="home-storage-dl">
               <div>
+                <dt>{t('home.storageQuota')}</dt>
+                <dd>{fmtSize(storageQuota)}</dd>
+              </div>
+              <div>
                 <dt>{t('home.logicalStorage')}</dt>
                 <dd>{fmtSize(dashboard.logicalStorageBytes)}</dd>
               </div>
@@ -284,23 +290,6 @@ export function HomeDashboard() {
                   <strong>{d.fileName}</strong>
                   <span>{d.category} · {fmtDate(d.updatedAt || d.createdAt, locale)}</span>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {dashboard.notifications?.length > 0 && (
-        <section className="home-panel home-notifications">
-          <div className="home-panel-header">
-            <h2>{t('topbar.notifications')}</h2>
-          </div>
-          <ul className="home-notif-list">
-            {dashboard.notifications.map((n, i) => (
-              <li key={i}>
-                <span className="home-notif-type">{n.type}</span>
-                <p>{n.message}</p>
-                <time>{fmtDate(n.date, locale)}</time>
               </li>
             ))}
           </ul>

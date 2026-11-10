@@ -169,7 +169,6 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
               category: d.category,
               contentType: d.contentType,
               currentVersion: d.currentVersion,
-              sha256Hash: d.sha256Hash,
             } satisfies DocumentMeta,
           }
         } catch {
@@ -235,7 +234,6 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
             category: docDetail.category,
             contentType: docDetail.contentType,
             currentVersion: docDetail.currentVersion,
-            sha256Hash: docDetail.sha256Hash,
           },
         }))
       }
@@ -823,18 +821,14 @@ export function DocumentAuditList({ users }: DocumentAuditListProps) {
                             {fmtDate(panelIntegrity.lastCheckAt, locale)}
                           </p>
                         </>
-                      ) : selectedDocDetail?.sha256Hash ? (
+                      ) : (
                         <>
                           <div className="doc-audit-integrity-status">
                             <span className="doc-audit-integrity-icon ok">✓</span>
                             {t('docAudit.hashAvailable')}
                           </div>
-                          <p className="audit-detail-mono doc-audit-integrity-hash">
-                            {selectedDocDetail.sha256Hash.slice(0, 24)}…
-                          </p>
+                          <p className="doc-audit-integrity-meta">{t('docAudit.noVerificationYet')}</p>
                         </>
-                      ) : (
-                        <p className="doc-audit-empty">{t('users.notAvailable')}</p>
                       )}
                     </div>
                   </div>

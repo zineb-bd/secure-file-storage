@@ -17,14 +17,23 @@ import {
   APP_NAME,
   computeSecurityLevel,
   connectionPlaceholder,
+  isClamAvEngine,
+  isEncryptionActive,
+  latestDetectionAt,
+  threatsFromAlerts,
   DATABASE_PROVIDERS,
   ENCRYPTION_ALGORITHMS,
+  encryptionAlgorithmLabel,
   formatBytesShort,
   healthToStatus,
   JWT_EXPIRATION_MINUTES,
+  LOCKOUT_MINUTES,
+  MAX_FAILED_LOGINS,
   MAX_FILE_SIZE_BYTES,
+  PASSWORD_MIN_LENGTH,
   SETTINGS_SECTIONS,
   STORAGE_PROVIDERS,
+  STORAGE_QUOTA_BYTES,
   storageToForm,
   storageUsagePercent,
   type SettingsSection,
@@ -38,7 +47,7 @@ import {
   PREF_NOTIF_EMAIL_KEY,
   PREF_NOTIF_INAPP_KEY,
 } from '@/constants'
-import type { AntivirusAlert, AntivirusStats, DashboardStats, StorageConfig } from '@/types'
+import type { AntivirusAlert, AntivirusStats, DashboardStats, DocumentMaturityScore, StorageConfig } from '@/types'
 
 function readBoolPref(key: string, fallback = true) {
   const v = localStorage.getItem(key)
@@ -51,10 +60,19 @@ interface HealthResponse {
   timestamp: string
 }
 
-function formatScanMs(ms?: number | null) {
-  if (ms == null || Number.isNaN(ms)) return '—'
+function formatScanMs(ms: number | null | undefined, emptyLabel: string) {
+  if (ms == null || Number.isNaN(ms) || ms <= 0) return emptyLabel
   if (ms < 1000) return `${Math.round(ms)} ms`
   return `${(ms / 1000).toFixed(2)} s`
+}
+
+function maturityLevelLabel(level: string, t: (k: string) => string) {
+  const map: Record<string, string> = {
+    Excellent: t('maturity.level.excellent'),
+    Good: t('maturity.level.good'),
+    NeedsImprovement: t('maturity.level.needs'),
+  }
+  return map[level] || level
 }
 
 function StatusIndicator({ status, label }: { status: SystemStatus; label: string }) {
@@ -120,6 +138,7 @@ export function SettingsView({ onError }: SettingsViewProps) {
   const [alerts, setAlerts] = useState<AntivirusAlert[]>([])
   const [avStats, setAvStats] = useState<AntivirusStats | null>(null)
   const [dashboard, setDashboard] = useState<DashboardStats | null>(null)
+  const [maturity, setMaturity] = useState<DocumentMaturityScore | null>(null)
   const [health, setHealth] = useState<HealthResponse | null>(null)
   const [lastKeyRotation, setLastKeyRotation] = useState<string | null>(null)
   const [lastKeyId, setLastKeyId] = useState<string | null>(null)
@@ -129,7 +148,7 @@ export function SettingsView({ onError }: SettingsViewProps) {
   const [draftHome, setDraftHome] = useState(() => localStorage.getItem(PREF_HOME_PAGE_KEY) || '/')
   const [draftCompact, setDraftCompact] = useState(() => readBoolPref(PREF_COMPACT_TABLE_KEY, false))
   const [draftNotifInApp, setDraftNotifInApp] = useState(() => readBoolPref(PREF_NOTIF_INAPP_KEY, true))
-  const [draftNotifEmail, setDraftNotifEmail] = useState(() => readBoolPref(PREF_NOTIF_EMAIL_KEY, true))
+  const draftNotifEmail = false
   const [rotateConfirm, setRotateConfirm] = useState(false)
   const [rotating, setRotating] = useState(false)
 
@@ -141,11 +160,12 @@ export function SettingsView({ onError }: SettingsViewProps) {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [storage, avAlerts, avStatsRes, stats, healthRes] = await Promise.all([
+      const [storage, avAlerts, avStatsRes, stats, maturityRes, healthRes] = await Promise.all([
         api<StorageConfig>('/api/admin/storage').catch(() => null),
         api<AntivirusAlert[]>('/api/admin/security/antivirus-alerts?take=50').catch(() => [] as AntivirusAlert[]),
         api<AntivirusStats>('/api/admin/security/antivirus-stats').catch(() => null),
         api<DashboardStats>('/api/dashboard').catch(() => null),
+        api<DocumentMaturityScore>('/api/dashboard/maturity').catch(() => null),
         fetch(apiUrl('/health')).then((r) => r.json() as Promise<HealthResponse>).catch(() => null),
       ])
       if (storage) {
@@ -168,6 +188,7 @@ export function SettingsView({ onError }: SettingsViewProps) {
       setAlerts(avAlerts || [])
       setAvStats(avStatsRes)
       setDashboard(stats)
+      setMaturity(maturityRes)
       setHealth(healthRes)
     } catch (e) {
       const msg = e instanceof Error ? e.message : t('msg.loadProfileError')
@@ -181,7 +202,23 @@ export function SettingsView({ onError }: SettingsViewProps) {
     void load()
   }, [load])
 
-  const securityLevel = useMemo(() => computeSecurityLevel(alerts), [alerts])
+  const openAlerts = avStats?.unresolvedAlerts ?? alerts.filter((a) => !a.isResolved).length
+  const encryptionActive = isEncryptionActive(
+    config?.encryptionAlgorithm || storageForm?.encryptionAlgorithm,
+    config?.activeEncryptionKeyId,
+    config?.activeEncryptionKeyIdentifier,
+  )
+  const clamAvEnabled = isClamAvEngine(avStats?.engine)
+  const antivirusEnabled = avStats ? Boolean(avStats.enabled || avStats.engine) : true
+  const securityLevel = useMemo(
+    () =>
+      computeSecurityLevel({
+        unresolvedAlerts: openAlerts,
+        antivirusEnabled,
+        encryptionActive,
+      }),
+    [openAlerts, antivirusEnabled, encryptionActive]
+  )
 
   const checkSystemStatus = async () => {
     setChecking(true)
@@ -434,16 +471,9 @@ export function SettingsView({ onError }: SettingsViewProps) {
         <div className="settings-switch-row">
           <div>
             <strong>{t('profile.notifEmail')}</strong>
-            <p>{t('profile.notifEmailHint')}</p>
+            <p>{t('profile.notifEmailUnavailable')}</p>
           </div>
-          <label className="settings-switch">
-            <input
-              type="checkbox"
-              checked={draftNotifEmail}
-              onChange={(e) => setDraftNotifEmail(e.target.checked)}
-            />
-            <span className="settings-switch-slider" />
-          </label>
+          <span className="settings-badge settings-badge-disabled">{t('settings.disabled')}</span>
         </div>
       </div>
 
@@ -525,24 +555,107 @@ export function SettingsView({ onError }: SettingsViewProps) {
     </div>
   )
 
-  const renderSecurity = () => (
+  const renderSecurity = () => {
+    const noScan = t('settings.av.noScan')
+    const algo = encryptionAlgorithmLabel(config?.encryptionAlgorithm || storageForm?.encryptionAlgorithm, t)
+    const keyId = config?.activeEncryptionKeyIdentifier || lastKeyId
+    const keyDate = lastKeyRotation || config?.updatedAt
+    const lastDetection = latestDetectionAt(alerts, avStats?.lastDetectionAt)
+    const threats = (avStats?.topThreats && avStats.topThreats.length > 0)
+      ? avStats.topThreats
+      : threatsFromAlerts(alerts)
+    const securityPillar = maturity?.security
+    const avCleanMetric = securityPillar?.metrics.find((m) => m.key === 'antivirusClean')
+    const cleanDocs = (avStats?.cleanDocuments && avStats.cleanDocuments > 0)
+      ? avStats.cleanDocuments
+      : (avCleanMetric?.value ?? avStats?.cleanDocuments ?? 0)
+    const scannedDocs = (avStats?.documentsScanned && avStats.documentsScanned > 0)
+      ? avStats.documentsScanned
+      : (avCleanMetric?.total ?? dashboard?.totalDocuments ?? 0)
+
+    return (
     <div className="settings-section">
       <div className="settings-section-header">
         <h3>{t('settings.nav.security')}</h3>
         <p>{t('settings.securityDesc')}</p>
       </div>
 
-      <div className="settings-security-level">
+      <div className={`settings-security-level level-${securityLevel}`}>
         <div>
           <span className="settings-security-level-label">{t('settings.securityLevel')}</span>
           <strong className={`settings-security-level-value level-${securityLevel}`}>
             {t(`settings.securityLevel.${securityLevel}`)}
           </strong>
+          <p className="settings-security-level-hint">{t(`settings.securityLevelHint.${securityLevel}`)}</p>
         </div>
         <IconShield size={28} />
       </div>
 
+      <ul className="settings-security-checks">
+        <li className="ok">{t('settings.check.jwt')}</li>
+        <li className={encryptionActive ? 'ok' : 'warn'}>
+          {encryptionActive ? t('settings.check.encryptionOn') : t('settings.check.encryptionOff')}
+        </li>
+        <li className="ok">{t('settings.check.password')}</li>
+        <li className={antivirusEnabled ? 'ok' : 'warn'}>
+          {antivirusEnabled ? t('settings.check.avOn') : t('settings.check.avOff')}
+        </li>
+        <li className={openAlerts === 0 ? 'ok' : 'warn'}>
+          {t('settings.check.alerts', { count: String(openAlerts) })}
+        </li>
+        <li className="ok">{t('settings.check.audit')}</li>
+        <li className="ok">{t('settings.rbac')}</li>
+        <li className={clamAvEnabled ? 'ok' : 'warn'}>
+          {clamAvEnabled ? t('settings.check.clamAvOn') : t('settings.check.clamAvOff')}
+        </li>
+      </ul>
+
+      <dl className="settings-security-facts">
+        <div>
+          <dt>{t('settings.jwtAuth')}</dt>
+          <dd>{t('settings.minutesValue', { count: String(JWT_EXPIRATION_MINUTES) })}</dd>
+        </div>
+        <div>
+          <dt>{t('settings.hashing')}</dt>
+          <dd>{t('settings.hashingValue')}</dd>
+        </div>
+        <div>
+          <dt>{t('settings.accountLockout')}</dt>
+          <dd>{t('settings.lockoutValue', { minutes: String(LOCKOUT_MINUTES) })}</dd>
+        </div>
+        <div>
+          <dt>{t('settings.encryptionAlgorithm')}</dt>
+          <dd>{algo}</dd>
+        </div>
+        <div>
+          <dt>{t('settings.integrity')}</dt>
+          <dd>{t('settings.integrityValue')}</dd>
+        </div>
+        <div>
+          <dt>{t('settings.av.engine')}</dt>
+          <dd>{avStats?.engine || t('settings.av.engineFallback')}</dd>
+        </div>
+        <div>
+          <dt>{t('settings.scanCoverage')}</dt>
+          <dd>
+            {cleanDocs}
+            {' / '}
+            {scannedDocs}
+          </dd>
+        </div>
+        <div>
+          <dt>{t('settings.av.detectionsTitle')}</dt>
+          <dd>
+            {t('settings.av.detectionsCount', {
+              total: String(avStats?.totalAlerts ?? alerts.length),
+              open: String(openAlerts),
+            })}
+          </dd>
+        </div>
+      </dl>
+
       <div className="settings-card">
+        <h4>{t('settings.authTitle')}</h4>
         <FeatureRow
           name={t('settings.jwtAuth')}
           description={t('settings.jwtAuthDesc')}
@@ -552,48 +665,180 @@ export function SettingsView({ onError }: SettingsViewProps) {
         <ReadOnlyRow
           label={t('settings.sessionExpiration')}
           value={t('settings.minutesValue', { count: String(JWT_EXPIRATION_MINUTES) })}
+          hint={t('settings.sessionExpirationHint')}
+        />
+        <ReadOnlyRow
+          label={t('settings.passwordPolicy')}
+          value={t('settings.passwordPolicyValue')}
+          hint={t('settings.passwordPolicyHint', { count: String(PASSWORD_MIN_LENGTH) })}
+        />
+        <ReadOnlyRow
+          label={t('settings.hashing')}
+          value={t('settings.hashingValue')}
+        />
+        <ReadOnlyRow
+          label={t('settings.maxLoginAttempts')}
+          value={String(MAX_FAILED_LOGINS)}
+        />
+        <ReadOnlyRow
+          label={t('settings.accountLockout')}
+          value={t('settings.lockoutValue', { minutes: String(LOCKOUT_MINUTES) })}
         />
         <FeatureRow
-          name={t('settings.encryptionAtRest')}
-          description={t('settings.encryptionAtRestDesc')}
+          name={t('settings.twoFactor')}
+          description={t('settings.twoFactorDesc')}
+          enabled={false}
+          t={t}
+        />
+        <FeatureRow
+          name={t('settings.rbac')}
+          description={t('settings.rbacDesc')}
           enabled
           t={t}
         />
         <FeatureRow
-          name={t('settings.antivirusScan')}
-          description={t('settings.antivirusScanDesc')}
-          enabled={avStats?.enabled ?? false}
+          name={t('settings.auditLog')}
+          description={t('settings.auditLogDesc')}
+          enabled
           t={t}
         />
       </div>
 
       <div className="settings-card">
+        <h4>{t('settings.encryptionKeys')}</h4>
+        <p className="settings-card-desc">{t('settings.encryptionKeysDesc')}</p>
+        <FeatureRow
+          name={t('settings.encryptionAtRest')}
+          description={t('settings.encryptionAtRestDesc')}
+          enabled={encryptionActive}
+          t={t}
+        />
+        <ReadOnlyRow label={t('settings.encryptionAlgorithm')} value={algo} />
+        <FeatureRow
+          name={t('settings.sha256')}
+          description={t('settings.sha256Desc')}
+          enabled
+          t={t}
+        />
+        <FeatureRow
+          name={t('settings.compression')}
+          description={t('settings.compressionDesc')}
+          enabled={storageForm?.compressionEnabled !== false}
+          t={t}
+        />
+        <FeatureRow
+          name={t('settings.digitalSignature')}
+          description={t('settings.digitalSignatureDesc')}
+          enabled={false}
+          t={t}
+        />
+        <dl className="settings-dl">
+          <div>
+            <dt>{t('settings.keyStatus')}</dt>
+            <dd>{encryptionActive ? t('settings.keyStatusActive') : t('settings.notAvailable')}</dd>
+          </div>
+          <div>
+            <dt>{t('settings.keyIdentifier')}</dt>
+            <dd className="settings-mono">{keyId || t('settings.keyInitial')}</dd>
+          </div>
+          <div>
+            <dt>{t('settings.lastKeyRotation')}</dt>
+            <dd>{keyDate ? fmtDate(keyDate, locale) : t('settings.keyNeverRotated')}</dd>
+          </div>
+          <div>
+            <dt>{t('settings.integrity')}</dt>
+            <dd>{t('settings.integrityValue')}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="settings-card">
+        <div className="settings-card-title-row">
+          <h4>{t('maturity.pillar.security')}</h4>
+          <span className={`settings-badge ${securityPillar ? 'settings-badge-enabled' : 'settings-badge-muted'}`}>
+            {securityPillar
+              ? `${securityPillar.score}% · ${maturityLevelLabel(securityPillar.level, t)}`
+              : t('settings.maturityUnavailable')}
+          </span>
+        </div>
+        <p className="settings-card-desc">{t('settings.maturitySecurityDesc')}</p>
+        {securityPillar ? (
+          <ul className="settings-maturity-metrics">
+            {securityPillar.metrics.map((m) => (
+              <li key={m.key}>
+                <div className="settings-maturity-metric-head">
+                  <span>{t(`maturity.metric.${m.key}`)}</span>
+                  <strong>
+                    {m.value}/{m.total} · {m.percent}%
+                  </strong>
+                </div>
+                <div className="settings-progress-bar">
+                  <div className="settings-progress-fill" style={{ width: `${Math.min(m.percent, 100)}%` }} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <dl className="settings-dl">
+            <div>
+              <dt>{t('settings.documentsTotal')}</dt>
+              <dd>{dashboard ? String(dashboard.totalDocuments) : '0'}</dd>
+            </div>
+            <div>
+              <dt>{t('settings.scanCoverage')}</dt>
+              <dd>
+                {cleanDocs}
+                {' / '}
+                {scannedDocs}
+              </dd>
+            </div>
+            <div>
+              <dt>{t('settings.encryptionAlgorithm')}</dt>
+              <dd>{algo}</dd>
+            </div>
+            <div>
+              <dt>{t('settings.rbac')}</dt>
+              <dd>{t('settings.enabled')}</dd>
+            </div>
+          </dl>
+        )}
+      </div>
+
+      <div className="settings-card">
         <div className="settings-card-title-row">
           <h4>{t('settings.av.performanceTitle')}</h4>
-          <span className={`settings-badge ${avStats?.enabled ? 'settings-badge-enabled' : 'settings-badge-disabled'}`}>
-            {avStats?.enabled ? t('settings.active') : t('settings.inactive')}
+          <span className={`settings-badge ${antivirusEnabled ? 'settings-badge-enabled' : 'settings-badge-disabled'}`}>
+            {antivirusEnabled ? t('settings.active') : t('settings.inactive')}
           </span>
         </div>
         <p className="settings-card-desc">{t('settings.av.performanceDesc')}</p>
+        <FeatureRow
+          name={t('settings.av.clamAv')}
+          description={clamAvEnabled ? t('settings.av.clamAvActive') : t('settings.av.clamAvInactive')}
+          enabled={clamAvEnabled}
+          t={t}
+        />
         <div className="settings-av-kpis">
           <div className="settings-av-kpi">
             <span className="settings-stat-label">{t('settings.av.engine')}</span>
-            <strong>{avStats ? `${avStats.engine}` : '—'}</strong>
-            {avStats && (
-              <span className="settings-av-kpi-sub">{avStats.host}:{avStats.port}</span>
-            )}
+            <strong>{avStats?.engine || t('settings.av.engineFallback')}</strong>
+            <span className="settings-av-kpi-sub">
+              {clamAvEnabled && avStats
+                ? `${avStats.host}:${avStats.port}`
+                : t('settings.av.notConnected')}
+            </span>
           </div>
           <div className="settings-av-kpi">
             <span className="settings-stat-label">{t('settings.av.avgScan')}</span>
-            <strong>{formatScanMs(avStats?.averageScanMs)}</strong>
+            <strong>{formatScanMs(avStats?.averageScanMs, noScan)}</strong>
           </div>
           <div className="settings-av-kpi">
             <span className="settings-stat-label">{t('settings.av.lastScan')}</span>
-            <strong>{formatScanMs(avStats?.lastScanMs)}</strong>
+            <strong>{formatScanMs(avStats?.lastScanMs, noScan)}</strong>
           </div>
           <div className="settings-av-kpi">
             <span className="settings-stat-label">{t('settings.av.maxScan')}</span>
-            <strong>{formatScanMs(avStats?.maxScanMs)}</strong>
+            <strong>{formatScanMs(avStats?.maxScanMs, noScan)}</strong>
           </div>
           <div className="settings-av-kpi">
             <span className="settings-stat-label">{t('settings.av.sessionScans')}</span>
@@ -610,19 +855,21 @@ export function SettingsView({ onError }: SettingsViewProps) {
           <div className="settings-av-kpi">
             <span className="settings-stat-label">{t('settings.av.cleanDocs')}</span>
             <strong>
-              {avStats?.cleanDocuments ?? 0}
+              {cleanDocs}
               <span className="settings-av-kpi-muted">
                 {' / '}
-                {avStats?.documentsScanned ?? 0}
+                {scannedDocs}
               </span>
             </strong>
           </div>
         </div>
-        {(avStats?.topThreats?.length ?? 0) > 0 && (
-          <div className="settings-av-threats">
-            <h5>{t('settings.av.topThreats')}</h5>
+        <div className="settings-av-threats">
+          <h5>{t('settings.av.topThreats')}</h5>
+          {threats.length === 0 ? (
+            <p className="settings-av-empty">{t('settings.av.noThreats')}</p>
+          ) : (
             <ul className="settings-av-threat-list">
-              {avStats!.topThreats.map((th) => (
+              {threats.map((th) => (
                 <li key={th.threatName}>
                   <span className="settings-av-threat-name">{th.threatName}</span>
                   <span className="settings-av-threat-count">{th.count}</span>
@@ -630,26 +877,24 @@ export function SettingsView({ onError }: SettingsViewProps) {
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <div className={`settings-card ${(avStats?.unresolvedAlerts ?? alerts.length) > 0 ? 'settings-card-warning' : ''}`}>
+      <div className={`settings-card ${openAlerts > 0 ? 'settings-card-warning' : ''}`}>
         <div className="settings-card-title-row">
           <h4>{t('settings.av.detectionsTitle')}</h4>
           <span className="settings-badge settings-badge-muted">
             {t('settings.av.detectionsCount', {
               total: String(avStats?.totalAlerts ?? alerts.length),
-              open: String(avStats?.unresolvedAlerts ?? alerts.filter((a) => !a.isResolved).length),
+              open: String(openAlerts),
             })}
           </span>
         </div>
         <p className="settings-card-desc">{t('settings.av.detectionsDesc')}</p>
-        {avStats?.lastDetectionAt && (
-          <p className="settings-hint">
-            {t('settings.av.lastDetection')}: {fmtDate(avStats.lastDetectionAt, locale)}
-          </p>
-        )}
+        <p className="settings-hint">
+          {t('settings.av.lastDetection')}: {lastDetection ? fmtDate(lastDetection, locale) : t('settings.av.neverDetected')}
+        </p>
         {alerts.length === 0 ? (
           <p className="settings-av-empty">{t('settings.av.noDetections')}</p>
         ) : (
@@ -657,17 +902,15 @@ export function SettingsView({ onError }: SettingsViewProps) {
             {alerts.map((a) => (
               <li key={a.id} className={a.isResolved ? 'resolved' : 'open'}>
                 <div className="settings-av-detection-main">
-                  <strong className="settings-av-detection-threat">{a.threatName}</strong>
+                  <strong className="settings-av-detection-threat">{a.threatName || t('settings.av.unknownThreat')}</strong>
                   <span className={`settings-badge ${a.isResolved ? 'settings-badge-muted' : 'settings-badge-disabled'}`}>
                     {a.isResolved ? t('settings.av.resolved') : t('settings.av.open')}
                   </span>
                 </div>
-                <div className="settings-av-detection-file">{a.fileName}</div>
-                {a.details && (
-                  <div className="settings-av-detection-details" title={a.details}>
-                    {a.details}
-                  </div>
-                )}
+                <div className="settings-av-detection-file">{a.fileName || t('settings.av.unknownFile')}</div>
+                <div className="settings-av-detection-details">
+                  {a.details?.trim() ? a.details : t('settings.av.noDetails')}
+                </div>
                 <time>{fmtDate(a.detectedAt, locale)}</time>
               </li>
             ))}
@@ -675,12 +918,14 @@ export function SettingsView({ onError }: SettingsViewProps) {
         )}
       </div>
     </div>
-  )
+    )
+  }
 
   const renderStorage = () => {
     const used = dashboard?.storageUsedBytes ?? 0
     const logical = dashboard?.logicalStorageBytes ?? 0
-    const pct = storageUsagePercent(used, logical)
+    const quota = dashboard?.storageQuotaBytes || STORAGE_QUOTA_BYTES
+    const pct = storageUsagePercent(used, quota)
     const isOtherDb = storageForm?.databaseProvider === 'Other'
       || storageForm?.databaseProvider === 'SqlServer'
       || storageForm?.databaseProvider === 'MySql'
@@ -700,6 +945,10 @@ export function SettingsView({ onError }: SettingsViewProps) {
               <strong>{fmtSize(used)}</strong>
             </div>
             <div>
+              <span className="settings-stat-label">{t('settings.storageQuota')}</span>
+              <strong>{fmtSize(quota)}</strong>
+            </div>
+            <div>
               <span className="settings-stat-label">{t('settings.logicalStorage')}</span>
               <strong>{fmtSize(logical)}</strong>
             </div>
@@ -716,6 +965,7 @@ export function SettingsView({ onError }: SettingsViewProps) {
             </div>
             <span className="settings-progress-label">{pct}%</span>
           </div>
+          <p className="settings-card-desc">{t('settings.storageUsageHint')}</p>
         </div>
 
         {storageForm && (
@@ -796,8 +1046,8 @@ export function SettingsView({ onError }: SettingsViewProps) {
             <div className="settings-card settings-card-highlight">
               <div className="settings-card-title-row">
                 <h4>{t('settings.encryptionKeys')}</h4>
-                <span className={`settings-badge ${config?.activeEncryptionKeyId ? 'settings-badge-enabled' : 'settings-badge-disabled'}`}>
-                  {config?.activeEncryptionKeyId ? t('settings.active') : t('settings.notAvailable')}
+                <span className={`settings-badge ${encryptionActive ? 'settings-badge-enabled' : 'settings-badge-disabled'}`}>
+                  {encryptionActive ? t('settings.active') : t('settings.notAvailable')}
                 </span>
               </div>
               <p className="settings-card-desc">{t('settings.storageKeyAssociation')}</p>
@@ -805,7 +1055,7 @@ export function SettingsView({ onError }: SettingsViewProps) {
                 <div>
                   <dt>{t('settings.keyIdentifier')}</dt>
                   <dd className="settings-mono">
-                    {config?.activeEncryptionKeyIdentifier || lastKeyId || t('settings.notAvailable')}
+                    {config?.activeEncryptionKeyIdentifier || lastKeyId || t('settings.keyInitial')}
                   </dd>
                 </div>
                 {(lastKeyRotation || config?.updatedAt) && (

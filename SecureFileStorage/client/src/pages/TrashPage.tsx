@@ -24,7 +24,7 @@ export function TrashPage() {
     setError('')
     try {
       const q = buildQuery({ status: 'Deleted', page: 1, pageSize: 500 })
-      const data = await api<{ items: DocumentDto[] }>(`/api/documents${q}`)
+      const data = await api<{ items: DocumentDto[] }>(`/api/trash${q}`)
       setDocs(data.items || [])
     } catch (e) {
       const msg = e instanceof Error ? e.message : t('msg.loadProfileError')

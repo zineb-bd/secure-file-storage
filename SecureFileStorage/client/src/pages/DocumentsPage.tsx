@@ -1,29 +1,37 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '@/api/client'
 import { CATEGORIES } from '@/constants'
 import { DocumentTable } from '@/components/documents/DocumentTable'
+import { CreateFolderModal, MoveModal } from '@/components/documents/FolderModals'
 import { IconSearch } from '@/components/categories/CategoryIcons'
 import { IconUpload } from '@/components/ui/TopbarIcons'
 import { useI18n } from '@/i18n/I18nContext'
 import { buildQuery, fmtSize } from '@/utils/format'
-import type { DocumentDto } from '@/types'
+import type { DocumentDto, FolderPathItem } from '@/types'
 
 export function DocumentsPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const folderId = searchParams.get('folder')
   const [docs, setDocs] = useState<DocumentDto[]>([])
+  const [path, setPath] = useState<FolderPathItem[]>([])
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [category, setCategory] = useState('')
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [createOpen, setCreateOpen] = useState(false)
+  const [moveDoc, setMoveDoc] = useState<DocumentDto | null>(null)
 
   useEffect(() => {
     const id = window.setTimeout(() => setDebouncedSearch(search.trim()), 280)
     return () => window.clearTimeout(id)
   }, [search])
+
+  const searching = Boolean(debouncedSearch)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -33,27 +41,37 @@ export function DocumentsPage() {
         fileName: debouncedSearch || undefined,
         category: category || undefined,
         status: status || undefined,
+        parentId: searching ? undefined : folderId || undefined,
+        includeAll: searching ? 'true' : 'false',
         page: 1,
         pageSize: 100,
       })
       const data = await api<{ items: DocumentDto[] }>(`/api/documents${q}`)
       setDocs(data.items || [])
+      if (folderId && !searching) {
+        const crumbs = await api<FolderPathItem[]>(`/api/documents/${folderId}/path`)
+        setPath(crumbs || [])
+      } else {
+        setPath([])
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : t('msg.loadProfileError'))
     } finally {
       setLoading(false)
     }
-  }, [debouncedSearch, category, status, t])
+  }, [debouncedSearch, category, status, folderId, searching, t])
 
   useEffect(() => {
     void load()
   }, [load])
 
   const stats = useMemo(() => {
-    const active = docs.filter((d) => d.status === 'Active').length
+    const files = docs.filter((d) => !d.isFolder)
+    const folders = docs.filter((d) => d.isFolder).length
+    const active = files.filter((d) => d.status === 'Active').length
     const shared = docs.filter((d) => d.visibility === 'Shared' || d.visibility === 'Public').length
-    const totalBytes = docs.reduce((sum, d) => sum + (d.sizeBytes || 0), 0)
-    return { total: docs.length, active, shared, totalBytes }
+    const totalBytes = files.reduce((sum, d) => sum + (d.sizeBytes || 0), 0)
+    return { total: docs.length, folders, active, shared, totalBytes }
   }, [docs])
 
   const hasFilters = Boolean(debouncedSearch || category || status)
@@ -64,6 +82,14 @@ export function DocumentsPage() {
     setCategory('')
     setStatus('')
   }
+
+  const openFolder = (id: string | null) => {
+    if (!id) setSearchParams({})
+    else setSearchParams({ folder: id })
+  }
+
+  const uploadHref = folderId ? `/documents/upload?folder=${encodeURIComponent(folderId)}` : '/documents/upload'
+  const currentName = path.length ? path[path.length - 1]?.name : t('files.listTitle')
 
   return (
     <section className="page files-page" id="page-documents">
@@ -85,6 +111,26 @@ export function DocumentsPage() {
           <div className="files-stat-label">{t('files.stat.size')}</div>
         </article>
       </div>
+
+      <nav className="files-breadcrumb" aria-label={t('files.breadcrumb')}>
+        <button type="button" className={!folderId ? 'is-current' : undefined} onClick={() => openFolder(null)}>
+          {t('nav.documents')}
+        </button>
+        {path.map((crumb, i) => (
+          <span key={crumb.id} className="files-breadcrumb-item">
+            <span className="files-breadcrumb-sep" aria-hidden>
+              /
+            </span>
+            <button
+              type="button"
+              className={i === path.length - 1 ? 'is-current' : undefined}
+              onClick={() => openFolder(crumb.id)}
+            >
+              {crumb.name}
+            </button>
+          </span>
+        ))}
+      </nav>
 
       <div className="files-toolbar">
         <div className="files-search-wrap">
@@ -138,11 +184,14 @@ export function DocumentsPage() {
             )}
           </div>
 
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => setCreateOpen(true)}>
+            {t('files.newFolder')}
+          </button>
           <button
             type="button"
             className="btn btn-primary btn-sm files-upload-btn"
             id="btn-open-upload"
-            onClick={() => navigate('/documents/upload')}
+            onClick={() => navigate(uploadHref)}
           >
             <IconUpload />
             {t('btn.upload')}
@@ -162,7 +211,7 @@ export function DocumentsPage() {
       <section className="files-panel">
         <div className="files-panel-header">
           <div>
-            <h2>{t('files.listTitle')}</h2>
+            <h2>{currentName}</h2>
             <p>
               {loading
                 ? t('files.loading')
@@ -183,21 +232,22 @@ export function DocumentsPage() {
         ) : docs.length === 0 ? (
           <div className="files-empty">
             <div className="files-empty-icon" aria-hidden />
-            <h3>{hasFilters ? t('files.emptyFilteredTitle') : t('files.emptyTitle')}</h3>
-            <p>{hasFilters ? t('files.emptyFilteredDesc') : t('files.emptyDesc')}</p>
+            <h3>{hasFilters ? t('files.emptyFilteredTitle') : t('files.emptyFolderTitle')}</h3>
+            <p>{hasFilters ? t('files.emptyFilteredDesc') : t('files.emptyFolderDesc')}</p>
             {hasFilters ? (
               <button type="button" className="btn btn-secondary" onClick={clearFilters}>
                 {t('files.clearFilters')}
               </button>
             ) : (
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => navigate('/documents/upload')}
-              >
-                <IconUpload />
-                {t('home.emptyCta')}
-              </button>
+              <div className="files-empty-actions">
+                <button type="button" className="btn btn-outline" onClick={() => setCreateOpen(true)}>
+                  {t('files.newFolder')}
+                </button>
+                <button type="button" className="btn btn-primary" onClick={() => navigate(uploadHref)}>
+                  <IconUpload />
+                  {t('home.emptyCta')}
+                </button>
+              </div>
             )}
           </div>
         ) : (
@@ -205,6 +255,8 @@ export function DocumentsPage() {
             <DocumentTable
               documents={docs}
               onChanged={load}
+              onOpenFolder={(d) => openFolder(d.id)}
+              onMove={setMoveDoc}
               emptyMsg={t('empty.none')}
               showOwner={false}
               compact
@@ -212,6 +264,13 @@ export function DocumentsPage() {
           </div>
         )}
       </section>
+
+      {createOpen && (
+        <CreateFolderModal parentId={folderId} onClose={() => setCreateOpen(false)} onCreated={() => void load()} />
+      )}
+      {moveDoc && (
+        <MoveModal doc={moveDoc} onClose={() => setMoveDoc(null)} onMoved={() => void load()} />
+      )}
     </section>
   )
 }

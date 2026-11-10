@@ -9,7 +9,7 @@ import {
 
 export type DocumentMeta = Pick<
   DocumentDetail,
-  'id' | 'fileName' | 'category' | 'contentType' | 'currentVersion' | 'sha256Hash'
+  'id' | 'fileName' | 'category' | 'contentType' | 'currentVersion'
 >
 
 export const DOCUMENT_AUDIT_ACTIONS = [

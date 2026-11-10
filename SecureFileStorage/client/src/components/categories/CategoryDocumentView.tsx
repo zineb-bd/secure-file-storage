@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api, downloadBlob } from '@/api/client'
 import { DocumentTable } from '@/components/documents/DocumentTable'
 import { FileIcon } from '@/components/documents/FileIcon'
@@ -54,6 +55,7 @@ interface CategoryDocumentViewProps {
 export function CategoryDocumentView({ documents, emptyMsg, onChanged }: CategoryDocumentViewProps) {
   const { t, locale } = useI18n()
   const { isAdmin } = useAuth()
+  const navigate = useNavigate()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [filters, setFilters] = useState<DocFilters>(EMPTY_FILTERS)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -116,6 +118,10 @@ export function CategoryDocumentView({ documents, emptyMsg, onChanged }: Categor
       onShare: () => setShare(doc),
       onMetadata: () => setMetadata(doc),
       onVersions: () => setVersions(doc),
+      onNewVersion:
+        doc.canModify !== false
+          ? () => navigate(`/documents/upload?documentId=${encodeURIComponent(doc.id)}`)
+          : undefined,
       onFavorite: async () => {
         const result = await toggleFavoriteApi(doc.id, !!doc.isFavorite)
         setLocalDocs((prev) =>
@@ -138,7 +144,7 @@ export function CategoryDocumentView({ documents, emptyMsg, onChanged }: Categor
         onChanged?.()
       },
     }),
-    [onChanged, t]
+    [navigate, onChanged, t]
   )
 
   const clearFilters = () => setFilters(EMPTY_FILTERS)

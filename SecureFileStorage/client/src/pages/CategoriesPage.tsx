@@ -33,10 +33,14 @@ import {
   loadCustomCategories,
   saveCategoryOverrides,
   saveCustomCategories,
+  fetchCategoryCatalog,
+  createCategoryRemote,
+  updateCategoryRemote,
+  deleteCategoryRemote,
   type CategoryIconId,
   type CategoryColorId,
 } from '@/utils/categoryStorage'
-import type { DocumentDto } from '@/types'
+import type { DocumentCategoryDto, DocumentDto } from '@/types'
 
 type ViewMode = 'grid' | 'list'
 type ToastType = 'success' | 'error'
@@ -76,6 +80,7 @@ export function CategoriesPage() {
   const { t, locale } = useI18n()
   const { isAuthenticated, isAdmin } = useAuth()
   const [docs, setDocs] = useState<DocumentDto[]>([])
+  const [catalog, setCatalog] = useState<DocumentCategoryDto[]>([])
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -109,8 +114,12 @@ export function CategoriesPage() {
     setError('')
     try {
       const q = buildQuery({ page: 1, pageSize: 500, status: 'Active' })
-      const data = await api<{ items: DocumentDto[] }>(`/api/documents${q}`)
+      const [data, cats] = await Promise.all([
+        api<{ items: DocumentDto[] }>(`/api/documents${q}`),
+        fetchCategoryCatalog().catch(() => [] as DocumentCategoryDto[]),
+      ])
       setDocs(data.items || [])
+      setCatalog(cats)
     } catch (e) {
       const msg = e instanceof Error ? e.message : t('msg.loadProfileError')
       if (msg.includes('401') || msg.includes('Session')) {
@@ -163,10 +172,11 @@ export function CategoriesPage() {
 
   const keys = useMemo(() => {
     const set = new Set<string>(CATEGORIES)
+    catalog.forEach((c) => set.add(c.name))
     loadCustomCategories().forEach((c) => set.add(c.name))
     docs.forEach((d) => set.add(d.category || 'General'))
     return Array.from(set).sort((a, b) => getLabel(a).localeCompare(getLabel(b)))
-  }, [docs, getLabel, refreshKey])
+  }, [docs, getLabel, refreshKey, catalog])
 
   const filteredKeys = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -259,6 +269,12 @@ export function CategoriesPage() {
           color: form.color,
         })
         saveCustomCategories(list)
+        await createCategoryRemote({
+          name: trimmed,
+          description: form.description.trim(),
+          icon: form.icon,
+          color: form.color,
+        })
         showToast(t('cat.created'))
       } else if (editingKey) {
         const trimmedLabel = form.name.trim()
@@ -279,6 +295,15 @@ export function CategoriesPage() {
               color: form.color,
             }
             saveCustomCategories(list)
+            const remote = catalog.find((c) => c.name === oldName)
+            if (remote) {
+              await updateCategoryRemote(remote.id, {
+                name: newName,
+                description: form.description.trim(),
+                icon: form.icon,
+                color: form.color,
+              })
+            }
             if (newName !== oldName) {
               const affected = docs.filter((d) => (d.category || 'General') === oldName)
               await Promise.all(
@@ -345,6 +370,10 @@ export function CategoriesPage() {
       }
 
       saveCustomCategories(loadCustomCategories().filter((c) => c.name !== deleteTarget))
+      const remote = catalog.find((c) => c.name === deleteTarget)
+      if (remote && !remote.isBuiltin) {
+        await deleteCategoryRemote(remote.id, moveToCategory)
+      }
       if (selected === deleteTarget) setSelected(null)
       setDeleteTarget(null)
       showToast(t('cat.deleted'))

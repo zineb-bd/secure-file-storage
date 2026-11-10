@@ -1,14 +1,18 @@
 /** Constantes alignées sur SecureFileStorage.Infrastructure.Security.FileValidator */
-export const UPLOAD_MAX_BYTES = 100 * 1024 * 1024
-export const UPLOAD_MAX_MB = UPLOAD_MAX_BYTES / 1024 / 1024
+export const UPLOAD_MAX_BYTES = 1024 * 1024 * 1024 * 1024
+export const UPLOAD_MAX_TB = 1
 
 export const UPLOAD_ALLOWED_EXTENSIONS = [
   '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
-  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.txt', '.csv', '.zip',
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic', '.heif', '.txt', '.csv', '.zip',
+  '.mp4', '.webm', '.mkv', '.avi', '.mov', '.m4v', '.wmv', '.3gp',
+  '.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma',
 ] as const
 
+export const UPLOAD_ACCEPT_ATTRIBUTE = UPLOAD_ALLOWED_EXTENSIONS.join(',')
+
 export const UPLOAD_SUPPORTED_FORMATS_LABEL =
-  'PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, WEBP, TXT, CSV, ZIP'
+  'PDF, Office, images (JPG, PNG, GIF, WEBP, BMP, HEIC), ZIP, vidéos (MP4, WEBM, MKV, AVI, MOV, 3GP…) et audio (MP3, WAV, OGG, FLAC, AAC…)'
 
 export type UploadFileStatus = 'ready' | 'uploading' | 'uploaded' | 'failed'
 
@@ -36,6 +40,12 @@ export const UPLOAD_ACCESS_LEVELS = [
   { value: 'Write', labelKey: 'access.write' as const },
 ] as const
 
+export const PUBLIC_ACCESS_LEVELS = [
+  { value: 'Read', labelKey: 'access.read' as const },
+  { value: 'Preview', labelKey: 'access.preview' as const },
+  { value: 'Download', labelKey: 'access.download' as const },
+] as const
+
 export function fileExtension(fileName: string): string {
   const ext = fileName.includes('.') ? fileName.split('.').pop() || '' : ''
   return ext.toLowerCase()
@@ -55,6 +65,8 @@ export function validateUploadFile(file: File): string | null {
     || type.startsWith('application/vnd.')
     || type.startsWith('image/')
     || type.startsWith('text/')
+    || type.startsWith('video/')
+    || type.startsWith('audio/')
     || type === 'application/zip'
   if (!isAllowedMime) return 'invalidMime'
   return null
@@ -78,13 +90,15 @@ export function buildUploadFormData(options: {
   visibility: UploadVisibility
   publicLevel: string
   sharedRows: SharedRow[]
+  parentId?: string | null
 }): FormData {
-  const { file, category, description, visibility, publicLevel, sharedRows } = options
+  const { file, category, description, visibility, publicLevel, sharedRows, parentId } = options
   const form = new FormData()
   form.append('file', file)
   form.append('category', category)
   form.append('description', description)
   form.append('visibility', visibility)
+  if (parentId) form.append('parentId', parentId)
   if (visibility === 'Public') form.append('publicAccessLevel', publicLevel)
   if (visibility === 'Shared') {
     const entries = normalizeSharedRows(sharedRows).map((r) => ({
@@ -170,12 +184,6 @@ export async function detectLocalThreatSignature(file: File): Promise<string | n
   return null
 }
 
-export async function sha256Hex(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer()
-  const digest = await crypto.subtle.digest('SHA-256', buffer)
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
 export function keywordsFromFileName(name: string): string[] {
   return name
     .replace(/\.[^.]+$/, '')
@@ -183,6 +191,123 @@ export function keywordsFromFileName(name: string): string[] {
     .map((w) => w.trim())
     .filter((w) => w.length > 2)
     .slice(0, 6)
+}
+
+const TAG_STOPWORDS = new Set([
+  'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'ou', 'en', 'dans', 'pour', 'par', 'sur',
+  'avec', 'sans', 'the', 'and', 'for', 'from', 'with', 'this', 'that', 'document', 'fichier', 'file',
+  'files', 'page', 'pages', 'copie', 'copy', 'final', 'version', 'pdf', 'docx', 'doc', 'xlsx', 'pptx',
+  'txt', 'nouveau', 'nouvelle', 'untitled',
+])
+
+const TAG_LEXICON: Array<[RegExp, string]> = [
+  [/contrat\s+de\s+travail/i, 'Contrat de travail'],
+  [/\bcontrats?\b/i, 'Contrat'],
+  [/\bconvention\b/i, 'Contrat'],
+  [/\bfactures?\b|\binvoices?\b/i, 'Facture'],
+  [/\bdevis\b|\bquotes?\b/i, 'Devis'],
+  [/\bpaie\b|\bsalaire\b|\bpayroll\b|\bbulletin\b/i, 'Paie'],
+  [/\bcv\b|\bcurriculum\b|\bresume\b/i, 'CV'],
+  [/\brapports?\b|\breports?\b/i, 'Rapport'],
+  [/\brgpd\b|\bgdpr\b/i, 'RGPD'],
+  [/\bpolitique\b|\bpolicy\b/i, 'Politique'],
+  [/\bconfidentialit[eé]\b|\bprivacy\b/i, 'Confidentialité'],
+  [/\bbudget\b|\bcomptabilit[eé]\b|\bfinance\b/i, 'Finance'],
+  [/\bformation\b|\btraining\b/i, 'Formation'],
+  [/\bs[eé]curit[eé]\b|\bsecurity\b/i, 'Sécurité'],
+  [/\baudit\b/i, 'Audit'],
+  [/\bprojet\b|\bproject\b/i, 'Projet'],
+  [/\breunion\b|\br[eé]union\b|\bmeeting\b/i, 'Réunion'],
+  [/\brh\b|\bressources?\s+humaines?\b/i, 'RH'],
+  [/\bjuridique\b|\blegal\b/i, 'Juridique'],
+  [/\bpr[eé]sentation\b|\bslides?\b/i, 'Présentation'],
+  [/\battestation\b/i, 'Attestation'],
+]
+
+const PDF_NOISE = /^(endobj|endstream|startxref|xref|obj|stream|trailer|filter|length|type|font|parent|kids|count|mediabox|resources|procset|extgstate|contents|annot|rect|subtype|catalog|outlines|encoding|widths|bbox|matrix)$/i
+
+export function extractTagsLocally(input: {
+  fileName: string
+  title?: string
+  category?: string
+  description?: string
+  excerpt?: string
+}): string[] {
+  const haystack = [input.fileName, input.title, input.category, input.description, input.excerpt]
+    .filter(Boolean)
+    .join(' ')
+  const tags: string[] = []
+  const seen = new Set<string>()
+  const add = (tag: string) => {
+    const value = tag.trim()
+    if (!value || seen.has(value.toLowerCase())) return
+    seen.add(value.toLowerCase())
+    tags.push(value)
+  }
+
+  for (const [re, tag] of TAG_LEXICON) {
+    if (re.test(haystack)) add(tag)
+  }
+
+  const cat = (input.category || '').trim()
+  if (cat && !/^general|général$/i.test(cat)) add(cat)
+
+  const ext = fileExtension(input.fileName)
+  if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) add('Tableur')
+  if (['pptx', 'ppt', 'odp'].includes(ext)) add('Présentation')
+
+  for (const token of keywordsFromFileName(input.fileName)) {
+    const key = token.toLowerCase()
+    if (TAG_STOPWORDS.has(key) || /^\d+$/.test(token)) continue
+    if ([...seen].some((s) => s.includes(key) || key.includes(s))) continue
+    add(token)
+  }
+
+  return tags.slice(0, 8)
+}
+
+export async function extractDocumentExcerpt(file: File): Promise<string> {
+  const ext = fileExtension(file.name)
+  const isText =
+    file.type.startsWith('text/') ||
+    ['txt', 'csv', 'json', 'xml', 'md', 'log'].includes(ext)
+  if (isText && file.size < 800_000) {
+    try {
+      return (await file.text()).slice(0, 8000)
+    } catch {
+      return ''
+    }
+  }
+
+  try {
+    const buf = await file.slice(0, 1_500_000).arrayBuffer()
+    return extractPrintableRuns(new Uint8Array(buf), 8000)
+  } catch {
+    return ''
+  }
+}
+
+function extractPrintableRuns(bytes: Uint8Array, maxChars: number): string {
+  const chunks: string[] = []
+  let current = ''
+  const flush = () => {
+    const trimmed = current.trim()
+    current = ''
+    if (trimmed.length < 4 || PDF_NOISE.test(trimmed)) return
+    if (/^[\d./\\-]+$/.test(trimmed)) return
+    chunks.push(trimmed)
+  }
+  for (const b of bytes) {
+    const ok = (b >= 32 && b < 127) || (b >= 192 && b <= 255)
+    if (ok) {
+      current += String.fromCharCode(b)
+    } else {
+      flush()
+    }
+    if (chunks.join(' ').length >= maxChars) break
+  }
+  flush()
+  return chunks.join(' ').slice(0, maxChars)
 }
 
 export function guessLanguageFromName(name: string): string {

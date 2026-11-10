@@ -15,9 +15,17 @@
     "fr": "Gestion documentaire sécurisée",
     "en": "Secure Document Management"
   },
+  "auth.headline": {
+    "fr": "Chaque fichier. Chiffré. Contrôlé.",
+    "en": "Every file. Encrypted. Controlled."
+  },
   "auth.brandDescription": {
     "fr": "Gérez, protégez et consultez vos documents en toute sécurité, au même endroit.",
     "en": "Manage, protect and access your documents securely in one place."
+  },
+  "auth.trustLine": {
+    "fr": "AES-256  ·  Contrôle d'accès  ·  Journal d'audit",
+    "en": "AES-256  ·  Access control  ·  Audit trail"
   },
   "auth.featureSecure": {
     "fr": "Chiffrement et contrôle d'accès",
@@ -36,8 +44,16 @@
     "en": "Sign in"
   },
   "login.welcome": {
-    "fr": "Bon retour",
-    "en": "Welcome Back"
+    "fr": "Connexion",
+    "en": "Sign in"
+  },
+  "login.secureBadge": {
+    "fr": "Session sécurisée",
+    "en": "Secure session"
+  },
+  "login.language": {
+    "fr": "Langue",
+    "en": "Language"
   },
   "login.subtitle": {
     "fr": "Connectez-vous pour accéder à vos documents sécurisés",
@@ -66,6 +82,10 @@
   "login.forgot": {
     "fr": "Mot de passe oublié ?",
     "en": "Forgot Password?"
+  },
+  "login.forgotHelp": {
+    "fr": "La réinitialisation en libre-service n'est pas disponible. Contactez un administrateur pour obtenir un nouveau mot de passe.",
+    "en": "Self-service reset is not available. Contact an administrator to get a new password."
   },
   "login.remember": {
     "fr": "Se souvenir de moi",
@@ -240,8 +260,8 @@
     "en": "Favorites"
   },
   "nav.shared": {
-    "fr": "Partagés avec moi",
-    "en": "Shared with me"
+    "fr": "Collaborer",
+    "en": "Collaborate"
   },
   "nav.categories": {
     "fr": "Catégories",
@@ -254,6 +274,10 @@
   "nav.trash": {
     "fr": "Corbeille",
     "en": "Trash"
+  },
+  "nav.annuaire": {
+    "fr": "Annuaire",
+    "en": "Directory"
   },
   "nav.profile": {
     "fr": "Mon profil",
@@ -419,6 +443,70 @@
     "fr": "Aucun fichier ne correspond à vos filtres. Essayez d’élargir la recherche.",
     "en": "No files match your filters. Try broadening your search."
   },
+  "files.newFolder": {
+    "fr": "Nouveau dossier",
+    "en": "New folder"
+  },
+  "files.createFolder": {
+    "fr": "Créer le dossier",
+    "en": "Create folder"
+  },
+  "files.creating": {
+    "fr": "Création…",
+    "en": "Creating…"
+  },
+  "files.folderName": {
+    "fr": "Nom du dossier",
+    "en": "Folder name"
+  },
+  "files.folderNamePlaceholder": {
+    "fr": "Ex. Contrats 2026",
+    "en": "e.g. Contracts 2026"
+  },
+  "files.folderError": {
+    "fr": "Impossible de créer le dossier.",
+    "en": "Could not create the folder."
+  },
+  "files.folderType": {
+    "fr": "Dossier",
+    "en": "Folder"
+  },
+  "files.breadcrumb": {
+    "fr": "Emplacement",
+    "en": "Location"
+  },
+  "files.rootFolder": {
+    "fr": "Mes documents (racine)",
+    "en": "My documents (root)"
+  },
+  "files.emptyFolderTitle": {
+    "fr": "Ce dossier est vide",
+    "en": "This folder is empty"
+  },
+  "files.emptyFolderDesc": {
+    "fr": "Créez un sous-dossier ou téléversez un fichier ici.",
+    "en": "Create a subfolder or upload a file here."
+  },
+  "files.moveTitle": {
+    "fr": "Déplacer « {name} »",
+    "en": "Move “{name}”"
+  },
+  "files.moveHint": {
+    "fr": "Choisissez le dossier de destination.",
+    "en": "Choose the destination folder."
+  },
+  "files.moveError": {
+    "fr": "Déplacement impossible.",
+    "en": "Could not move the item."
+  },
+  "files.moving": {
+    "fr": "Déplacement…",
+    "en": "Moving…"
+  },
+  "action.move": {
+    "fr": "Déplacer",
+    "en": "Move"
+  },
   "page.favorites.title": {
     "fr": "Documents favoris",
     "en": "Favorite Documents"
@@ -428,16 +516,24 @@
     "en": "Quickly find documents you marked as favorites"
   },
   "page.shared.title": {
-    "fr": "Partagés avec moi",
-    "en": "Shared with me"
+    "fr": "Collaborer",
+    "en": "Collaborate"
   },
   "page.shared.subtitle": {
-    "fr": "Documents partagés avec vous ou accessibles publiquement",
-    "en": "Documents shared with you or publicly accessible"
+    "fr": "Fichiers partagés avec vous et documents que vous avez ouverts à la collaboration",
+    "en": "Files shared with you and documents you opened for collaboration"
   },
   "shared.stat.total": {
     "fr": "Partagés",
     "en": "Shared"
+  },
+  "shared.stat.received": {
+    "fr": "Avec moi",
+    "en": "With me"
+  },
+  "shared.stat.sent": {
+    "fr": "Mes partages",
+    "en": "Shared by me"
   },
   "shared.stat.owners": {
     "fr": "Propriétaires",
@@ -447,25 +543,141 @@
     "fr": "Modifiables",
     "en": "Editable"
   },
+  "shared.stat.people": {
+    "fr": "Personnes",
+    "en": "People"
+  },
   "shared.stat.size": {
     "fr": "Volume",
     "en": "Size"
   },
+  "shared.tab.received": {
+    "fr": "Partagés avec moi",
+    "en": "Shared with me"
+  },
+  "shared.tab.sent": {
+    "fr": "Partagés par moi",
+    "en": "Shared by me"
+  },
   "shared.listTitle": {
-    "fr": "Documents partagés",
-    "en": "Shared documents"
+    "fr": "Documents collaboratifs",
+    "en": "Collaborative documents"
   },
   "shared.count": {
-    "fr": "{count} document(s) partagé(s)",
-    "en": "{count} shared document(s)"
+    "fr": "{count} document(s)",
+    "en": "{count} document(s)"
+  },
+  "shared.search": {
+    "fr": "Rechercher un document, un propriétaire…",
+    "en": "Search a document or owner…"
+  },
+  "shared.filter.owner": {
+    "fr": "Tous les propriétaires",
+    "en": "All owners"
+  },
+  "shared.filter.access": {
+    "fr": "Tous les droits",
+    "en": "All access levels"
+  },
+  "shared.filter.category": {
+    "fr": "Toutes les catégories",
+    "en": "All categories"
+  },
+  "shared.role": {
+    "fr": "Votre accès",
+    "en": "Your access"
+  },
+  "shared.updated": {
+    "fr": "Modifié",
+    "en": "Updated"
+  },
+  "shared.sharedBy": {
+    "fr": "Propriétaire",
+    "en": "Owner"
+  },
+  "shared.you": {
+    "fr": "Vous",
+    "en": "You"
+  },
+  "shared.unknownOwner": {
+    "fr": "Inconnu",
+    "en": "Unknown"
   },
   "shared.emptyTitle": {
-    "fr": "Aucun document partagé",
-    "en": "No shared documents"
+    "fr": "Aucun document partagé avec vous",
+    "en": "Nothing shared with you yet"
   },
   "shared.emptyDesc": {
-    "fr": "Les fichiers que d’autres utilisateurs partagent avec vous apparaîtront ici.",
-    "en": "Files that other users share with you will appear here."
+    "fr": "Les fichiers que d’autres utilisateurs partagent avec vous apparaîtront ici, avec le niveau d’accès accordé.",
+    "en": "Files that others share with you will appear here, with the access level granted."
+  },
+  "shared.emptyMineTitle": {
+    "fr": "Vous n’avez encore partagé aucun document",
+    "en": "You have not shared any document yet"
+  },
+  "shared.emptyMineDesc": {
+    "fr": "Ouvrez un document dans Mes documents, puis cliquez sur Collaborer pour inviter des collègues ou créer un lien.",
+    "en": "Open a document in My documents, then click Collaborate to invite colleagues or create a link."
+  },
+  "shared.openDocs": {
+    "fr": "Aller à Mes documents",
+    "en": "Go to My documents"
+  },
+  "shared.legendTitle": {
+    "fr": "Niveaux d’accès",
+    "en": "Access levels"
+  },
+  "shared.legend.read": {
+    "fr": "Consulter le document sans le télécharger ni le modifier.",
+    "en": "View the document without downloading or editing it."
+  },
+  "shared.legend.preview": {
+    "fr": "Aperçu sécurisé, sans copie locale.",
+    "en": "Secure preview, without a local copy."
+  },
+  "shared.legend.download": {
+    "fr": "Lire et enregistrer une copie sur votre appareil.",
+    "en": "Read and save a copy on your device."
+  },
+  "shared.legend.write": {
+    "fr": "Modifier, versions et gestion des collaborateurs.",
+    "en": "Edit, versions and collaborator management."
+  },
+  "shared.peopleTitle": {
+    "fr": "Qui partage avec vous",
+    "en": "Who shares with you"
+  },
+  "shared.peopleEmpty": {
+    "fr": "Personne n’a encore partagé de fichier avec vous.",
+    "en": "Nobody has shared a file with you yet."
+  },
+  "shared.peopleCount": {
+    "fr": "{count} document(s)",
+    "en": "{count} document(s)"
+  },
+  "shared.activityTitle": {
+    "fr": "Activité récente",
+    "en": "Recent activity"
+  },
+  "shared.activityEmpty": {
+    "fr": "Pas encore d’activité de partage.",
+    "en": "No sharing activity yet."
+  },
+  "shared.tipsTitle": {
+    "fr": "Collaborer en sécurité",
+    "en": "Collaborate securely"
+  },
+  "shared.tip1": {
+    "fr": "Invitez par nom ou e-mail depuis le bouton Collaborer d’un document.",
+    "en": "Invite by name or email from a document’s Collaborate button."
+  },
+  "shared.tip2": {
+    "fr": "Un lien sécurisé expire à la date que vous choisissez ; révoquez-le à tout moment.",
+    "en": "A secure link expires on the date you choose; revoke it at any time."
+  },
+  "shared.tip3": {
+    "fr": "Les règles de catégorie peuvent restreindre l’accès plus que le partage individuel.",
+    "en": "Category rules can restrict access more tightly than an individual share."
   },
   "page.categories.title": {
     "fr": "Catégories",
@@ -491,21 +703,237 @@
     "fr": "Consultez et restaurez vos documents supprimés",
     "en": "Manage and restore your deleted documents"
   },
-  "page.profile.title": {
+  "page.annuaire.title": {
+    "fr": "Annuaire",
+    "en": "Directory"
+  },
+  "page.annuaire.subtitle": {
+    "fr": "Gérez les utilisateurs de l'organisation.",
+    "en": "Manage the organization's users."
+  },
+  "page.annuaire.subtitleUser": {
+    "fr": "Personnes de l'organisation",
+    "en": "People in the organization"
+  },
+  "page.annuaire.subtitleGroups": {
+    "fr": "Gérez les groupes et leurs accès aux documents.",
+    "en": "Manage groups and their document access."
+  },
+  "annuaire.tab.me": {
     "fr": "Mon profil",
     "en": "My profile"
+  },
+  "annuaire.tab.profile": {
+    "fr": "Profil",
+    "en": "Profile"
+  },
+  "annuaire.manageUsers": {
+    "fr": "Gérer les utilisateurs",
+    "en": "Manage users"
+  },
+  "annuaire.manageGroups": {
+    "fr": "Gérer les groupes",
+    "en": "Manage groups"
+  },
+  "annuaire.browsePeople": {
+    "fr": "Voir l'annuaire",
+    "en": "Browse directory"
+  },
+  "annuaire.myAccount": {
+    "fr": "Mon compte",
+    "en": "My account"
+  },
+  "annuaire.myAccountDesc": {
+    "fr": "Identité, sécurité et préférences de votre compte",
+    "en": "Your identity, security and preferences"
+  },
+  "annuaire.searchPlaceholder": {
+    "fr": "Rechercher une personne ou un groupe…",
+    "en": "Search for a person or a group…"
+  },
+  "annuaire.searchPeople": {
+    "fr": "Rechercher une personne…",
+    "en": "Search for a person…"
+  },
+  "annuaire.filterAll": {
+    "fr": "Tous",
+    "en": "All"
+  },
+  "annuaire.filterPeople": {
+    "fr": "Personnes",
+    "en": "People"
+  },
+  "annuaire.filterGroups": {
+    "fr": "Groupes",
+    "en": "Groups"
+  },
+  "annuaire.statPeople": {
+    "fr": "Personnes",
+    "en": "People"
+  },
+  "annuaire.statActive": {
+    "fr": "Actifs",
+    "en": "Active"
+  },
+  "annuaire.statGroups": {
+    "fr": "Groupes",
+    "en": "Groups"
+  },
+  "annuaire.you": {
+    "fr": "Vous",
+    "en": "You"
+  },
+  "annuaire.manageProfile": {
+    "fr": "Gérer mon profil",
+    "en": "Manage my profile"
+  },
+  "annuaire.sectionYou": {
+    "fr": "Votre fiche",
+    "en": "Your card"
+  },
+  "annuaire.sectionPeople": {
+    "fr": "Personnes",
+    "en": "People"
+  },
+  "annuaire.sectionGroups": {
+    "fr": "Groupes",
+    "en": "Groups"
+  },
+  "annuaire.empty": {
+    "fr": "Aucun résultat dans l'annuaire",
+    "en": "No directory results"
+  },
+  "annuaire.emptyHint": {
+    "fr": "Essayez un autre mot.",
+    "en": "Try another search term."
+  },
+  "annuaire.tab.users": {
+    "fr": "Utilisateurs",
+    "en": "Users"
+  },
+  "annuaire.tab.groups": {
+    "fr": "Groupes",
+    "en": "Groups"
+  },
+  "annuaire.add": {
+    "fr": "Ajouter",
+    "en": "Add"
+  },
+  "annuaire.filter.role": {
+    "fr": "Rôle",
+    "en": "Role"
+  },
+  "annuaire.filter.group": {
+    "fr": "Groupe",
+    "en": "Group"
+  },
+  "annuaire.filter.status": {
+    "fr": "Statut",
+    "en": "Status"
+  },
+  "annuaire.filter.allRoles": {
+    "fr": "Tous les rôles",
+    "en": "All roles"
+  },
+  "annuaire.filter.allGroups": {
+    "fr": "Tous les groupes",
+    "en": "All groups"
+  },
+  "annuaire.filter.allStatus": {
+    "fr": "Tous les statuts",
+    "en": "All statuses"
+  },
+  "annuaire.col.user": {
+    "fr": "Utilisateur",
+    "en": "User"
+  },
+  "annuaire.col.group": {
+    "fr": "Groupe",
+    "en": "Group"
+  },
+  "annuaire.col.status": {
+    "fr": "Statut",
+    "en": "Status"
+  },
+  "annuaire.viewDetails": {
+    "fr": "Voir détails",
+    "en": "View details"
+  },
+  "annuaire.noGroup": {
+    "fr": "Aucun groupe",
+    "en": "No group"
+  },
+  "annuaire.membersCount": {
+    "fr": "{count} membres",
+    "en": "{count} members"
+  },
+  "annuaire.docsCount": {
+    "fr": "{count} documents accessibles",
+    "en": "{count} accessible documents"
+  },
+  "annuaire.owner": {
+    "fr": "Responsable",
+    "en": "Owner"
+  },
+  "annuaire.ownerUnknown": {
+    "fr": "Non défini",
+    "en": "Not set"
+  },
+  "annuaire.viewGroup": {
+    "fr": "Voir le groupe",
+    "en": "View group"
+  },
+  "groups.edit": {
+    "fr": "Modifier le groupe",
+    "en": "Edit group"
+  },
+  "groups.accessibleDocs": {
+    "fr": "Documents accessibles",
+    "en": "Accessible documents"
+  },
+  "groups.accessibleDocsEmpty": {
+    "fr": "Aucun document n'est encore rattaché à ce groupe.",
+    "en": "No documents are linked to this group yet."
+  },
+  "groups.owner": {
+    "fr": "Responsable",
+    "en": "Owner"
+  },
+  "users.groups": {
+    "fr": "Groupes",
+    "en": "Groups"
+  },
+  "users.lastActivity": {
+    "fr": "Dernière activité",
+    "en": "Last activity"
+  },
+  "users.sharedWithUser": {
+    "fr": "Documents partagés avec lui",
+    "en": "Documents shared with them"
+  },
+  "users.noSharedDocs": {
+    "fr": "Aucun document partagé.",
+    "en": "No shared documents."
+  },
+  "annuaire.back": {
+    "fr": "Retour à l'annuaire",
+    "en": "Back to directory"
+  },
+  "page.profile.title": {
+    "fr": "Annuaire",
+    "en": "Directory"
   },
   "page.profile.subtitle": {
     "fr": "Gérez vos informations, votre sécurité et vos préférences",
     "en": "Manage your information, security and preferences"
   },
   "page.adminUsers.title": {
-    "fr": "Utilisateurs",
-    "en": "Users"
+    "fr": "Annuaire",
+    "en": "Directory"
   },
   "page.adminUsers.subtitle": {
-    "fr": "Gérez les utilisateurs et leurs droits d'accès",
-    "en": "Manage users and their access permissions"
+    "fr": "Gérez les utilisateurs, les groupes et votre profil",
+    "en": "Manage users, groups and your profile"
   },
   "page.adminGroups.title": {
     "fr": "Groupes d'utilisateurs",
@@ -819,13 +1247,97 @@
     "fr": "Détails",
     "en": "Details"
   },
+  "action.edit": {
+    "fr": "Modifier",
+    "en": "Edit"
+  },
   "details.document": {
     "fr": "Document",
     "en": "Document"
   },
   "details.tab.info": {
-    "fr": "Infos",
-    "en": "Info"
+    "fr": "Informations",
+    "en": "Information"
+  },
+  "details.tab.preview": {
+    "fr": "Aperçu",
+    "en": "Preview"
+  },
+  "details.tab.versions": {
+    "fr": "Versions",
+    "en": "Versions"
+  },
+  "details.tab.share": {
+    "fr": "Partage",
+    "en": "Sharing"
+  },
+  "details.tab.activity": {
+    "fr": "Activité",
+    "en": "Activity"
+  },
+  "details.infoTitle": {
+    "fr": "Informations du document",
+    "en": "Document information"
+  },
+  "details.securityTitle": {
+    "fr": "Sécurité",
+    "en": "Security"
+  },
+  "details.integrityTitle": {
+    "fr": "Intégrité",
+    "en": "Integrity"
+  },
+  "details.integrityVerified": {
+    "fr": "Intégrité vérifiée",
+    "en": "Integrity verified"
+  },
+  "details.integrityFailed": {
+    "fr": "Intégrité compromise",
+    "en": "Integrity compromised"
+  },
+  "details.integrityPending": {
+    "fr": "Vérification…",
+    "en": "Checking…"
+  },
+  "details.encryptedOk": {
+    "fr": "Document chiffré",
+    "en": "Document encrypted"
+  },
+  "details.avSecure": {
+    "fr": "Fichier sécurisé",
+    "en": "File is safe"
+  },
+  "details.badge.secure": {
+    "fr": "Sécurisé",
+    "en": "Secure"
+  },
+  "details.badge.archived": {
+    "fr": "Archivé",
+    "en": "Archived"
+  },
+  "details.badge.shared": {
+    "fr": "Partagé",
+    "en": "Shared"
+  },
+  "details.badge.confidential": {
+    "fr": "Confidentiel",
+    "en": "Confidential"
+  },
+  "details.current": {
+    "fr": "actuelle",
+    "en": "current"
+  },
+  "details.noActivity": {
+    "fr": "Aucune activité enregistrée pour ce document.",
+    "en": "No activity recorded for this document."
+  },
+  "details.folderNoPreview": {
+    "fr": "Les dossiers n'ont pas d'aperçu.",
+    "en": "Folders have no preview."
+  },
+  "details.confirmTrash": {
+    "fr": "Déplacer ce document vers la corbeille ?",
+    "en": "Move this document to trash?"
   },
   "details.loading": {
     "fr": "Chargement des détails…",
@@ -900,8 +1412,32 @@
     "en": "Protection"
   },
   "details.antivirus": {
-    "fr": "Antivirus",
-    "en": "Antivirus"
+    "fr": "Analyse antivirus",
+    "en": "Antivirus scan"
+  },
+  "details.scan.clean": {
+    "fr": "Sain",
+    "en": "Clean"
+  },
+  "details.scan.skipped": {
+    "fr": "Non scanné",
+    "en": "Not scanned"
+  },
+  "details.scan.threat": {
+    "fr": "Menace détectée",
+    "en": "Threat detected"
+  },
+  "details.scan.pending": {
+    "fr": "En cours",
+    "en": "Pending"
+  },
+  "details.scan.unknown": {
+    "fr": "Inconnu",
+    "en": "Unknown"
+  },
+  "details.lockUntil": {
+    "fr": "jusqu'au",
+    "en": "until"
   },
   "details.lockStatus": {
     "fr": "Verrouillage",
@@ -936,8 +1472,24 @@
     "en": "Collaborators list unavailable."
   },
   "details.type": {
-    "fr": "Type MIME",
-    "en": "MIME type"
+    "fr": "Type",
+    "en": "Type"
+  },
+  "details.typeImage": {
+    "fr": "Image",
+    "en": "Image"
+  },
+  "details.typeVideo": {
+    "fr": "Vidéo",
+    "en": "Video"
+  },
+  "details.typeAudio": {
+    "fr": "Audio",
+    "en": "Audio"
+  },
+  "details.typeText": {
+    "fr": "Texte",
+    "en": "Text"
   },
   "details.version": {
     "fr": "Version",
@@ -996,8 +1548,12 @@
     "en": "Verification failed"
   },
   "details.integrityHint": {
-    "fr": "Compare le hash SHA-256 stocké avec le contenu actuel du fichier.",
-    "en": "Compares the stored SHA-256 hash with the current file content."
+    "fr": "Compare l'empreinte stockée avec le contenu actuel du fichier. Le résultat du contrôle est affiché, pas l'empreinte.",
+    "en": "Compares the stored fingerprint with the current file content. Only the check result is shown, not the fingerprint."
+  },
+  "details.integrityProtected": {
+    "fr": "Contrôle d'intégrité actif (empreinte technique non exposée).",
+    "en": "Integrity control active (technical fingerprint not exposed)."
   },
   "details.saved": {
     "fr": "Modifications enregistrées",
@@ -1010,6 +1566,10 @@
   "action.versions": {
     "fr": "Versions",
     "en": "Versions"
+  },
+  "action.newVersion": {
+    "fr": "Nouvelle version",
+    "en": "New version"
   },
   "action.restore": {
     "fr": "Restaurer",
@@ -1471,6 +2031,10 @@
     "fr": "Résumés et alertes par e-mail",
     "en": "Summaries and alerts by email"
   },
+  "profile.notifEmailUnavailable": {
+    "fr": "Les notifications par e-mail ne sont pas configurées sur ce serveur. Seules les notifications dans l'application sont actives.",
+    "en": "Email notifications are not configured on this server. Only in-app notifications are active."
+  },
   "profile.rolesPermissions": {
     "fr": "Rôle et permissions",
     "en": "Role and permissions"
@@ -1671,6 +2235,42 @@
     "fr": "Téléversez et gérez vos documents en toute sécurité",
     "en": "Securely upload and manage your documents"
   },
+  "upload.importUrlTitle": {
+    "fr": "Importer depuis un lien",
+    "en": "Import from a link"
+  },
+  "upload.importUrl": {
+    "fr": "URL du fichier",
+    "en": "File URL"
+  },
+  "upload.importUrlHint": {
+    "fr": "Collez un lien HTTP/HTTPS. Le serveur télécharge, scanne et chiffre le fichier. Les adresses internes sont bloquées.",
+    "en": "Paste an HTTP/HTTPS link. The server downloads, scans and encrypts the file. Internal addresses are blocked."
+  },
+  "upload.importDriveHint": {
+    "fr": "Collez un lien de partage Google Drive (accès « Toute personne disposant du lien »).",
+    "en": "Paste a Google Drive share link (Anyone with the link)."
+  },
+  "upload.importOneDriveHint": {
+    "fr": "Collez un lien de partage OneDrive ou SharePoint.",
+    "en": "Paste a OneDrive or SharePoint share link."
+  },
+  "upload.importDropboxHint": {
+    "fr": "Collez un lien de partage Dropbox.",
+    "en": "Paste a Dropbox share link."
+  },
+  "upload.importUrlButton": {
+    "fr": "Importer",
+    "en": "Import"
+  },
+  "upload.importUrlRequired": {
+    "fr": "Saisissez une URL HTTP ou HTTPS.",
+    "en": "Enter an HTTP or HTTPS URL."
+  },
+  "upload.importUrlDone": {
+    "fr": "Fichier importé.",
+    "en": "File imported."
+  },
   "upload.versionTitle": {
     "fr": "Nouvelle version du document",
     "en": "Upload New Version"
@@ -1712,8 +2312,8 @@
     "en": "Supported formats"
   },
   "upload.maxSize": {
-    "fr": "Taille maximale : {max} Mo",
-    "en": "Maximum file size: {max} MB"
+    "fr": "Taille maximale : {max} To",
+    "en": "Maximum file size: {max} TB"
   },
   "upload.selectedFiles": {
     "fr": "Fichier sélectionné",
@@ -1967,6 +2567,38 @@
     "fr": "Ajouter un tag et appuyer sur Entrée…",
     "en": "Add a tag and press Enter…"
   },
+  "upload.studio.tagsHint": {
+    "fr": "Les tags sont extraits automatiquement du nom et du contenu du document. Vous pouvez les modifier.",
+    "en": "Tags are extracted automatically from the document name and content. You can edit them."
+  },
+  "upload.studio.tagsExtract": {
+    "fr": "Extraire les tags",
+    "en": "Extract tags"
+  },
+  "upload.studio.tagsExtracting": {
+    "fr": "Extraction…",
+    "en": "Extracting…"
+  },
+  "upload.studio.tagsSourceLocal": {
+    "fr": "Modèle local",
+    "en": "Local model"
+  },
+  "upload.studio.tagsSourceAi": {
+    "fr": "Modèle IA",
+    "en": "AI model"
+  },
+  "upload.studio.tagsSourceHybrid": {
+    "fr": "IA + modèle local",
+    "en": "AI + local model"
+  },
+  "upload.studio.tagsAddKeyword": {
+    "fr": "Ajouter le tag {tag}",
+    "en": "Add tag {tag}"
+  },
+  "upload.studio.toastTags": {
+    "fr": "Tags extraits du document",
+    "en": "Tags extracted from the document"
+  },
   "upload.studio.confidentiality": {
     "fr": "Confidentialité",
     "en": "Confidentiality"
@@ -2024,8 +2656,12 @@
     "en": "Integrity check pending"
   },
   "upload.studio.hashLabel": {
-    "fr": "Empreinte SHA-256",
-    "en": "SHA-256 hash"
+    "fr": "Contrôle d'intégrité",
+    "en": "Integrity check"
+  },
+  "upload.studio.hashServerOnly": {
+    "fr": "Effectué côté serveur",
+    "en": "Performed on the server"
   },
   "upload.studio.aiPending": {
     "fr": "Analyse IA en cours…",
@@ -2112,8 +2748,8 @@
     "en": "Summary"
   },
   "upload.studio.aiSummaryText": {
-    "fr": "Aperçu heuristique basé sur le nom et le type du fichier. Une analyse IA complète peut être disponible après téléversement.",
-    "en": "Heuristic preview based on file name and type. Full AI analysis may be available after upload."
+    "fr": "Tags, langue et mots-clés sont proposés à partir du nom et du contenu du fichier.",
+    "en": "Tags, language and keywords are suggested from the file name and content."
   },
   "upload.studio.metaSize": {
     "fr": "Taille",
@@ -2312,8 +2948,8 @@
     "en": "The file is empty."
   },
   "upload.errorTooLarge": {
-    "fr": "Taille maximale dépassée ({max} Mo).",
-    "en": "Maximum file size exceeded ({max} MB)."
+    "fr": "Taille maximale dépassée ({max} To).",
+    "en": "Maximum file size exceeded ({max} TB)."
   },
   "upload.errorInvalidType": {
     "fr": "Type de fichier non autorisé.",
@@ -3579,6 +4215,10 @@
     "fr": "Utilisez « Changer le rôle » pour modifier les droits.",
     "en": "Use « Change Role » to modify access rights."
   },
+  "users.roleLabel": {
+    "fr": "Rôle",
+    "en": "Role"
+  },
   "users.roleChangeWarning": {
     "fr": "Changer le rôle de cet utilisateur modifiera ses droits d'accès.",
     "en": "Changing this user's role will modify their access permissions."
@@ -4324,8 +4964,8 @@
     "en": "View in page"
   },
   "docAudit.sha256": {
-    "fr": "Hash SHA-256",
-    "en": "SHA-256 Hash"
+    "fr": "Contrôle d'intégrité",
+    "en": "Integrity check"
   },
   "docAudit.integrityTitle": {
     "fr": "Intégrité du document",
@@ -4344,8 +4984,8 @@
     "en": "Last verification"
   },
   "docAudit.hashAvailable": {
-    "fr": "Empreinte disponible",
-    "en": "Hash available"
+    "fr": "Contrôle d'intégrité disponible",
+    "en": "Integrity check available"
   },
   "docAudit.noVerificationYet": {
     "fr": "Aucune vérification d'intégrité enregistrée pour le moment.",
@@ -4492,8 +5132,8 @@
     "en": "Favorites"
   },
   "settings.home.shared": {
-    "fr": "Partagés",
-    "en": "Shared"
+    "fr": "Collaborer",
+    "en": "Collaborate"
   },
   "settings.home.categories": {
     "fr": "Catégories",
@@ -4564,8 +5204,8 @@
     "en": "Documents"
   },
   "settings.securityDesc": {
-    "fr": "Authentification, sessions et clés de chiffrement.",
-    "en": "Authentication, sessions and encryption keys."
+    "fr": "Authentification, chiffrement, antivirus et contrôles d’accès de la plateforme.",
+    "en": "Platform authentication, encryption, antivirus and access controls."
   },
   "settings.documentSecurityDesc": {
     "fr": "Protection, chiffrement et intégrité des documents.",
@@ -4747,6 +5387,138 @@
     "fr": "Basique",
     "en": "Basic"
   },
+  "settings.securityLevelHint.strong": {
+    "fr": "Chiffrement AES-256, authentification JWT, scan signatures et journal d’audit sont opérationnels.",
+    "en": "AES-256 encryption, JWT authentication, signature scanning and audit logging are operational."
+  },
+  "settings.securityLevelHint.medium": {
+    "fr": "La plateforme est protégée, mais un contrôle est incomplet (chiffrement ou antivirus).",
+    "en": "The platform is protected, but one control is incomplete (encryption or antivirus)."
+  },
+  "settings.securityLevelHint.basic": {
+    "fr": "Plusieurs contrôles sont incomplets. Vérifiez le chiffrement et le scan antivirus.",
+    "en": "Several controls are incomplete. Check encryption and antivirus scanning."
+  },
+  "settings.check.clamAvOn": {
+    "fr": "ClamAV connecté (moteur optionnel)",
+    "en": "ClamAV connected (optional engine)"
+  },
+  "settings.check.clamAvOff": {
+    "fr": "ClamAV optionnel non connecté",
+    "en": "Optional ClamAV not connected"
+  },
+  "settings.check.jwt": {
+    "fr": "JWT actif (session 60 min)",
+    "en": "JWT active (60 min session)"
+  },
+  "settings.check.encryptionOn": {
+    "fr": "Chiffrement au repos actif",
+    "en": "Encryption at rest active"
+  },
+  "settings.check.encryptionOff": {
+    "fr": "Clé de chiffrement non associée",
+    "en": "Encryption key not associated"
+  },
+  "settings.check.password": {
+    "fr": "Politique mot de passe + BCrypt",
+    "en": "Password policy + BCrypt"
+  },
+  "settings.check.avOn": {
+    "fr": "Antivirus actif (signatures)",
+    "en": "Antivirus active (signatures)"
+  },
+  "settings.check.avOff": {
+    "fr": "Antivirus inactif",
+    "en": "Antivirus inactive"
+  },
+  "settings.check.alerts": {
+    "fr": "{count} alerte(s) antivirus ouverte(s)",
+    "en": "{count} open antivirus alert(s)"
+  },
+  "settings.check.audit": {
+    "fr": "Journal d’audit activé",
+    "en": "Audit log enabled"
+  },
+  "settings.authTitle": {
+    "fr": "Authentification et accès",
+    "en": "Authentication and access"
+  },
+  "settings.sessionExpirationHint": {
+    "fr": "Durée du jeton JWT définie côté serveur.",
+    "en": "JWT token lifetime defined on the server."
+  },
+  "settings.passwordPolicyHint": {
+    "fr": "Minimum {count} caractères, majuscule, minuscule, chiffre et caractère spécial, sans l’identifiant e-mail.",
+    "en": "Minimum {count} characters, uppercase, lowercase, digit and special character, without the email identifier."
+  },
+  "settings.lockoutValue": {
+    "fr": "{minutes} minutes après 5 tentatives",
+    "en": "{minutes} minutes after 5 attempts"
+  },
+  "settings.rbac": {
+    "fr": "Contrôle d’accès RBAC",
+    "en": "RBAC access control"
+  },
+  "settings.rbacDesc": {
+    "fr": "Rôles Admin / Utilisateur et permissions documentaires.",
+    "en": "Admin / User roles and document permissions."
+  },
+  "settings.auditLog": {
+    "fr": "Journal d’audit",
+    "en": "Audit log"
+  },
+  "settings.auditLogDesc": {
+    "fr": "Chaque action sensible est enregistrée (connexion, partage, téléversement…).",
+    "en": "Every sensitive action is recorded (sign-in, sharing, upload…)."
+  },
+  "settings.encryptionAlgorithm.aesCbc": {
+    "fr": "AES-256-CBC (fichiers historiques)",
+    "en": "AES-256-CBC (legacy files)"
+  },
+  "settings.keyInitial": {
+    "fr": "Clé maître serveur",
+    "en": "Server master key"
+  },
+  "settings.keyNeverRotated": {
+    "fr": "Jamais (clé initiale)",
+    "en": "Never (initial key)"
+  },
+  "settings.maturitySecurityDesc": {
+    "fr": "Couverture réelle des documents : chiffrement, antivirus, intégrité, permissions et rôles.",
+    "en": "Actual document coverage: encryption, antivirus, integrity, permissions and roles."
+  },
+  "settings.av.noScan": {
+    "fr": "Aucun scan cette session",
+    "en": "No scan this session"
+  },
+  "settings.av.engineFallback": {
+    "fr": "Signatures (intégré)",
+    "en": "Built-in signatures"
+  },
+  "settings.av.hostFallback": {
+    "fr": "localhost:3310",
+    "en": "localhost:3310"
+  },
+  "settings.av.noThreats": {
+    "fr": "Aucune menace recensée.",
+    "en": "No threats recorded."
+  },
+  "settings.av.neverDetected": {
+    "fr": "Aucune",
+    "en": "None"
+  },
+  "settings.av.unknownThreat": {
+    "fr": "Menace non identifiée",
+    "en": "Unidentified threat"
+  },
+  "settings.av.unknownFile": {
+    "fr": "Fichier non renseigné",
+    "en": "Unnamed file"
+  },
+  "settings.av.noDetails": {
+    "fr": "Aucun détail complémentaire.",
+    "en": "No additional details."
+  },
   "settings.jwtAuth": {
     "fr": "Authentification JWT",
     "en": "JWT Authentication"
@@ -4768,8 +5540,8 @@
     "en": "Password policy"
   },
   "settings.passwordPolicyValue": {
-    "fr": "Hachage BCrypt activé",
-    "en": "BCrypt hashing enabled"
+    "fr": "Majuscule, minuscule, chiffre, caractère spécial · BCrypt",
+    "en": "Uppercase, lowercase, digit, special character · BCrypt"
   },
   "settings.maxLoginAttempts": {
     "fr": "Tentatives de connexion max.",
@@ -4800,8 +5572,56 @@
     "en": "Encryption Key Status"
   },
   "settings.keyStatusActive": {
-    "fr": "Clé active",
-    "en": "Active key"
+    "fr": "Clé active (AES-256 au repos)",
+    "en": "Active key (AES-256 at rest)"
+  },
+  "settings.factsTitle": {
+    "fr": "Contrôles en vigueur",
+    "en": "Active controls"
+  },
+  "settings.hashing": {
+    "fr": "Hachage des mots de passe",
+    "en": "Password hashing"
+  },
+  "settings.hashingValue": {
+    "fr": "BCrypt (Identity)",
+    "en": "BCrypt (Identity)"
+  },
+  "settings.integrity": {
+    "fr": "Intégrité des fichiers",
+    "en": "File integrity"
+  },
+  "settings.integrityValue": {
+    "fr": "SHA-256 à chaque version",
+    "en": "SHA-256 on every version"
+  },
+  "settings.scanCoverage": {
+    "fr": "Documents scannés",
+    "en": "Scanned documents"
+  },
+  "settings.av.protectionMode": {
+    "fr": "Mode de protection",
+    "en": "Protection mode"
+  },
+  "settings.av.clamAv": {
+    "fr": "ClamAV (optionnel)",
+    "en": "ClamAV (optional)"
+  },
+  "settings.av.clamAvInactive": {
+    "fr": "Désactivé — le scan s’appuie sur les signatures internes (EICAR / démo).",
+    "en": "Disabled — scanning uses built-in signatures (EICAR / demo)."
+  },
+  "settings.av.clamAvActive": {
+    "fr": "Connecté en complément des signatures internes.",
+    "en": "Connected in addition to built-in signatures."
+  },
+  "settings.av.notConnected": {
+    "fr": "Non connecté",
+    "en": "Not connected"
+  },
+  "settings.maturityUnavailable": {
+    "fr": "Couverture calculée à partir des documents et des scans enregistrés.",
+    "en": "Coverage computed from stored documents and recorded scans."
   },
   "settings.lastKeyRotation": {
     "fr": "Dernière rotation",
@@ -4856,8 +5676,8 @@
     "en": "SHA-256 Integrity Check"
   },
   "settings.sha256Desc": {
-    "fr": "Empreinte SHA-256 pour vérifier l'intégrité des documents.",
-    "en": "SHA-256 hash to verify document integrity."
+    "fr": "Contrôle d'intégrité interne des documents (empreinte technique non exposée).",
+    "en": "Internal document integrity control (technical fingerprint not exposed)."
   },
   "settings.antivirusScan": {
     "fr": "Analyse antivirus",
@@ -4963,9 +5783,13 @@
     "fr": "Stockage logique",
     "en": "Logical Storage"
   },
+  "settings.storageQuota": {
+    "fr": "Capacité",
+    "en": "Capacity"
+  },
   "settings.storageUsageHint": {
-    "fr": "Les capacités totales sont définies par l'infrastructure hôte.",
-    "en": "Total capacity is defined by the host infrastructure."
+    "fr": "Capacité de l'application : 10 To. La barre indique l'espace déjà utilisé.",
+    "en": "Application capacity: 10 TB. The bar shows space already used."
   },
   "settings.storageConfig": {
     "fr": "Configuration du stockage",
@@ -5291,17 +6115,21 @@
     "fr": "Stockage logique",
     "en": "Logical storage"
   },
+  "home.storageQuota": {
+    "fr": "Capacité",
+    "en": "Capacity"
+  },
   "home.storageHint": {
-    "fr": "Aucun quota global n'est défini — les valeurs reflètent votre utilisation réelle.",
-    "en": "No global quota is configured — values reflect your actual usage."
+    "fr": "Capacité de l'application : 10 To.",
+    "en": "Application capacity: 10 TB."
   },
   "home.sharedWithMe": {
     "fr": "Partagés avec moi",
     "en": "Shared with Me"
   },
   "home.viewShared": {
-    "fr": "Voir les documents partagés",
-    "en": "View Shared Documents"
+    "fr": "Ouvrir Collaborer",
+    "en": "Open Collaborate"
   },
   "home.noShared": {
     "fr": "Aucun document partagé pour le moment.",
@@ -5374,6 +6202,10 @@
   "home.activity.Share": {
     "fr": "« {doc} » a été partagé",
     "en": "{doc} was shared"
+  },
+  "home.activity.PermissionChange": {
+    "fr": "Les droits de « {doc} » ont été mis à jour",
+    "en": "Permissions for {doc} were updated"
   },
   "home.activity.Archive": {
     "fr": "« {doc} » a été archivé",
@@ -5513,16 +6345,32 @@
     "en": "Close assistant"
   },
   "chat.placeholder": {
-    "fr": "Posez votre question…",
-    "en": "Ask your question…"
+    "fr": "Décrivez ce dont vous avez besoin…",
+    "en": "Describe what you need…"
   },
   "chat.send": {
     "fr": "Envoyer",
     "en": "Send"
   },
   "chat.welcome": {
-    "fr": "Bonjour{name} ! Je peux vous aider à utiliser SecureDocs. Choisissez une suggestion ou posez une question.",
-    "en": "Hello{name}! I can help you use SecureDocs. Pick a suggestion or ask a question."
+    "fr": "Bonjour{name} ! Je peux vous aider à utiliser SecureDocs : téléversement, partage, documents, corbeille, sécurité.",
+    "en": "Hello{name}! I can help you use SecureDocs: upload, sharing, documents, trash, security."
+  },
+  "chat.exampleLabel": {
+    "fr": "Exemple",
+    "en": "Example"
+  },
+  "chat.exampleQuestion": {
+    "fr": "Comment un document est-il chiffré en AES-256 avant d'être lu ?",
+    "en": "How is a document AES-256 encrypted before it is read?"
+  },
+  "chat.statusReady": {
+    "fr": "En ligne — réponses immédiates",
+    "en": "Online — instant answers"
+  },
+  "chat.openPage": {
+    "fr": "Ouvrir",
+    "en": "Open"
   },
   "chat.typing": {
     "fr": "L'assistant réfléchit…",
@@ -5533,16 +6381,20 @@
     "en": "Conversations are not retained. Only anonymous topic counters are used for statistics."
   },
   "chat.error": {
-    "fr": "Impossible d'obtenir une réponse pour le moment. Réessayez ou choisissez une suggestion ci-dessous.",
-    "en": "Unable to get a reply right now. Try again or pick a suggestion below."
+    "fr": "Impossible d'obtenir une réponse pour le moment. Réessayez dans un instant.",
+    "en": "Unable to get a reply right now. Try again in a moment."
   },
   "chat.fallback": {
-    "fr": "Je n'ai pas trouvé de réponse précise. Voici des sujets sur lesquels je peux vous aider : téléversement, partage, corbeille, catégories, sécurité. Reformulez votre question ou utilisez une suggestion.",
-    "en": "I couldn't find a precise answer. Topics I can help with: upload, sharing, trash, categories, security. Rephrase your question or use a suggestion."
+    "fr": "Je n'ai pas trouvé de réponse précise. Je peux vous aider sur le téléversement, le partage, la corbeille, les catégories et la sécurité.",
+    "en": "I couldn't find a precise answer. I can help with upload, sharing, trash, categories, and security."
   },
   "chat.suggest.upload": {
     "fr": "Comment uploader un fichier ?",
     "en": "How do I upload a file?"
+  },
+  "chat.suggest.download": {
+    "fr": "Comment télécharger un fichier ?",
+    "en": "How do I download a file?"
   },
   "chat.suggest.documents": {
     "fr": "Où voir mes documents ?",
@@ -5565,8 +6417,8 @@
     "en": "Where is the trash?"
   },
   "chat.suggest.profile": {
-    "fr": "Comment gérer mon profil ?",
-    "en": "How do I manage my profile?"
+    "fr": "Comment gérer l'annuaire ?",
+    "en": "How do I manage the directory?"
   },
   "chat.suggest.dashboard": {
     "fr": "Que montre le tableau de bord ?",
@@ -5596,64 +6448,116 @@
     "fr": "Que peux-tu faire ?",
     "en": "What can you do?"
   },
+  "chat.suggest.preview": {
+    "fr": "Comment prévisualiser un fichier ?",
+    "en": "How do I preview a file?"
+  },
+  "chat.suggest.favorites": {
+    "fr": "Où sont mes favoris ?",
+    "en": "Where are my favorites?"
+  },
+  "chat.suggest.groups": {
+    "fr": "Comment gérer les groupes ?",
+    "en": "How do I manage groups?"
+  },
+  "chat.suggest.notifications": {
+    "fr": "Où voir les notifications ?",
+    "en": "Where are notifications?"
+  },
+  "chat.suggest.versions": {
+    "fr": "Comment voir les versions ?",
+    "en": "How do I see versions?"
+  },
+  "chat.suggest.login": {
+    "fr": "Comment me connecter ?",
+    "en": "How do I sign in?"
+  },
   "chat.faq.greeting": {
-    "fr": "Bonjour ! Je suis l'assistant SecureDocs. Posez-moi une question sur le téléversement, le partage, l'archive, la corbeille ou la sécurité.",
-    "en": "Hello! I'm the SecureDocs assistant. Ask me about uploading, sharing, archives, trash, or security."
+    "fr": "Bonjour ! Je suis l'assistant SecureDocs. Je vous aide sur le téléversement, le partage, l'annuaire, la corbeille et la sécurité.",
+    "en": "Hello! I'm the SecureDocs assistant. I can help with uploading, sharing, the directory, trash, and security."
   },
   "chat.faq.help": {
-    "fr": "Je peux vous guider sur : téléversement, documents, partage, catégories, archive, corbeille, profil, tableau de bord, et (admin) utilisateurs, rôles, audit, configuration. Cliquez une suggestion ou décrivez votre besoin.",
-    "en": "I can guide you on: upload, documents, sharing, categories, archive, trash, profile, dashboard, and (admin) users, roles, audit, settings. Click a suggestion or describe what you need."
+    "fr": "Je vous guide dans SecureDocs : téléverser, retrouver un fichier, partager, catégories, favoris, archive, corbeille, Annuaire (profil, utilisateurs, groupes), et (admin) audit ou paramètres.",
+    "en": "I can guide you in SecureDocs: upload, find a file, share, categories, favorites, archive, trash, Directory (profile, users, groups), and (admin) audit or settings."
   },
   "chat.faq.upload": {
-    "fr": "Pour téléverser un fichier : ouvrez Documents → Téléverser (ou le bouton Upload dans la barre du haut). Glissez-déposez votre fichier, renseignez éventuellement la catégorie et la description, puis validez. Le fichier est chiffré avant stockage.",
-    "en": "To upload a file: open Documents → Upload (or the Upload button in the top bar). Drag and drop your file, optionally set category and description, then confirm. The file is encrypted before storage."
+    "fr": "Pour téléverser : cliquez sur Téléverser (bouton bleu) ou ouvrez Documents → Téléverser. Glissez-déposez le fichier : les tags sont extraits automatiquement (vous pouvez les ajuster), choisissez éventuellement une catégorie, puis validez. Le fichier est scanné, compressé et chiffré avant stockage.",
+    "en": "To upload: click Upload (blue button) or open Documents → Upload. Drag and drop the file: tags are extracted automatically (you can edit them), optionally set a category, then confirm. The file is scanned, compressed, and encrypted before storage."
+  },
+  "chat.faq.download": {
+    "fr": "Pour récupérer un fichier déjà stocké : ouvrez Mes documents, puis Télécharger. Pour ajouter un nouveau fichier, utilisez plutôt Téléverser (bouton bleu).",
+    "en": "To get a file already stored: open My documents, then Download. To add a new file, use Upload instead (blue button)."
   },
   "chat.faq.documents": {
-    "fr": "Vos documents actifs se trouvent dans le menu Documents. Vous pouvez rechercher, prévisualiser, télécharger, partager ou archiver. Les documents partagés avec vous apparaissent sous Partagés.",
-    "en": "Your active documents are under Documents. You can search, preview, download, share, or archive. Files shared with you appear under Shared."
+    "fr": "Vos fichiers actifs sont dans Mes documents. Utilisez la recherche et les filtres (catégorie, statut). Vous pouvez prévisualiser, télécharger, partager, mettre en favori ou archiver.",
+    "en": "Your active files are under My documents. Use search and filters (category, status). You can preview, download, share, favorite, or archive."
+  },
+  "chat.faq.preview": {
+    "fr": "Pour prévisualiser un document : ouvrez Mes documents, cliquez sur le fichier (ou l'action Aperçu). Les formats courants (PDF, images, texte) s'affichent dans une fenêtre, sans quitter SecureDocs.",
+    "en": "To preview a document: open My documents, click the file (or Preview). Common formats (PDF, images, text) open in a window without leaving SecureDocs."
   },
   "chat.faq.share": {
-    "fr": "Pour partager : ouvrez un document, utilisez le partage pour inviter un utilisateur (niveau d'accès) ou créer un lien. Les fichiers reçus sont listés dans Partagés.",
-    "en": "To share: open a document, invite a user with an access level, or create a share link. Files shared with you appear under Shared."
+    "fr": "Pour partager : ouvrez un document, puis Partager. Invitez un utilisateur (niveau d'accès) ou créez un lien sécurisé. Les fichiers reçus apparaissent dans Partagés avec moi.",
+    "en": "To share: open a document, then Share. Invite a user (access level) or create a secure link. Files shared with you appear under Shared with me."
+  },
+  "chat.faq.favorites": {
+    "fr": "Les Favoris regroupent les documents que vous marquez d'une étoile. Ouvrez un fichier dans Mes documents et cliquez sur l'étoile, puis retrouvez-le dans le menu Favoris.",
+    "en": "Favorites lists documents you star. Open a file in My documents, click the star, then find it under Favorites."
   },
   "chat.faq.categories": {
-    "fr": "Les catégories permettent d'organiser vos documents. Attribuez une catégorie à l'upload ou via les métadonnées, puis filtrez depuis la page Catégories.",
-    "en": "Categories help organize documents. Set a category on upload or in metadata, then filter from the Categories page."
+    "fr": "Les catégories classent vos documents (RH, Factures, Contrats…). Attribuez-en une au téléversement ou dans les métadonnées, puis filtrez depuis Catégories. Les groupes peuvent avoir des droits par catégorie.",
+    "en": "Categories organize documents (HR, Invoices, Contracts…). Set one on upload or in metadata, then filter from Categories. Groups can have per-category rights."
   },
   "chat.faq.archive": {
-    "fr": "Archiver retire un document de la liste active sans le supprimer. Retrouvez-le dans Archivés, puis restaurez-le si besoin.",
-    "en": "Archiving removes a document from the active list without deleting it. Find it under Archived, then restore when needed."
+    "fr": "Archiver retire un document de la liste active sans le supprimer. Retrouvez-le dans Archivés, puis restaurez-le si besoin. Ce n'est pas la corbeille.",
+    "en": "Archiving removes a document from the active list without deleting it. Find it under Archived, then restore when needed. This is not the trash."
   },
   "chat.faq.trash": {
     "fr": "La Corbeille contient les documents supprimés. Vous pouvez les restaurer ou les supprimer définitivement. Vider la corbeille est irréversible.",
     "en": "Trash holds deleted documents. You can restore them or permanently delete them. Emptying trash is irreversible."
   },
   "chat.faq.profile": {
-    "fr": "Dans Profil, mettez à jour vos informations, changez votre mot de passe, et gérez vos préférences (thème, langue, avatar).",
-    "en": "In Profile, update your details, change your password, and manage preferences (theme, language, avatar)."
+    "fr": "L'Annuaire liste les personnes de l'organisation. Votre fiche « Vous » permet de modifier le nom, l'avatar et le mot de passe. Un administrateur peut aussi ajouter, désactiver ou supprimer des comptes.",
+    "en": "Directory lists people in the organization. Your “You” card lets you update name, avatar, and password. An administrator can also add, deactivate, or delete accounts."
   },
   "chat.faq.dashboard": {
-    "fr": "Le tableau de bord résume votre activité : nombre de documents, stockage, éléments récents et accès rapide aux actions courantes.",
-    "en": "The dashboard summarizes your activity: document count, storage, recent items, and quick access to common actions."
+    "fr": "Le tableau de bord (Accueil) résume votre activité : nombre de documents, stockage, éléments récents et accès rapides.",
+    "en": "The Home dashboard summarizes your activity: document count, storage, recent items, and shortcuts."
   },
   "chat.faq.roles": {
-    "fr": "Les administrateurs gèrent les rôles dans Admin → Rôles : création, description et permissions associées aux comptes.",
-    "en": "Administrators manage roles under Admin → Roles: create roles, set descriptions, and assign permissions to accounts."
+    "fr": "Il n'y a plus de page Rôles séparée. Deux profils existent : Administrateur et Utilisateur. Les droits détaillés se gèrent dans Annuaire → Groupes, et les accès par catégorie depuis Catégories.",
+    "en": "There is no separate Roles page. Two profiles exist: Administrator and User. Detailed rights are managed in Directory → Groups, and per-category access from Categories."
   },
   "chat.faq.users": {
-    "fr": "Les administrateurs gèrent les comptes dans Admin → Utilisateurs : création, activation/désactivation et attribution de rôles.",
-    "en": "Administrators manage accounts under Admin → Users: create users, activate/deactivate, and assign roles."
+    "fr": "Dans l'Annuaire, un administrateur voit toutes les personnes, ouvre une fiche, ajoute un utilisateur, désactive ou supprime un compte. Les autres utilisateurs voient uniquement la liste des personnes.",
+    "en": "In Directory, an administrator can view everyone, open a card, add a user, deactivate or delete an account. Other users only see the people list."
+  },
+  "chat.faq.groups": {
+    "fr": "Les groupes apparaissent dans l'Annuaire (filtre Groupes). Créez un groupe, ouvrez-le pour ajouter des membres, puis attribuez des droits par catégorie.",
+    "en": "Groups appear in Directory (Groups filter). Create a group, open it to add members, then grant per-category rights."
   },
   "chat.faq.audit": {
-    "fr": "L'audit (Admin → Audit) journalise les actions importantes (connexion, upload, téléchargement, partage, suppression) pour la traçabilité.",
-    "en": "Audit (Admin → Audit) logs important actions (login, upload, download, share, delete) for traceability."
+    "fr": "L'audit documentaire (menu Administration) journalise les actions importantes : connexion, téléversement, téléchargement, partage, suppression. Utile pour la traçabilité.",
+    "en": "Document audit (Administration menu) logs important actions: login, upload, download, share, delete. Useful for traceability."
   },
   "chat.faq.config": {
-    "fr": "La configuration système (Admin → Configuration) permet d'ajuster les paramètres de stockage et options liées à la plateforme.",
-    "en": "System configuration (Admin → Config) lets you adjust storage settings and related platform options."
+    "fr": "Les paramètres système (Administration → Paramètres) permettent d'ajuster le stockage, l'antivirus et les options de la plateforme. Accessible aux administrateurs.",
+    "en": "System settings (Administration → Settings) let you adjust storage, antivirus, and platform options. Administrators only."
   },
   "chat.faq.security": {
-    "fr": "SecureDocs compresse (GZip) puis chiffre (AES-256) avant stockage. À la lecture, le serveur déchiffre et décompresse. L'accès est contrôlé par rôles ; l'intégrité se vérifie par hash SHA-256. Les sessions sont protégées par JWT.",
-    "en": "SecureDocs GZip-compresses then AES-256 encrypts before storage. On read, the server decrypts and decompresses. Access is role-based; integrity uses SHA-256. Sessions are protected with JWT."
+    "fr": "SecureDocs compresse (GZip) puis chiffre (AES-256) avant stockage. À la lecture, le serveur déchiffre et décompresse. L'accès est contrôlé par rôles ; l'intégrité se vérifie par hash SHA-256. Les sessions utilisent un jeton JWT.",
+    "en": "SecureDocs GZip-compresses then AES-256 encrypts before storage. On read, the server decrypts and decompresses. Access is role-based; integrity uses SHA-256. Sessions use a JWT token."
+  },
+  "chat.faq.notifications": {
+    "fr": "La cloche en haut à droite affiche les notifications (partages reçus, etc.). Vous pouvez tout marquer comme lu. Activez ou désactivez les notifications dans Annuaire → Mon compte.",
+    "en": "The bell in the top-right shows notifications (shares received, etc.). You can mark them all as read. Turn notifications on or off in Directory → My account."
+  },
+  "chat.faq.versions": {
+    "fr": "Les versions d'un document se consultent depuis la fiche du fichier (action Versions). Vous pouvez voir l'historique des mises à jour. Téléversez une nouvelle version depuis le même document si vous en avez le droit.",
+    "en": "Document versions are available from the file details (Versions action). You can see the update history. Upload a new version from the same document if you have permission."
+  },
+  "chat.faq.login": {
+    "fr": "Connectez-vous avec votre e-mail professionnel et votre mot de passe. Si vous avez oublié le mot de passe, contactez un administrateur. Pour le changer une fois connecté : Annuaire → Mon compte.",
+    "en": "Sign in with your work email and password. If you forgot your password, contact an administrator. To change it once signed in: Directory → My account."
   }
 }

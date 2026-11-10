@@ -5,6 +5,8 @@ export type ChatSource = 'faq' | 'ai' | 'fallback'
 export interface ChatApiResponse {
   reply: string
   source: ChatSource
+  topic?: string
+  route?: string | null
 }
 
 export async function askChatbot(message: string, locale?: string): Promise<ChatApiResponse> {

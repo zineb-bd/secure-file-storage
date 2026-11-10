@@ -55,9 +55,9 @@ export function activityDescription(activity: RecentActivity, t: (k: string) => 
   return `${doc} — ${activity.action}`
 }
 
-export function storageMeterPercent(used: number, logical: number) {
-  if (!logical || logical <= 0) return used > 0 ? 12 : 0
-  return Math.min(Math.round((used / logical) * 100), 100)
+export function storageMeterPercent(used: number, quota: number) {
+  if (!quota || quota <= 0) return used > 0 ? 1 : 0
+  return Math.min(Math.round((used / quota) * 100), 100)
 }
 
 function fileTypeLabel(contentType: string | null | undefined, fileName: string) {

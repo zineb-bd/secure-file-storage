@@ -1,3 +1,5 @@
+import { api } from '@/api/client'
+import type { DocumentCategoryDto } from '@/types'
 import {
   CATEGORIES,
   CATEGORY_OVERRIDES_KEY,
@@ -99,4 +101,35 @@ export function getCategoryMeta(key: string) {
     descKey: builtin?.descKey,
     labelKey: builtin?.labelKey,
   }
+}
+
+export async function fetchCategoryCatalog(): Promise<DocumentCategoryDto[]> {
+  const items = await api<DocumentCategoryDto[]>('/api/categories/catalog')
+  const custom = items.filter((c) => !c.isBuiltin).map((c) => ({
+    name: c.name,
+    description: c.description,
+    icon: c.icon,
+    color: c.color,
+  }))
+  saveCustomCategories(custom)
+  return items
+}
+
+export async function createCategoryRemote(payload: CustomCategory): Promise<DocumentCategoryDto> {
+  return api<DocumentCategoryDto>('/api/categories/catalog', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function updateCategoryRemote(id: string, payload: CustomCategory): Promise<DocumentCategoryDto> {
+  return api<DocumentCategoryDto>(`/api/categories/catalog/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteCategoryRemote(id: string, moveTo?: string): Promise<void> {
+  const q = moveTo ? `?moveTo=${encodeURIComponent(moveTo)}` : ''
+  await api(`/api/categories/catalog/${id}${q}`, { method: 'DELETE' })
 }

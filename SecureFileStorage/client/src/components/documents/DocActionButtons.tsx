@@ -161,6 +161,8 @@ export interface DocActions {
   onCheckout?: () => void
   onCheckin?: () => void
   onFavorite?: () => void
+  onMove?: () => void
+  onNewVersion?: () => void
 }
 
 interface DocActionButtonsProps extends DocActions {
@@ -218,12 +220,28 @@ export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProp
 
   const moreItems: MenuItem[] = []
 
-  if (actions.onVersions) {
+  if (actions.onMove && opts.canModify !== false) {
+    moreItems.push({
+      key: 'move',
+      label: t('action.move'),
+      icon: <MoveIcon />,
+      onClick: actions.onMove,
+    })
+  }
+  if (!opts.isFolder && actions.onVersions) {
     moreItems.push({
       key: 'versions',
       label: t('action.versions'),
       icon: <VersionsIcon />,
       onClick: actions.onVersions,
+    })
+  }
+  if (!opts.isFolder && opts.canModify !== false && actions.onNewVersion) {
+    moreItems.push({
+      key: 'new-version',
+      label: t('action.newVersion'),
+      icon: <VersionsIcon />,
+      onClick: actions.onNewVersion,
     })
   }
   if (opts.showRestore && actions.onRestore) {
@@ -248,7 +266,7 @@ export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProp
       icon: <CheckinIcon />,
       onClick: actions.onCheckin,
     })
-  } else if (!opts.isLocked && opts.canModify !== false && actions.onCheckout) {
+  } else if (!opts.isFolder && !opts.isLocked && opts.canModify !== false && actions.onCheckout) {
     moreItems.push({
       key: 'checkout',
       label: t('action.checkout'),
@@ -391,7 +409,19 @@ export function DocActionButtons({ opts = {}, ...actions }: DocActionButtonsProp
   )
 }
 
+function MoveIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M4 7h11" />
+      <path d="M12 4l3 3-3 3" />
+      <path d="M20 17H9" />
+      <path d="M12 14l-3 3 3 3" />
+    </svg>
+  )
+}
+
 export function docActionOptsFromDoc(d: DocumentDto, extra: Partial<DocActionOpts> = {}): DocActionOpts {
+  const folder = !!d.isFolder
   return {
     isLocked: d.isLocked,
     isLockedByCurrentUser: d.isLockedByCurrentUser,
@@ -399,6 +429,9 @@ export function docActionOptsFromDoc(d: DocumentDto, extra: Partial<DocActionOpt
     isFavorite: d.isFavorite,
     showFavorite: true,
     ...extra,
+    isFolder: folder,
+    noPreview: folder || extra.noPreview,
+    noDownload: folder || extra.noDownload,
   }
 }
 

@@ -18,6 +18,7 @@ interface AuthContextValue {
   isAdmin: boolean
   login: (email: string, password: string) => Promise<void>
   logout: (callApi?: boolean) => Promise<void>
+  patchUser: (patch: Partial<UserInfo>) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -71,6 +72,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userInfo)
   }, [])
 
+  const patchUser = useCallback((patch: Partial<UserInfo>) => {
+    setUser((prev) => {
+      if (!prev) return prev
+      const next = { ...prev, ...patch }
+      localStorage.setItem(USER_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [])
+
   const isAdmin = (user?.roles || []).includes('Admin')
 
   const value = useMemo(
@@ -81,8 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin,
       login,
       logout,
+      patchUser,
     }),
-    [token, user, isAdmin, login, logout]
+    [token, user, isAdmin, login, logout, patchUser]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

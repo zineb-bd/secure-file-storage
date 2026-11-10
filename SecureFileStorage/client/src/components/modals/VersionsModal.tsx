@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api, downloadBlob } from '@/api/client'
 import { useI18n } from '@/i18n/I18nContext'
 import { fmtDate, fmtSize } from '@/utils/format'
@@ -13,6 +14,7 @@ interface VersionsModalProps {
 
 export function VersionsModal({ doc, onClose, onChanged }: VersionsModalProps) {
   const { t, locale } = useI18n()
+  const navigate = useNavigate()
   const [versions, setVersions] = useState<DocumentVersion[]>([])
 
   const load = async () => {
@@ -72,6 +74,18 @@ export function VersionsModal({ doc, onClose, onChanged }: VersionsModalProps) {
         <button type="button" className="btn" onClick={onClose}>
           {t('btn.cancel')}
         </button>
+        {doc.canModify !== false && (
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              onClose()
+              navigate(`/documents/upload?documentId=${encodeURIComponent(doc.id)}`)
+            }}
+          >
+            {t('action.newVersion')}
+          </button>
+        )}
       </div>
     </Modal>
   )

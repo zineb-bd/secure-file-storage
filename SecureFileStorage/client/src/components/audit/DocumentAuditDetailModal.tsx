@@ -69,7 +69,6 @@ export function DocumentAuditDetailModal({
         category: docDetail.category,
         contentType: docDetail.contentType,
         currentVersion: docDetail.currentVersion,
-        sha256Hash: docDetail.sha256Hash,
       }
     : meta || null
 
@@ -178,7 +177,6 @@ export function DocumentAuditDetailModal({
                           <th>{t('table.created')}</th>
                           <th>{t('audit.colUser')}</th>
                           <th>{t('table.size')}</th>
-                          <th>{t('docAudit.sha256')}</th>
                           <th>{t('audit.colStatus')}</th>
                         </tr>
                       </thead>
@@ -193,9 +191,6 @@ export function DocumentAuditDetailModal({
                             <td>{fmtDate(v.createdAt, locale)}</td>
                             <td>{v.uploadedByName}</td>
                             <td>{fmtSize(v.sizeBytes)}</td>
-                            <td className="doc-audit-hash" title={v.sha256Hash}>
-                              {v.sha256Hash ? `${v.sha256Hash.slice(0, 12)}…` : '—'}
-                            </td>
                             <td>
                               <span className="audit-badge audit-badge-success">
                                 {t('audit.status.success')}
@@ -221,10 +216,6 @@ export function DocumentAuditDetailModal({
                         <div>
                           <dt>{t('table.size')}</dt>
                           <dd>{fmtSize(selectedVersion.sizeBytes)}</dd>
-                        </div>
-                        <div className="doc-audit-version-dl-full">
-                          <dt>{t('docAudit.sha256')}</dt>
-                          <dd className="audit-detail-mono">{selectedVersion.sha256Hash || t('users.notAvailable')}</dd>
                         </div>
                         {selectedVersion.changeComment && (
                           <div className="doc-audit-version-dl-full">
@@ -264,17 +255,14 @@ export function DocumentAuditDetailModal({
                       <p className="doc-audit-integrity-detail">{integrity.details}</p>
                     )}
                   </>
-                ) : docDetail?.sha256Hash ? (
+                ) : (
                   <>
                     <div className="doc-audit-integrity-status">
                       <span className="doc-audit-integrity-icon ok">✓</span>
                       <strong>{t('docAudit.hashAvailable')}</strong>
                     </div>
-                    <p className="audit-detail-mono doc-audit-integrity-hash">{docDetail.sha256Hash}</p>
                     <p className="doc-audit-integrity-meta">{t('docAudit.noVerificationYet')}</p>
                   </>
-                ) : (
-                  <p className="doc-audit-empty">{t('users.notAvailable')}</p>
                 )}
               </div>
             </section>

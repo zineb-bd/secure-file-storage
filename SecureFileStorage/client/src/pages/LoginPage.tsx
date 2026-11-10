@@ -20,6 +20,7 @@ export function LoginPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(successMessage)
   const [loading, setLoading] = useState(false)
+  const [forgotOpen, setForgotOpen] = useState(false)
   const [touched, setTouched] = useState({ email: false, password: false })
 
   useEffect(() => {
@@ -64,6 +65,7 @@ export function LoginPage() {
   return (
     <AuthLayout formKey="login">
       <header className="auth-form-header">
+        <span className="auth-secure-badge">{t('login.secureBadge')}</span>
         <h2>{t('login.welcome')}</h2>
         <p className="auth-form-subtitle">{t('login.subtitle')}</p>
       </header>
@@ -133,10 +135,22 @@ export function LoginPage() {
             />
             <span>{t('login.remember')}</span>
           </label>
-          <a className="auth-forgot-link" href="#" onClick={(e) => e.preventDefault()}>
+          <a
+            className="auth-forgot-link"
+            href="#forgot"
+            onClick={(e) => {
+              e.preventDefault()
+              setForgotOpen(true)
+            }}
+          >
             {t('login.forgot')}
           </a>
         </div>
+        {forgotOpen && (
+          <p className="auth-forgot-help" role="status">
+            {t('login.forgotHelp')}
+          </p>
+        )}
 
         <button type="submit" className="btn btn-primary btn-block auth-submit" id="btn-login" disabled={loading}>
           {loading ? (

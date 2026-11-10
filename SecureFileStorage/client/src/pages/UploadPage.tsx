@@ -19,6 +19,7 @@ import {
   IconGlobe,
   IconLock,
   IconShieldCheck,
+  IconSparkles,
   IconUploadCloud,
   IconUsers,
   IconX,
@@ -30,16 +31,19 @@ import {
   buildUploadFormData,
   buildVersionFormData,
   detectLocalThreatSignature,
+  extractDocumentExcerpt,
+  extractTagsLocally,
   fileExtension,
   guessLanguageFromName,
   isThreatUploadError,
   keywordsFromFileName,
   mapScanResultToUi,
   normalizeSharedRows,
-  sha256Hex,
   UPLOAD_ACCESS_LEVELS,
+  PUBLIC_ACCESS_LEVELS,
+  UPLOAD_ACCEPT_ATTRIBUTE,
   UPLOAD_DRAFT_KEY,
-  UPLOAD_MAX_MB,
+  UPLOAD_MAX_TB,
   UPLOAD_SUPPORTED_FORMATS_LABEL,
   validateUploadFile,
   type ScanUiStatus,
@@ -48,32 +52,34 @@ import {
   type UploadVisibility,
 } from '@/utils/uploadHelpers'
 import { fmtSize } from '@/utils/format'
-import type { DocumentDto, UserDirectoryEntry } from '@/types'
+import { previewKindOf } from '@/utils/previewHelpers'
+import { suggestDocumentTags, type TagSuggestSource } from '@/utils/tagSuggestApi'
+import type { DocumentDto, DocumentImportSource, UserDirectoryEntry } from '@/types'
 
 type ToastKind = 'success' | 'error' | 'info' | 'threat'
 type ToastState = { kind: ToastKind; message: string } | null
-type PreviewKind = 'image' | 'pdf' | 'office' | 'text' | 'other'
+type ImportSourceId = 'device' | 'url' | 'googledrive' | 'onedrive' | 'dropbox'
 
-function previewKindOf(file: File): PreviewKind {
-  const ext = fileExtension(file.name)
-  if (file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-    return 'image'
-  }
-  if (file.type === 'application/pdf' || ext === 'pdf') return 'pdf'
-  if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) return 'office'
-  if (file.type.startsWith('text/') || ['txt', 'csv'].includes(ext)) return 'text'
-  return 'other'
-}
+const FALLBACK_SOURCES: DocumentImportSource[] = [
+  { id: 'device', displayName: 'Depuis l\'appareil', isEnabled: true },
+  { id: 'url', displayName: 'Depuis un lien', isEnabled: true },
+  { id: 'googledrive', displayName: 'Google Drive', isEnabled: true },
+  { id: 'onedrive', displayName: 'OneDrive', isEnabled: true },
+  { id: 'dropbox', displayName: 'Dropbox', isEnabled: true },
+]
 
 export function UploadPage() {
   const { t, locale } = useI18n()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const documentId = searchParams.get('documentId')
+  const folderId = searchParams.get('folder')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const uploadJobRef = useRef<UploadJob | null>(null)
   const preScanTimerRef = useRef<number | null>(null)
+  const tagRequestIdRef = useRef(0)
+  const autoTagsRef = useRef<string[]>([])
 
   const [dragOver, setDragOver] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -88,15 +94,17 @@ export function UploadPage() {
   const [description, setDescription] = useState('')
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
+  const [tagExtracting, setTagExtracting] = useState(false)
+  const [tagSource, setTagSource] = useState<TagSuggestSource | null>(null)
   const [visibility, setVisibility] = useState<UploadVisibility>('Private')
   const [publicLevel, setPublicLevel] = useState('Download')
   const [sharedRows, setSharedRows] = useState<SharedRow[]>([])
   const [changeComment, setChangeComment] = useState('')
   const [versionConfirmed, setVersionConfirmed] = useState(false)
 
-  const [hash, setHash] = useState('')
-  const [hashAt, setHashAt] = useState<Date | null>(null)
-  const [hashPending, setHashPending] = useState(false)
+  const [integrityReady, setIntegrityReady] = useState(false)
+  const [integrityAt, setIntegrityAt] = useState<Date | null>(null)
+  const [integrityPending, setIntegrityPending] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [textPreview, setTextPreview] = useState('')
   const [scanAt, setScanAt] = useState<Date | null>(null)
@@ -110,6 +118,10 @@ export function UploadPage() {
   const [uploadError, setUploadError] = useState('')
   const [resultDoc, setResultDoc] = useState<DocumentDto | null>(null)
   const [toast, setToast] = useState<ToastState>(null)
+  const [importUrl, setImportUrl] = useState('')
+  const [importingUrl, setImportingUrl] = useState(false)
+  const [importSource, setImportSource] = useState<ImportSourceId>('device')
+  const [importSources, setImportSources] = useState<DocumentImportSource[]>(FALLBACK_SOURCES)
 
   const isVersionMode = !!documentId && !!existingDoc
   const dateFmt = useMemo(
@@ -130,6 +142,43 @@ export function UploadPage() {
     setToast({ kind, message })
   }, [])
 
+  const applySuggestedTags = useCallback((suggested: string[], replace: boolean) => {
+    const unique = suggested.filter(Boolean)
+    autoTagsRef.current = unique
+    setTags((prev) => {
+      if (replace) return unique
+      const manual = prev.filter((tag) => !autoTagsRef.current.includes(tag) && !unique.includes(tag))
+      return [...unique, ...manual]
+    })
+  }, [])
+
+  const requestTagSuggestions = useCallback(
+    async (target: File, title: string, options?: { replace?: boolean; silent?: boolean }) => {
+      const id = ++tagRequestIdRef.current
+      setTagExtracting(true)
+      try {
+        const excerpt = await extractDocumentExcerpt(target)
+        if (id !== tagRequestIdRef.current) return
+        const result = await suggestDocumentTags({
+          fileName: target.name,
+          title,
+          contentType: target.type,
+          category,
+          description,
+          excerpt,
+          locale,
+        })
+        if (id !== tagRequestIdRef.current) return
+        applySuggestedTags(result.tags, options?.replace !== false)
+        setTagSource(result.source)
+        if (!options?.silent && result.tags.length) showToast('info', t('upload.studio.toastTags'))
+      } finally {
+        if (id === tagRequestIdRef.current) setTagExtracting(false)
+      }
+    },
+    [applySuggestedTags, category, description, locale, showToast, t]
+  )
+
   useEffect(() => {
     if (!toast) return
     const id = window.setTimeout(() => setToast(null), 4200)
@@ -140,6 +189,14 @@ export function UploadPage() {
     void api<UserDirectoryEntry[]>('/api/users/directory')
       .then(setDirectory)
       .catch(() => setDirectory([]))
+  }, [])
+
+  useEffect(() => {
+    void api<DocumentImportSource[]>('/api/documents/import/sources')
+      .then((list) => {
+        if (list?.length) setImportSources(list)
+      })
+      .catch(() => setImportSources(FALLBACK_SOURCES))
   }, [])
 
   useEffect(() => {
@@ -211,13 +268,13 @@ export function UploadPage() {
       setScanStatus('scanning')
       setPreScanProgress(8)
       setScanAt(new Date())
-      setHash('')
-      setHashAt(null)
-      setHashPending(true)
+      setIntegrityReady(false)
+      setIntegrityAt(null)
+      setIntegrityPending(true)
       clearPreview()
 
-      const kind = previewKindOf(target)
-      if (kind === 'image' || kind === 'pdf') {
+      const kind = previewKindOf(target.type, target.name)
+      if (kind === 'image' || kind === 'pdf' || kind === 'video' || kind === 'audio') {
         setPreviewUrl(URL.createObjectURL(target))
       } else if (kind === 'text' && target.size < 400_000) {
         try {
@@ -234,10 +291,9 @@ export function UploadPage() {
 
       try {
         const threat = await detectLocalThreatSignature(target)
-        const digest = await sha256Hex(target)
-        setHash(digest)
-        setHashAt(new Date())
-        setHashPending(false)
+        setIntegrityReady(true)
+        setIntegrityAt(new Date())
+        setIntegrityPending(false)
         setPreScanProgress(100)
         setScanAt(new Date())
         if (threat) {
@@ -248,7 +304,7 @@ export function UploadPage() {
           showToast('info', t('upload.studio.toastScanDone'))
         }
       } catch {
-        setHashPending(false)
+        setIntegrityPending(false)
         setPreScanProgress(100)
         setScanStatus('error')
       } finally {
@@ -273,7 +329,7 @@ export function UploadPage() {
           continue
         }
         if (err === 'tooLarge') {
-          setUploadError(t('upload.errorTooLarge', { max: String(UPLOAD_MAX_MB) }))
+          setUploadError(t('upload.errorTooLarge', { max: String(UPLOAD_MAX_TB) }))
           continue
         }
         if (err === 'invalidType' || err === 'invalidMime') {
@@ -298,9 +354,15 @@ export function UploadPage() {
       setProgress(0)
       setUploadDone(false)
       setResultDoc(null)
+      const stem = primary.name.replace(/\.[^.]+$/, '')
+      const immediate = extractTagsLocally({ fileName: primary.name, title: stem, category })
+      autoTagsRef.current = immediate
+      setTags(immediate)
+      setTagSource(immediate.length ? 'local' : null)
       void runLocalAnalysis(primary)
+      void requestTagSuggestions(primary, stem, { silent: true })
     },
-    [t, isVersionMode, runLocalAnalysis]
+    [t, isVersionMode, runLocalAnalysis, requestTagSuggestions, category]
   )
 
   const onFileInput = (e: ChangeEvent<HTMLInputElement>) => {
@@ -316,19 +378,30 @@ export function UploadPage() {
 
   const removeFile = () => {
     if (uploading) return
+    tagRequestIdRef.current += 1
+    setTagExtracting(false)
     if (fileQueue.length) {
       const next = fileQueue[0]
       setFile(next)
       setFileQueue((q) => q.slice(1))
-      setDocName(next.name.replace(/\.[^.]+$/, ''))
+      const stem = next.name.replace(/\.[^.]+$/, '')
+      setDocName(stem)
+      const immediate = extractTagsLocally({ fileName: next.name, title: stem, category })
+      autoTagsRef.current = immediate
+      setTags(immediate)
+      setTagSource(immediate.length ? 'local' : null)
       void runLocalAnalysis(next)
+      void requestTagSuggestions(next, stem, { silent: true })
     } else {
       setFile(null)
       setDocName('')
       setScanStatus('idle')
       setPreScanProgress(0)
-      setHash('')
-      setHashAt(null)
+      setIntegrityReady(false)
+      setIntegrityAt(null)
+      setTags([])
+      setTagSource(null)
+      autoTagsRef.current = []
       clearPreview()
     }
     setFileStatus('ready')
@@ -337,10 +410,14 @@ export function UploadPage() {
     setUploadDone(false)
   }
 
+  const addTagValue = (value: string) => {
+    const next = value.trim()
+    if (!next || tags.includes(next)) return
+    setTags([...tags, next])
+  }
+
   const addTag = () => {
-    const value = tagInput.trim()
-    if (!value) return
-    if (!tags.includes(value)) setTags([...tags, value])
+    addTagValue(tagInput)
     setTagInput('')
   }
 
@@ -365,13 +442,18 @@ export function UploadPage() {
     setDescription('')
     setTags([])
     setTagInput('')
+    setTagExtracting(false)
+    setTagSource(null)
+    autoTagsRef.current = []
+    tagRequestIdRef.current += 1
     setVisibility('Private')
     setPublicLevel('Download')
     setSharedRows([])
     setChangeComment('')
     setVersionConfirmed(false)
-    setHash('')
-    setHashAt(null)
+    setIntegrityReady(false)
+    setIntegrityAt(null)
+    setIntegrityPending(false)
     setScanAt(null)
     setUploadDone(false)
     setUploadError('')
@@ -425,10 +507,65 @@ export function UploadPage() {
       visibility,
       publicLevel,
       sharedRows,
+      parentId: folderId,
     })
     const job = uploadWithProgress('/api/documents', form, 'POST', onProgress)
     uploadJobRef.current = job
     return job.promise
+  }
+
+  const sourceLabel = (id: string) => {
+    const key = `upload.source.${id}`
+    const label = t(key)
+    return label === key ? importSources.find((s) => s.id === id)?.displayName || id : label
+  }
+
+  const importHint =
+    importSource === 'googledrive'
+      ? t('upload.importDriveHint')
+      : importSource === 'onedrive'
+        ? t('upload.importOneDriveHint')
+        : importSource === 'dropbox'
+          ? t('upload.importDropboxHint')
+          : t('upload.importUrlHint')
+
+  const importPlaceholder =
+    importSource === 'googledrive'
+      ? 'https://drive.google.com/file/d/…'
+      : importSource === 'onedrive'
+        ? 'https://1drv.ms/…'
+        : importSource === 'dropbox'
+          ? 'https://www.dropbox.com/s/…'
+          : 'https://'
+
+  const importFromUrl = async () => {
+    const url = importUrl.trim()
+    if (!url) {
+      setUploadError(t('upload.importUrlRequired'))
+      return
+    }
+    setImportingUrl(true)
+    setUploadError('')
+    try {
+      const result = await api<DocumentDto>('/api/documents/import/url', {
+        method: 'POST',
+        body: JSON.stringify({
+          url,
+          category,
+          description: description.trim() || undefined,
+          visibility,
+          publicAccessLevel: publicLevel,
+        }),
+      })
+      setResultDoc(result)
+      setUploadDone(true)
+      setImportUrl('')
+      showToast('success', t('upload.importUrlDone'))
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : t('msg.loadProfileError'))
+    } finally {
+      setImportingUrl(false)
+    }
   }
 
   const handleSubmit = async () => {
@@ -493,7 +630,7 @@ export function UploadPage() {
   }
 
   const keywords = useMemo(() => (file ? keywordsFromFileName(file.name) : []), [file])
-  const previewKind = file ? previewKindOf(file) : 'other'
+  const previewKind = file ? previewKindOf(file.type, file.name) : 'other'
   const uploadBlocked =
     uploading || !file || scanStatus === 'scanning' || scanStatus === 'threat' || (isVersionMode && !versionConfirmed)
 
@@ -535,7 +672,7 @@ export function UploadPage() {
     <section className="page upload-page upload-studio" id="page-upload">
       <header className="upload-studio-header">
         <div>
-          <Link to="/documents" className="btn btn-secondary upload-back-btn">
+          <Link to={folderId ? `/documents?folder=${folderId}` : '/documents'} className="btn btn-secondary upload-back-btn">
             <IconArrowLeft />
             {t('upload.backToDocuments')}
           </Link>
@@ -554,6 +691,29 @@ export function UploadPage() {
 
       <div className="upload-studio-grid">
         <div className="upload-studio-main">
+          {!isVersionMode && (
+            <div className="upload-source-tabs" role="tablist" aria-label={t('upload.sources')}>
+              {importSources.map((source) => {
+                const id = source.id as ImportSourceId
+                const active = importSource === id
+                return (
+                  <button
+                    key={source.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    className={`upload-source-tab${active ? ' active' : ''}`}
+                    disabled={!source.isEnabled}
+                    onClick={() => source.isEnabled && setImportSource(id)}
+                  >
+                    {sourceLabel(source.id)}
+                    {!source.isEnabled && <em className="upload-source-soon">{t('upload.soon')}</em>}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+          {(isVersionMode || importSource === 'device') && (
           <div className="upload-card-modern">
             <div
               className={`upload-dropzone-modern${dragOver ? ' drag-over' : ''}${file ? ' has-file' : ''}`}
@@ -579,13 +739,7 @@ export function UploadPage() {
                 type="file"
                 className="upload-file-input"
                 multiple={!isVersionMode}
-                accept={UPLOAD_SUPPORTED_FORMATS_LABEL.split(', ')
-                  .map((x) => {
-                    const ext = x.trim().toLowerCase()
-                    if (ext === 'jpg') return '.jpg,.jpeg'
-                    return `.${ext}`
-                  })
-                  .join(',')}
+                accept={UPLOAD_ACCEPT_ATTRIBUTE}
                 onChange={onFileInput}
                 disabled={uploading}
               />
@@ -608,7 +762,7 @@ export function UploadPage() {
                     {t('upload.chooseFiles')}
                   </button>
                   <p className="upload-constraints-simple">
-                    {UPLOAD_SUPPORTED_FORMATS_LABEL} · {t('upload.maxSize', { max: String(UPLOAD_MAX_MB) })}
+                    {UPLOAD_SUPPORTED_FORMATS_LABEL} · {t('upload.maxSize', { max: String(UPLOAD_MAX_TB) })}
                   </p>
                 </>
               ) : (
@@ -661,6 +815,7 @@ export function UploadPage() {
               )}
             </div>
           </div>
+          )}
 
           {isVersionMode && existingDoc && (
             <div className="upload-card-modern">
@@ -688,6 +843,35 @@ export function UploadPage() {
                 />
                 {t('upload.versionConfirm')}
               </label>
+            </div>
+          )}
+
+          {!isVersionMode && importSource !== 'device' && (
+            <div className="upload-card-modern">
+              <h3>
+                <IconGlobe size={18} />
+                {sourceLabel(importSource)}
+              </h3>
+              <p className="muted">{importHint}</p>
+              <div className="form-group">
+                <label htmlFor="upload-import-url">{t('upload.importUrl')}</label>
+                <input
+                  id="upload-import-url"
+                  type="url"
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                  placeholder={importPlaceholder}
+                  disabled={uploading || importingUrl}
+                />
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={importingUrl || !importUrl.trim()}
+                onClick={() => void importFromUrl()}
+              >
+                {importingUrl ? t('profile.saving') : t('upload.importUrlButton')}
+              </button>
             </div>
           )}
 
@@ -735,7 +919,19 @@ export function UploadPage() {
                   />
                 </div>
                 <div className="form-group upload-form-full">
-                  <label htmlFor="upload-tags">{t('upload.studio.tags')}</label>
+                  <div className="upload-tags-head">
+                    <label htmlFor="upload-tags">{t('upload.studio.tags')}</label>
+                    <button
+                      type="button"
+                      className="btn upload-tag-extract"
+                      disabled={!file || uploading || tagExtracting}
+                      onClick={() => file && void requestTagSuggestions(file, docName || file.name.replace(/\.[^.]+$/, ''))}
+                    >
+                      <IconSparkles size={14} />
+                      {tagExtracting ? t('upload.studio.tagsExtracting') : t('upload.studio.tagsExtract')}
+                    </button>
+                  </div>
+                  <p className="settings-hint">{t('upload.studio.tagsHint')}</p>
                   <div className="upload-tag-input">
                     {tags.map((tag) => (
                       <span key={tag} className="upload-tag-chip">
@@ -760,6 +956,15 @@ export function UploadPage() {
                       disabled={uploading}
                     />
                   </div>
+                  {tagSource && (
+                    <span className="upload-tag-source">
+                      {tagSource === 'ai'
+                        ? t('upload.studio.tagsSourceAi')
+                        : tagSource === 'hybrid'
+                          ? t('upload.studio.tagsSourceHybrid')
+                          : t('upload.studio.tagsSourceLocal')}
+                    </span>
+                  )}
                 </div>
                 <div className="form-group upload-form-full">
                   <label>{t('upload.accessVisibility')}</label>
@@ -858,7 +1063,7 @@ export function UploadPage() {
                     onChange={(e) => setPublicLevel(e.target.value)}
                     disabled={uploading}
                   >
-                    {UPLOAD_ACCESS_LEVELS.map((level) => (
+                    {PUBLIC_ACCESS_LEVELS.map((level) => (
                       <option key={level.value} value={level.value}>
                         {t(level.labelKey)}
                       </option>
@@ -983,6 +1188,12 @@ export function UploadPage() {
               {file && previewKind === 'pdf' && previewUrl && (
                 <iframe title={file.name} src={previewUrl} />
               )}
+              {file && previewKind === 'video' && previewUrl && (
+                <video src={previewUrl} controls title={file.name} className="preview-video" />
+              )}
+              {file && previewKind === 'audio' && previewUrl && (
+                <audio src={previewUrl} controls title={file.name} className="preview-audio" />
+              )}
               {file && previewKind === 'text' && textPreview && (
                 <pre className="upload-hash-mono" style={{ maxHeight: 320, overflow: 'auto', width: '100%' }}>
                   {textPreview}
@@ -1007,21 +1218,20 @@ export function UploadPage() {
               {t('upload.studio.integrityTitle')}
             </h3>
             <p className="settings-hint">
-              {hashPending
+              {integrityPending
                 ? t('upload.studio.integrityPending')
-                : hash
+                : integrityReady
                   ? t('upload.studio.integrityOk')
                   : t('upload.studio.waitingFile')}
             </p>
-            <p className="upload-hash-mono">{hash || '—'}</p>
             <dl className="upload-meta-grid">
               <div>
                 <dt>{t('upload.studio.hashLabel')}</dt>
-                <dd>SHA-256</dd>
+                <dd>{t('upload.studio.hashServerOnly')}</dd>
               </div>
               <div>
                 <dt>{t('upload.studio.verifiedAt')}</dt>
-                <dd>{hashAt ? dateFmt.format(hashAt) : '—'}</dd>
+                <dd>{integrityAt ? dateFmt.format(integrityAt) : '—'}</dd>
               </div>
             </dl>
           </div>
@@ -1030,7 +1240,7 @@ export function UploadPage() {
             <h3>{t('upload.studio.aiTitle')}</h3>
             {!file ? (
               <p className="settings-hint">{t('upload.studio.waitingFile')}</p>
-            ) : hashPending ? (
+            ) : integrityPending ? (
               <p className="settings-hint">{t('upload.studio.aiPending')}</p>
             ) : (
               <>
@@ -1061,9 +1271,16 @@ export function UploadPage() {
                   <div className="upload-tag-input">
                     <span className="settings-hint">{t('upload.studio.aiKeywords')}</span>
                     {keywords.map((k) => (
-                      <span key={k} className="upload-tag-chip">
+                      <button
+                        key={k}
+                        type="button"
+                        className="upload-tag-chip suggested"
+                        disabled={uploading || tags.includes(k)}
+                        aria-label={t('upload.studio.tagsAddKeyword', { tag: k })}
+                        onClick={() => addTagValue(k)}
+                      >
                         {k}
-                      </span>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -1128,7 +1345,7 @@ export function UploadPage() {
         <button
           type="button"
           className="btn"
-          disabled={!file || uploading || hashPending}
+          disabled={!file || uploading || integrityPending}
           onClick={() => file && void runLocalAnalysis(file)}
         >
           {t('upload.studio.analyze')}
@@ -1141,11 +1358,11 @@ export function UploadPage() {
             {t('upload.studio.draft')}
           </button>
         )}
-        <button type="button" className="btn" disabled={uploading} onClick={() => navigate('/documents')}>
+        <button type="button" className="btn" disabled={uploading} onClick={() => navigate(folderId ? `/documents?folder=${folderId}` : '/documents')}>
           {t('upload.studio.cancel')}
         </button>
         {uploadDone ? (
-          <button type="button" className="btn btn-primary" onClick={() => navigate('/documents')}>
+          <button type="button" className="btn btn-primary" onClick={() => navigate(folderId ? `/documents?folder=${folderId}` : '/documents')}>
             {t('upload.backToDocuments')}
           </button>
         ) : (

@@ -3,46 +3,11 @@ import { api, downloadBlob } from '@/api/client'
 import { useI18n } from '@/i18n/I18nContext'
 import type { DocumentDto } from '@/types'
 import { Modal } from '@/components/ui/Modal'
+import { canInlinePreview, previewKindOf } from '@/utils/previewHelpers'
 
 interface PreviewModalProps {
   doc: DocumentDto
   onClose: () => void
-}
-
-type PreviewKind = 'pdf' | 'image' | 'text' | 'office' | 'other'
-
-function fileExt(name: string) {
-  const i = name.lastIndexOf('.')
-  return i >= 0 ? name.slice(i + 1).toLowerCase() : ''
-}
-
-function previewKindOf(doc: DocumentDto): PreviewKind {
-  const ct = (doc.contentType || '').toLowerCase()
-  const ext = fileExt(doc.fileName || '')
-
-  if (ct.includes('pdf') || ext === 'pdf') return 'pdf'
-  if (ct.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) {
-    return 'image'
-  }
-  if (
-    ct.includes('word') ||
-    ct.includes('excel') ||
-    ct.includes('powerpoint') ||
-    ct.includes('officedocument') ||
-    ct.includes('msword') ||
-    ct.includes('ms-excel') ||
-    ct.includes('ms-powerpoint') ||
-    ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'rtf'].includes(ext)
-  ) {
-    return 'office'
-  }
-  if (
-    ct.startsWith('text/') ||
-    ['txt', 'csv', 'json', 'xml', 'md', 'log'].includes(ext)
-  ) {
-    return 'text'
-  }
-  return 'other'
 }
 
 function previewErrorMessage(err: unknown, t: (k: string) => string) {
@@ -56,9 +21,9 @@ function previewErrorMessage(err: unknown, t: (k: string) => string) {
 
 export function PreviewModal({ doc, onClose }: PreviewModalProps) {
   const { t } = useI18n()
-  const kind = useMemo(() => previewKindOf(doc), [doc])
-  const canInline = kind === 'pdf' || kind === 'image' || kind === 'text'
-  const ext = fileExt(doc.fileName || '').toUpperCase() || 'FILE'
+  const kind = useMemo(() => previewKindOf(doc.contentType || '', doc.fileName || ''), [doc])
+  const canInline = canInlinePreview(kind)
+  const ext = (doc.fileName || '').split('.').pop()?.toUpperCase() || 'FILE'
 
   const [url, setUrl] = useState<string | null>(null)
   const [text, setText] = useState('')
@@ -174,6 +139,16 @@ export function PreviewModal({ doc, onClose }: PreviewModalProps) {
       {canInline && !error && loading && <div className="loading-inline">{t('preview.loading')}</div>}
       {url && kind === 'pdf' && <iframe src={url} title={doc.fileName} className="preview-frame" />}
       {url && kind === 'image' && <img src={url} alt={doc.fileName} className="preview-image" />}
+      {url && kind === 'video' && (
+        <video src={url} controls className="preview-video" title={doc.fileName}>
+          {t('preview.unsupportedType')}
+        </video>
+      )}
+      {url && kind === 'audio' && (
+        <audio src={url} controls className="preview-audio" title={doc.fileName}>
+          {t('preview.unsupportedType')}
+        </audio>
+      )}
       {kind === 'text' && !error && !loading && (
         <pre className="preview-text">{text || t('preview.unsupportedType')}</pre>
       )}

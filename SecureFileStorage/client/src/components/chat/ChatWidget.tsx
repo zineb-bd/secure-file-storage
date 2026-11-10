@@ -1,9 +1,10 @@
 import { type FormEvent, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useI18n } from '@/i18n/I18nContext'
 import { askChatbot } from '@/utils/chatApi'
-import { getSuggestionEntries, matchFaq, type ChatFaqEntry } from './chatFaq'
+import { matchFaq } from './chatFaq'
 
 type Role = 'user' | 'assistant'
 
@@ -11,6 +12,7 @@ interface ChatMessage {
   id: string
   role: Role
   text: string
+  route?: string | null
 }
 
 function firstName(fullName?: string | null): string {
@@ -18,9 +20,27 @@ function firstName(fullName?: string | null): string {
   return fullName.trim().split(/\s+/)[0] ?? ''
 }
 
+function pageLabel(route: string, t: (key: string) => string): string {
+  if (route.startsWith('/documents/upload')) return t('nav.upload')
+  if (route.startsWith('/documents')) return t('nav.documents')
+  if (route.startsWith('/favorites')) return t('nav.favorites')
+  if (route.startsWith('/shared')) return t('nav.shared')
+  if (route.startsWith('/categories')) return t('nav.categories')
+  if (route.startsWith('/archived')) return t('nav.archived')
+  if (route.startsWith('/trash')) return t('nav.trash')
+  if (route.includes('tab=users')) return t('nav.users')
+  if (route.includes('tab=groups')) return t('nav.groups')
+  if (route.startsWith('/annuaire')) return t('nav.annuaire')
+  if (route.startsWith('/admin/audit')) return t('nav.audit')
+  if (route.startsWith('/admin/config')) return t('nav.config')
+  if (route === '/') return t('nav.dashboard')
+  return t('chat.openPage')
+}
+
 export function ChatWidget() {
   const { user } = useAuth()
   const { t, lang } = useI18n()
+  const navigate = useNavigate()
   const panelId = useId()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
@@ -28,7 +48,6 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const suggestions = getSuggestionEntries()
 
   useEffect(() => {
     if (!open) return
@@ -43,13 +62,22 @@ export function ChatWidget() {
   }, [open, t, user?.fullName])
 
   useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  useEffect(() => {
     const el = listRef.current
     if (!el) return
     el.scrollTop = el.scrollHeight
   }, [messages, busy, open])
 
-  const pushAssistant = (text: string) => {
-    setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', text }])
+  const pushAssistant = (text: string, route?: string | null) => {
+    setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', text, route }])
   }
 
   const handleSend = async (raw: string) => {
@@ -58,19 +86,23 @@ export function ChatWidget() {
 
     setInput('')
     setMessages((prev) => [...prev, { id: `u-${Date.now()}`, role: 'user', text }])
-
-    const faq = matchFaq(text)
-    if (faq) {
-      pushAssistant(t(faq.replyKey))
-      return
-    }
-
     setBusy(true)
+
     try {
       const res = await askChatbot(text, lang)
-      pushAssistant(res.reply?.trim() || t('chat.fallback'))
+      const faq = matchFaq(text)
+      if (res.source === 'fallback' && faq) {
+        pushAssistant(t(faq.replyKey), faq.route)
+        return
+      }
+      pushAssistant(res.reply?.trim() || t('chat.fallback'), res.route || faq?.route)
     } catch {
-      pushAssistant(t('chat.error'))
+      const faq = matchFaq(text)
+      if (faq) {
+        pushAssistant(t(faq.replyKey), faq.route)
+      } else {
+        pushAssistant(t('chat.error'))
+      }
     } finally {
       setBusy(false)
     }
@@ -81,8 +113,11 @@ export function ChatWidget() {
     void handleSend(input)
   }
 
-  const onSuggestion = (entry: ChatFaqEntry) => {
-    void handleSend(t(entry.suggestionKey))
+  const openRoute = (route: string) => {
+    const [pathname, query] = route.split('?')
+    navigate({ pathname, search: query ? `?${query}` : '' })
+    // Fermer après le clic, sinon le souris-up tombe sur le bouton sous le panneau.
+    window.setTimeout(() => setOpen(false), 0)
   }
 
   return createPortal(
@@ -102,7 +137,7 @@ export function ChatWidget() {
               </span>
               <div>
                 <strong>{t('chat.title')}</strong>
-                <span className="chat-panel-sub">SecureDocs</span>
+                <span className="chat-panel-sub">{t('chat.statusReady')}</span>
               </div>
             </div>
             <button
@@ -118,7 +153,16 @@ export function ChatWidget() {
           <div className="chat-messages" ref={listRef}>
             {messages.map((m) => (
               <div key={m.id} className={`chat-bubble chat-bubble-${m.role}`}>
-                {m.text}
+                <p className="chat-bubble-text">{m.text}</p>
+                {m.role === 'assistant' && m.route && (
+                  <button
+                    type="button"
+                    className="chat-open-page"
+                    onClick={() => openRoute(m.route!)}
+                  >
+                    {t('chat.openPage')} · {pageLabel(m.route, t)}
+                  </button>
+                )}
               </div>
             ))}
             {busy && (
@@ -131,18 +175,16 @@ export function ChatWidget() {
             )}
           </div>
 
-          {!busy && (
+          {!busy && messages.length <= 1 && (
             <div className="chat-suggestions">
-              {suggestions.map((s) => (
-                <button
-                  key={s.intent}
-                  type="button"
-                  className="chat-suggestion"
-                  onClick={() => onSuggestion(s)}
-                >
-                  {t(s.suggestionKey)}
-                </button>
-              ))}
+              <span className="chat-example-label">{t('chat.exampleLabel')}</span>
+              <button
+                type="button"
+                className="chat-suggestion"
+                onClick={() => void handleSend(t('chat.exampleQuestion'))}
+              >
+                {t('chat.exampleQuestion')}
+              </button>
             </div>
           )}
 
